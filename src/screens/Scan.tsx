@@ -385,9 +385,17 @@ export default function Scan() {
     <div className="scan" onDoubleClick={() => setDebug((d) => !d)}>
       <video ref={videoRef} playsInline muted autoPlay />
       <AnimatePresence>
-        {flash && <motion.div className="scan__flash" style={{ background: flash }} initial={{ opacity: 0.55 }} animate={{ opacity: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} />}
+        {flash && <motion.div className="scan__flash" style={{ background: flash }} initial={{ opacity: 0.35 }} animate={{ opacity: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.35 }} />}
       </AnimatePresence>
 
+      {frameBox && (
+        <>
+          <div className="scan__dim" style={{ left: 0, top: 0, right: 0, height: frameBox.top }} />
+          <div className="scan__dim" style={{ left: 0, top: frameBox.top + frameBox.height, right: 0, bottom: 0 }} />
+          <div className="scan__dim" style={{ left: 0, top: frameBox.top, width: frameBox.left, height: frameBox.height }} />
+          <div className="scan__dim" style={{ left: frameBox.left + frameBox.width, top: frameBox.top, right: 0, height: frameBox.height }} />
+        </>
+      )}
       {frameBox && (
         <div
           ref={frameRef}

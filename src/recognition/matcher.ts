@@ -55,15 +55,22 @@ function findNumbers(text: string): NumberRead[] {
   // Slash lost by the OCR ("04189", "0 04189", "4 189"): split a digit run as n/total both ways.
   for (const m of s.matchAll(/(?<![A-Za-z\d])(\d[\d ]{2,10}\d)(?![A-Za-z\d])/g)) {
     const tokens = m[1].split(' ').filter(Boolean)
-    const runs = [tokens.join(''), tokens[tokens.length - 1], tokens.slice(-2).join('')].filter((r, i, a) => r.length >= 4 && r.length <= 6 && a.indexOf(r) === i)
+    const runs = [tokens.join(''), tokens[tokens.length - 1], tokens.slice(-2).join('')].filter((r, i, a) => r.length >= 4 && r.length <= 7 && a.indexOf(r) === i)
     for (const run of runs) {
       if (/(?:19|20)\d\d$/.test(run)) continue // the copyright year, not a number
+      if (run.length === 7) continue
       for (const cut of [3, 2]) {
         const total = parseInt(run.slice(-cut), 10), n = run.slice(0, -cut)
         if (n.length < 1 || n.length > 3) continue
         if (parseInt(n, 10) <= total * 1.5) push(normNumber(n), total, true)
       }
     }
+  }
+  // "SPoJ0327191": number, slash read as a digit (7, 1 or 4), total, often glued to the set
+  // code's letters. Only the 3+1+3 split makes sense.
+  for (const m of s.matchAll(/(?<!\d)(\d{3})[714](\d{3})(?!\d)/g)) {
+    const total = parseInt(m[2], 10)
+    if (parseInt(m[1], 10) <= total * 1.5 && !/^(?:19|20)\d\d$/.test(m[2])) push(normNumber(m[1]), total, true)
   }
   const promo = s.match(PROMO_RE)
   if (promo) push(normNumber(promo[1]), null)
