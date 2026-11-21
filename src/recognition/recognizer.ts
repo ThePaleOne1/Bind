@@ -78,7 +78,7 @@ export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean
   let confidence = m.confidence
 
   // Disambiguate same-number / same-name cards using the illustrator credit
-  const close = m.alternatives.filter((a) => best && a.score >= best.score - 0.12).slice(0, 6)
+  const close = m.alternatives.filter((a) => best && a.score >= best.score - 0.12).slice(0, 12)
   if (best && close.length > 1 && parsed.illustratorGuess) {
     const details = await Promise.all(close.map((c) => getCard(c.entry.id).catch(() => null)))
     let top: { c: Candidate; s: number } | null = null

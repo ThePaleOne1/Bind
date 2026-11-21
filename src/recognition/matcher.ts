@@ -99,6 +99,34 @@ export function parseOcr(t: OcrText): Parsed {
   return { number, total, numberWeak, numberAlts, nameGuess, illustratorGuess }
 }
 
+/**
+ * Ways to read a name out of the top band. OCR wraps the name in junk ("ge charcadet
+ * t7708 eae ae": the BASIC badge, HP, the energy symbol), and the Pokémon's name is
+ * nearly always the longest word, so try the longest word, it with each neighbour,
+ * and the usual prefixes.
+ */
+export function nameVariants(guess: string): string[] {
+  const words = guess.split(' ').filter(Boolean)
+  if (!words.length) return []
+  let li = 0
+  words.forEach((w, i) => { if (w.length > words[li].length) li = i })
+  const v = [
+    guess,
+    words.slice(0, 2).join(' '),
+    words[0],
+    words[li],
+    li > 0 ? `${words[li - 1]} ${words[li]}` : '',
+    li < words.length - 1 ? `${words[li]} ${words[li + 1]}` : '',
+  ]
+  return v.filter((x, i, a) => x.length >= 3 && a.indexOf(x) === i)
+}
+
+const bestSim = (variants: string[], name: string) => {
+  let sim = 0
+  for (const v of variants) sim = Math.max(sim, similarity(v, name))
+  return sim
+}
+
 export interface Candidate {
   entry: IndexEntry
   score: number
@@ -118,6 +146,7 @@ export function matchCards(
   let parsed = parsedIn
   const { entries } = index
   let scored: Candidate[] = []
+  const variants = nameVariants(parsed.nameGuess)
 
   const scoreNumber = (read: NumberRead): Candidate[] => {
     const out: Candidate[] = []
@@ -129,8 +158,8 @@ export function matchCards(
         else if (Math.abs(e.total - read.total) <= 2) s += 0.1
         else s -= 0.2
       }
-      if (parsed.nameGuess) {
-        const sim = similarity(parsed.nameGuess, e.name)
+      if (variants.length) {
+        const sim = bestSim(variants, e.name)
         // A clearly different name is evidence against, but only when enough of it was read.
         s += 0.3 * sim - (sim < 0.2 && parsed.nameGuess.length >= 4 ? 0.25 : 0)
       }
@@ -162,13 +191,9 @@ export function matchCards(
   const numberWeak = scored.length === 0 || scored[0].score < 0.5
   if (numberWeak && parsed.nameGuess.length >= 3) {
     const seen = new Set(scored.map((c) => c.entry.id))
-    // OCR often appends junk after the name ("charizard ie of by"); try shorter prefixes too.
-    const words = parsed.nameGuess.split(' ')
-    const variants = [parsed.nameGuess, words.slice(0, 2).join(' '), words[0]].filter((v, i, a) => v.length >= 3 && a.indexOf(v) === i)
     for (const e of entries) {
       if (seen.has(e.id)) continue
-      let sim = 0
-      for (const v of variants) sim = Math.max(sim, similarity(v, e.name))
+      const sim = bestSim(variants, e.name)
       if (sim <= 0.55) continue
       // The set total is usually read right even when the number is not: a name match
       // in a set with that total is near-certain.
@@ -182,7 +207,7 @@ export function matchCards(
   const second = scored[1]
   let confidence = best ? Math.min(1, best.score) : 0
   if (best && second && second.score > best.score - 0.05) confidence *= 0.6 // ambiguous
-  return { best, alternatives: scored.slice(0, 8), parsed, confidence }
+  return { best, alternatives: scored.slice(0, 12), parsed, confidence }
 }
 
 /** Search the local index by free text ("pikachu 25/102", "charizard 006") */

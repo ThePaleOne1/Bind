@@ -71,8 +71,10 @@ async function listBackCameras(currentId: string | null): Promise<CameraDevice[]
 
 export async function startCamera(video: HTMLVideoElement, opts: { deviceId?: string | null; _retry?: boolean } = {}): Promise<CameraHandle> {
   const base: MediaTrackConstraints = {
-    width: { ideal: 1920 },
-    height: { ideal: 1080 },
+    // Ask for 4K: the collector number is ~9 px tall at 1080p and foil patterns eat it.
+    // Analysis and OCR costs do not grow (GPU downscale, bands resampled to fixed heights).
+    width: { ideal: 3840 },
+    height: { ideal: 2160 },
     frameRate: { ideal: 30 },
     // Advanced constraints are ignored by browsers that do not support them.
     advanced: [{ focusMode: 'continuous' } as any],
