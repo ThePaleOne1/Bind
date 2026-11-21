@@ -35,17 +35,33 @@ export interface Recognition {
  */
 const MAX_CAPTURE_H = 1800
 const slots: HTMLCanvasElement[] = []
-export function captureRoi(video: HTMLVideoElement, roi: Roi, avoid?: HTMLCanvasElement): HTMLCanvasElement {
-  const vw = video.videoWidth, vh = video.videoHeight
+/** A pixel rectangle of any image source (video frame, full-resolution still) into a reusable canvas. */
+export function grabRegion(src: CanvasImageSource, r: { x: number; y: number; w: number; h: number }, avoid?: HTMLCanvasElement): HTMLCanvasElement {
   if (slots.length < 2) { slots.push(document.createElement('canvas')); slots.push(document.createElement('canvas')) }
   const c = slots[0] === avoid ? slots[1] : slots[0]
-  const sw = Math.round(roi.w * vw), sh = Math.round(roi.h * vh)
-  const scale = Math.min(1, MAX_CAPTURE_H / Math.max(1, sh))
+  const sw = Math.max(1, Math.round(r.w)), sh = Math.max(1, Math.round(r.h))
+  const scale = Math.min(1, MAX_CAPTURE_H / sh)
   const w = Math.max(1, Math.round(sw * scale)), h = Math.max(1, Math.round(sh * scale))
   if (c.width !== w || c.height !== h) { c.width = w; c.height = h }
   const ctx = c.getContext('2d', { willReadFrequently: true })!
   ctx.imageSmoothingQuality = 'high'
-  ctx.drawImage(video, roi.x * vw, roi.y * vh, sw, sh, 0, 0, w, h)
+  ctx.drawImage(src, r.x, r.y, sw, sh, 0, 0, w, h)
+  return c
+}
+export function captureRoi(video: HTMLVideoElement, roi: Roi, avoid?: HTMLCanvasElement): HTMLCanvasElement {
+  const vw = video.videoWidth, vh = video.videoHeight
+  return grabRegion(video, { x: roi.x * vw, y: roi.y * vh, w: roi.w * vw, h: roi.h * vh }, avoid)
+}
+
+/** Crop a rectangle (frame pixels) out of a grabbed frame into a reusable software canvas. */
+const cropSlots: HTMLCanvasElement[] = []
+export function cropCanvas(src: HTMLCanvasElement, r: { x: number; y: number; w: number; h: number }, avoid?: HTMLCanvasElement): HTMLCanvasElement {
+  if (cropSlots.length < 2) { cropSlots.push(document.createElement('canvas')); cropSlots.push(document.createElement('canvas')) }
+  const c = cropSlots[0] === avoid ? cropSlots[1] : cropSlots[0]
+  const w = Math.max(1, Math.round(r.w)), h = Math.max(1, Math.round(r.h))
+  if (c.width !== w || c.height !== h) { c.width = w; c.height = h }
+  const ctx = c.getContext('2d', { willReadFrequently: true })!
+  ctx.drawImage(src, r.x, r.y, r.w, r.h, 0, 0, w, h)
   return c
 }
 
@@ -113,7 +129,7 @@ export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean
   // Several cards within reach of each other (same name, number unreadable): rank them
   // by the noisy digit runs and the illustrator credit, and commit when one stands out.
   let alternatives = m.alternatives
-  const close = m.alternatives.filter((a) => best && a.score >= best.score - 0.12).slice(0, 12)
+  const close = m.alternatives.filter((a) => best && a.score >= best.score - 0.12).slice(0, 6)   // each needs the card's details (a network fetch when not cached)
   if (best && close.length > 1 && confidence < 0.8) {
     const { ranked, pick } = await tieBreak(ocr, close)
     alternatives = [...ranked.map((r) => r.c), ...m.alternatives.filter((a) => !close.includes(a))]
@@ -122,7 +138,7 @@ export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean
 
   let cardRec: CardRecord | null = null
   if (best && confidence >= 0.5) {
-    cardRec = await getCard(best.entry.id).catch(() => null)
+    cardRec = await getCard(best.entry.id, { quick: true }).catch(() => null)
   }
   const out: Recognition = { card: cardRec, confidence, alternatives, parsed, ocr, ms: performance.now() - t0, ocrMs, sharpness: sharpnessOf(card), foil: readFoil(card) }
   if (opts.debug) out.bands = debugBands(card)
@@ -139,7 +155,7 @@ export interface Ranked { c: Candidate; num: number; ill: number; s: number }
  */
 export async function tieBreak(ocr: { corner: string; bottom: string }, close: Candidate[]): Promise<{ ranked: Ranked[]; pick: Ranked | null }> {
   const runs = digitRuns(`${ocr.corner} ${ocr.bottom}`)
-  const details = await Promise.all(close.map((c) => getCard(c.entry.id).catch(() => null)))
+  const details = await Promise.all(close.map((c) => getCard(c.entry.id, { quick: true }).catch(() => null)))
   const text = `${ocr.bottom} ${ocr.corner}`
   const ranked: Ranked[] = close.map((c, i) => {
     const num = numberSimilarity(runs, c.entry.n, c.entry.total)

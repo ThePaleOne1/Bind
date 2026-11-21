@@ -1,3 +1,4 @@
+import { logEvent } from '../utils/perfLog'
 export interface Range { min: number; max: number; step: number }
 
 export interface CameraDevice { id: string; label: string }
@@ -23,6 +24,10 @@ export interface CameraHandle {
    * locks the sharpest, judged by `measure` (higher = sharper, `good` = sharp enough).
    */
   refocus: (opts?: { measure: () => number; good: number; full?: boolean }) => Promise<boolean>
+  /** Full-resolution still from the sensor (ImageCapture), or null when the lens cannot. */
+  still: () => Promise<ImageBitmap | null>
+  /** Whether still() is expected to work on this lens. */
+  canStill: () => boolean
   /** True while a focus sweep is running. */
   focusing: () => boolean
   /** Best sharpness a sweep has reached on this lens (0 when none has run). */
@@ -71,11 +76,12 @@ async function listBackCameras(currentId: string | null): Promise<CameraDevice[]
 
 export async function startCamera(video: HTMLVideoElement, opts: { deviceId?: string | null; hiRes?: boolean; _retry?: boolean } = {}): Promise<CameraHandle> {
   const base: MediaTrackConstraints = {
-    // 4K by default: the collector number is ~9 px tall at 1080p and foil patterns eat it.
-    // Analysis and OCR costs do not grow (GPU downscale, bands resampled to fixed heights),
-    // but the preview itself is heavier, so it can be turned down.
-    width: { ideal: opts.hiRes === false ? 1920 : 3840 },
-    height: { ideal: opts.hiRes === false ? 1080 : 2160 },
+    // The preview is only looked at for motion and focus, so it runs small: every
+    // drawImage(video) on a phone is a CPU colour conversion of the whole frame, and
+    // at 4K that alone took 600 ms a tick. The read uses a full-resolution still
+    // (still() below); 4K preview stays available for lenses without ImageCapture.
+    width: { ideal: opts.hiRes ? 3840 : 1280 },
+    height: { ideal: opts.hiRes ? 2160 : 720 },
     frameRate: { ideal: 30 },
     // Advanced constraints are ignored by browsers that do not support them.
     advanced: [{ focusMode: 'continuous' } as any],
@@ -263,12 +269,54 @@ export async function startCamera(video: HTMLVideoElement, opts: { deviceId?: st
     return sweeping
   }
 
+  // Full-resolution still for reading. The sensor's real resolution is only needed
+  // once per card; asked for in the preview's shape (16:9) so the guide region maps
+  // straight across. Two failures in a row and the lens is left alone.
+  let imageCapture: any = null
+  let photoSize: { w: number; h: number } | null = null
+  let stillFailures = 0
+  const still = async (): Promise<ImageBitmap | null> => {
+    if (stillFailures >= 2 || !('ImageCapture' in window)) return null
+    const t0 = performance.now()
+    try {
+      if (!imageCapture) {
+        imageCapture = new (window as any).ImageCapture(track)
+        const pc = await imageCapture.getPhotoCapabilities().catch(() => null)
+        const maxW: number = pc?.imageWidth?.max ?? 0, maxH: number = pc?.imageHeight?.max ?? 0
+        if (maxW && maxH) {
+          const w = Math.min(maxW, 4096)
+          photoSize = { w, h: Math.round(w * 9 / 16) }
+          if (photoSize.h > maxH) photoSize = { w: Math.round(maxH * 16 / 9), h: maxH }
+        }
+      }
+      const timeout = new Promise<never>((_, rej) => setTimeout(() => rej(new Error('still timeout')), 3000))
+      let blob: Blob
+      try {
+        blob = await Promise.race([imageCapture.takePhoto(photoSize ? { imageWidth: photoSize.w, imageHeight: photoSize.h } : {}), timeout])
+      } catch (e: any) {
+        if (/timeout/.test(String(e?.message))) throw e
+        photoSize = null                                   // size refused: take whatever the lens gives
+        blob = await Promise.race([imageCapture.takePhoto(), timeout])
+      }
+      const bmp = await createImageBitmap(blob)
+      stillFailures = 0
+      logEvent('still', `${bmp.width}x${bmp.height}`, performance.now() - t0)
+      return bmp
+    } catch (e: any) {
+      stillFailures++
+      logEvent('still', `failed: ${e?.message ?? e}`, performance.now() - t0)
+      return null
+    }
+  }
+
   return {
     stream,
     track,
     deviceId,
     devices,
     hasTorch,
+    still,
+    canStill: () => stillFailures < 2 && 'ImageCapture' in window,
     exposureRange,
     focusModes,
     focusRange,

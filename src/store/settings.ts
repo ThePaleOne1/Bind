@@ -13,7 +13,7 @@ export interface Settings {
   supabaseKey: string
   scanMode: ScanMode
   cameraId: string
-  hiRes: boolean          // ask the camera for 4K (sharper small print) rather than 1080p (lighter on the phone)
+  preview4k: boolean      // 4K preview (only for lenses that cannot take a full-resolution still); default 720p
   askFinish: boolean      // when a card comes in several finishes and the foil read is unsure, ask before adding
   effects: boolean        // confetti, flash and spring animations on a scan (off = lighter on slow phones)
   set: (p: Partial<Settings>) => void
@@ -32,7 +32,7 @@ export const useSettings = create<Settings>()(
       supabaseKey: '',
       scanMode: 'add',
       cameraId: '',
-      hiRes: true,
+      preview4k: false,
       askFinish: true,
       effects: true,
       set: (p) => set(p),

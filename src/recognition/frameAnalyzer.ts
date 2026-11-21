@@ -41,6 +41,7 @@ export class FrameAnalyzer {
   private disturbedWhileBusy = false
   private sharp: number | null = null
   private staged = false          // the 480-wide stage holds this step's frame
+  private rebase = false          // the region moved: take the next frame as the reference
   private video: HTMLVideoElement | null = null
   private roi: Roi | null = null
   phase: Phase = 'settling'   // scan whatever is in frame once the picture is stable
@@ -98,6 +99,12 @@ export class FrameAnalyzer {
     }
   }
 
+  /**
+   * The region being watched has moved (the card was found somewhere else): the next
+   * frame becomes the new reference and is not reported as motion or change.
+   */
+  rebaseNext() { this.rebase = true; this.captured = null }
+
   /** Sharpness of the current frame. Free while settling (the stage is read anyway); otherwise one extra grab. */
   sharpness(): number {
     if (this.sharp != null) return this.sharp
@@ -122,6 +129,7 @@ export class FrameAnalyzer {
   step(video: HTMLVideoElement, roi: Roi, now = performance.now()): boolean {
     this.video = video; this.roi = roi
     this.sharp = null; this.staged = false
+    if (this.rebase) { this.prev = null; this.cur = null }
     // two grids, swapped each step: no allocation per frame
     const g = this.prev && this.prev !== this.cur ? this.prev : new Float32Array(48 * 64)
     if (!grabGrid(video, roi, g)) return false
@@ -130,6 +138,7 @@ export class FrameAnalyzer {
     this.motion = this.cur ? this.diff(g, this.cur) : 0
     this.prev = this.cur
     this.cur = g
+    if (this.rebase) { this.rebase = false; this.reference = g.slice() }
 
     switch (this.phase) {
       case 'idle': {

@@ -9,6 +9,8 @@ import { signIn, signOut, supabase, syncNow, useAuth } from '../sync/supabase'
 import { Stepper, Switch, Title, TitleBar, toast } from '../components/ui'
 import { fmtAud } from '../utils/price'
 import { BUILD, applyUpdate, checkForUpdate, forceRefresh, isNewer, usePwa } from '../pwa'
+import { sendCompanion, companionConnected } from '../sync/companion'
+import { baseReport } from '../utils/perfLog'
 
 function VersionSection() {
   const pwa = usePwa()
@@ -42,6 +44,10 @@ function VersionSection() {
       <div className="setting">
         <div><div className="setting__label">Force refresh</div><div className="setting__sub">Clears the app cache and reloads</div></div>
         <button className="btn btn--sm btn--ghost" onClick={forceRefresh}>Refresh</button>
+      </div>
+      <div className="setting">
+        <div><div className="setting__label">Send report to Desk</div><div className="setting__sub">Frame rate log and scan timings from this session (the camera screen's debug view sends more)</div></div>
+        <button className="btn btn--sm btn--ghost" onClick={() => { sendCompanion({ type: 'report', report: { ...baseReport(BUILD), id: Math.random().toString(36).slice(2, 8), source: 'settings' } }); toast(companionConnected() ? 'Sent to Desk' : 'Sent locally') }}>Send</button>
       </div>
     </section>
   )

@@ -1,3 +1,4 @@
+import { logEvent } from '../utils/perfLog'
 import { db, getMeta, setMeta } from '../data/db'
 import type {CardRecord, IndexEntry, SetInfo, Finish } from '../data/types'
 
@@ -105,15 +106,28 @@ function parsePrices(detail: any) {
   return { usd, eur, tcgplayerId, cardmarketId, variantPrices: Object.keys(variantPrices).length ? variantPrices : null }
 }
 
-export async function getCard(id: string, opts: { refresh?: boolean } = {}): Promise<CardRecord> {
+/**
+ * `quick` is for the scan path: a cached record is returned at once however old it is
+ * (prices refresh in the background), and a fetch that is needed gets 5 s before the
+ * scan goes on without it. Slow mobile data must never hold a scan for half a minute.
+ */
+export async function getCard(id: string, opts: { refresh?: boolean; quick?: boolean } = {}): Promise<CardRecord> {
   const cached = await db.cards.get(id)
   // records cached before finishes were stored have no `variants` key: fetch them again
   const fresh = cached && cached.pricesUpdatedAt && Date.now() - cached.pricesUpdatedAt < PRICE_TTL && cached.variants !== undefined
   if (cached && fresh && !opts.refresh) return cached
+  if (cached && opts.quick && cached.variants !== undefined) {
+    void getCard(id).catch(() => {})
+    return cached
+  }
   try {
-    const r = await fetch(`${API}/cards/${encodeURIComponent(id)}`)
+    const t0 = performance.now()
+    const ctl = opts.quick ? new AbortController() : null
+    const timer = ctl ? setTimeout(() => ctl.abort(), 5000) : null
+    const r = await fetch(`${API}/cards/${encodeURIComponent(id)}`, ctl ? { signal: ctl.signal } : undefined).finally(() => { if (timer) clearTimeout(timer) })
     if (!r.ok) throw new Error(`card ${id}: ${r.status}`)
     const d = await r.json()
+    logEvent('net', `card ${id}`, performance.now() - t0)
     const p = parsePrices(d)
     const rec: CardRecord = {
       id: d.id,

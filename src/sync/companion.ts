@@ -8,10 +8,12 @@ import type { ScanEvent } from '../data/types'
 import { supabase, useAuth } from './supabase'
 
 export interface CompanionMessage {
-  type: 'scan' | 'hello'
+  type: 'scan' | 'hello' | 'report' | 'report-images'
   from: string
   at: number
   scan?: ScanEvent
+  /** Diagnostic report from the phone (see utils/perfLog); images travel separately. */
+  report?: any
 }
 
 type Listener = (m: CompanionMessage) => void
@@ -53,11 +55,13 @@ export function onCompanion(l: Listener) {
   return () => { listeners.delete(l) }
 }
 
-export function sendCompanion(partial: Omit<CompanionMessage, 'from' | 'at'>) {
+/** Resolves true when the message went out over the live link (false: local only, or refused). */
+export async function sendCompanion(partial: Omit<CompanionMessage, 'from' | 'at'>): Promise<boolean> {
   ensure()
   const m: CompanionMessage = { ...partial, from: deviceId, at: Date.now() }
   bc?.postMessage(m)
-  if (rt) void rt.send({ type: 'broadcast', event: 'msg', payload: m })
+  if (!rt) return false
+  try { return (await rt.send({ type: 'broadcast', event: 'msg', payload: m })) === 'ok' } catch { return false }
 }
 
 export const companionConnected = () => !!rt

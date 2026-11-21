@@ -20,7 +20,7 @@ export const finishTag = (f: Finish | undefined | null): string | null =>
  * too); the market listings are not: a finish only gets a price when that print
  * exists. So when the card has per-finish prices, those are the finishes.
  */
-export function finishesOf(card: Pick<CardRecord, 'variants' | 'variantPrices'> | null | undefined): Finish[] {
+export function finishesOf(card: Pick<CardRecord, 'variants' | 'variantPrices' | 'rarity' | 'setId'> | null | undefined): Finish[] {
   const priced = card?.variantPrices ? (Object.keys(card.variantPrices) as Finish[]).filter((f) => FINISHES.includes(f)) : []
   if (priced.length) return FINISHES.filter((f) => priced.includes(f))
   const v = card?.variants
@@ -30,6 +30,12 @@ export function finishesOf(card: Pick<CardRecord, 'variants' | 'variantPrices'> 
   if (v.reverse) out.push('reverse')
   if (v.holo) out.push('holo')
   if (v.firstEdition) out.push('first-edition')
+  // Without market data: from Scarlet & Violet on, a "Rare" (and anything rarer) is a
+  // holo print; the flags still claim a standard one exists.
+  const r = (card?.rarity ?? '').toLowerCase()
+  const modern = /^(sv|me)/.test(card?.setId ?? '')
+  const holoRarity = r === 'rare' || /holo|ultra|double|illustration|special|hyper|secret|ace|shiny|amazing|radiant/.test(r)
+  if (modern && holoRarity && !r.includes('reverse') && out.includes('normal') && out.length > 1) return out.filter((f) => f !== 'normal')
   return out.length ? out : ['normal']
 }
 
@@ -38,7 +44,7 @@ export function finishesOf(card: Pick<CardRecord, 'variants' | 'variantPrices'> 
  * (rares, full arts) is a holo; one that only exists as a reverse is a reverse;
  * anything with a standard print defaults to standard, and the user flips it.
  */
-export function defaultFinish(card: Pick<CardRecord, 'variants' | 'variantPrices'> | null | undefined): Finish {
+export function defaultFinish(card: Pick<CardRecord, 'variants' | 'variantPrices' | 'rarity' | 'setId'> | null | undefined): Finish {
   const f = finishesOf(card)
   return f.includes('normal') ? 'normal' : f[0]
 }

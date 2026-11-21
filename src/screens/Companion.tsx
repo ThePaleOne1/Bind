@@ -7,7 +7,7 @@ import { db } from '../data/db'
 import type { CardRecord, ScanEvent } from '../data/types'
 import { getCard, tcgplayerUrl } from '../api/tcgdex'
 import { useSettings } from '../store/settings'
-import { onCompanion, companionConnected } from '../sync/companion'
+import { onCompanion, companionConnected, type CompanionMessage } from '../sync/companion'
 import { useAuth } from '../sync/supabase'
 import { artofpkmUrl } from '../utils/links'
 import { fmtAud } from '../utils/price'
@@ -27,9 +27,42 @@ export default function Companion() {
   const [blocked, setBlocked] = useState<string | null>(null)
   const recent = useLiveQuery(() => db.scans.orderBy('at').reverse().limit(40).toArray(), [])
   const openedRef = useRef<Set<string>>(new Set())
+  // Diagnostic reports from the phone: text and images arrive as two messages; saved
+  // to Downloads as one JSON file a moment after the text lands.
+  const reportsRef = useRef(new Map<string, { text?: any; images?: any; saved?: boolean; timer?: ReturnType<typeof setTimeout> }>())
+  const [reports, setReports] = useState<{ id: string; at: number; minutes?: number; fps?: string }[]>([])
+  const saveReport = (id: string) => {
+    const p = reportsRef.current.get(id)
+    if (!p?.text) return
+    const blob = new Blob([JSON.stringify({ ...p.text, ...(p.images ?? {}) }, null, 1)], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `bind-report-${id}.json`
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000)
+    p.saved = true
+  }
+  const handleReport = (m: CompanionMessage) => {
+    const r = m.report
+    const id: string = r?.id ?? String(m.at)
+    const p = reportsRef.current.get(id) ?? {}
+    if (m.type === 'report') {
+      p.text = r
+      const fps = Array.isArray(r?.samples) && r.samples.length ? `${Math.min(...r.samples.map((s: any) => s.fps))}–${Math.max(...r.samples.map((s: any) => s.fps))} fps` : undefined
+      setReports((l) => [{ id, at: m.at, minutes: r?.sessionMinutes, fps }, ...l.filter((x) => x.id !== id)].slice(0, 10))
+      if (p.timer) clearTimeout(p.timer)
+      p.timer = setTimeout(() => saveReport(id), 2500)
+    } else {
+      p.images = r
+      if (p.saved) saveReport(id)
+    }
+    reportsRef.current.set(id, p)
+    toast('Report received from the phone')
+  }
 
   useEffect(() => {
     return onCompanion(async (m) => {
+      if (m.type === 'report' || m.type === 'report-images') { handleReport(m); return }
       if (m.type !== 'scan' || !m.scan) return
       const ev = m.scan
       setLive((l) => [ev, ...l].slice(0, 60))
@@ -81,6 +114,18 @@ export default function Companion() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {reports.length > 0 && (
+        <div className="card-panel stack" style={{ marginBottom: 20, gap: 8 }}>
+          <b>Phone reports</b>
+          {reports.map((r) => (
+            <div key={r.id} className="row row--between">
+              <span className="setting__sub">{new Date(r.at).toLocaleTimeString()} · {r.minutes != null ? `${r.minutes} min session` : 'report'}{r.fps ? ` · ${r.fps}` : ''} · <span className="mono">bind-report-{r.id}.json</span></span>
+              <button className="btn btn--sm btn--ghost" onClick={() => saveReport(r.id)}>Download</button>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="companion">
         <div className="companion__hero">
