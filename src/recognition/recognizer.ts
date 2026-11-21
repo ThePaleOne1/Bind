@@ -1,6 +1,6 @@
 import { loadIndex, getCard } from '../api/tcgdex'
 import type { CardRecord } from '../data/types'
-import { readCard } from './ocr'
+import { readCard, debugBands } from './ocr'
 import { matchCards, parseOcr, type Candidate, type Parsed } from './matcher'
 import { similarity } from '../utils/text'
 import type { Roi } from './frameAnalyzer'
@@ -12,6 +12,7 @@ export interface Recognition {
   parsed: Parsed
   ocr: { top: string; bottom: string }
   ms: number
+  bands?: { top: string; bottom: string } // preprocessed band images (debug)
 }
 
 /** Grab the guide region of the live video at full camera resolution. */
@@ -24,7 +25,12 @@ export function captureRoi(video: HTMLVideoElement, roi: Roi): HTMLCanvasElement
   return c
 }
 
-export async function recognize(card: HTMLCanvasElement): Promise<Recognition> {
+export async function setNameOf(setId: string): Promise<string> {
+  const idx = await loadIndex()
+  return idx.sets[setId]?.name ?? setId.toUpperCase()
+}
+
+export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean } = {}): Promise<Recognition> {
   const t0 = performance.now()
   const [index, ocr] = await Promise.all([loadIndex(), readCard(card)])
   const parsed = parseOcr(ocr)
@@ -52,5 +58,16 @@ export async function recognize(card: HTMLCanvasElement): Promise<Recognition> {
   if (best && confidence >= 0.5) {
     cardRec = await getCard(best.entry.id).catch(() => null)
   }
-  return { card: cardRec, confidence, alternatives: m.alternatives, parsed, ocr, ms: performance.now() - t0 }
+  const out: Recognition = { card: cardRec, confidence, alternatives: m.alternatives, parsed, ocr, ms: performance.now() - t0 }
+  if (opts.debug) out.bands = debugBands(card)
+  return out
+}
+
+/** Prefer the attempt that read a collector number; otherwise the more confident one. */
+export function betterOf(a: Recognition, b: Recognition): Recognition {
+  if (a.card && !b.card) return a
+  if (b.card && !a.card) return b
+  if (a.parsed.number && !b.parsed.number) return a
+  if (b.parsed.number && !a.parsed.number) return b
+  return b.confidence > a.confidence ? b : a
 }

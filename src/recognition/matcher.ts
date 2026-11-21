@@ -5,6 +5,7 @@ import { similarity, norm } from '../utils/text'
 export interface OcrText {
   top: string      // name band
   bottom: string   // number + illustrator band
+  corner?: string  // tight bottom-left crop, number only (read at higher scale)
 }
 
 export interface Parsed {
@@ -22,24 +23,36 @@ const STOP = new Set([
 
 const PROMO_RE = /\b((?:SWSH|SVP|SM|XY|BW|DP|HGSS|TG|GG|SV|RC|SH|SL|MEP|ME)\s?\d{1,3})\b/i
 
+/** Common OCR confusions in a numeric context. */
+const fixDigits = (s: string) =>
+  s
+    .replace(/(?<![A-Za-z])[|Il](?=\d)/g, '1')      // "l25/198" → "125/198" (but not "Fl 090")
+    .replace(/(?<=\d)[|Il](?![A-Za-z])/g, '1')      // "12l/198" → "121/198"
+    .replace(/(?<=\d)[oO]|[oO](?=\d{2})/g, '0')     // "1o0/167" → "100/167"
+    .replace(/(?<=\d)[sS](?=\d|\/)/g, '5')
+
+function findNumber(text: string): { number: string; total: number | null } | null {
+  const s = fixDigits(text)
+  // Lettered numbering first (TG01/TG30, GG12/GG70, RC5/RC32, SV001/SV122), then plain 025/198.
+  const lettered = s.match(/(?<![A-Za-z])((?:TG|GG|RC|SV|SH|SL|SWSH|SM|XY|BW|DP|HGSS)\s?\d{1,3})\s*[\/|]\s*(?:[A-Z]{0,4}\s?)(\d{1,3})/i)
+  // Plain: a stray digit glued on after the total ("230/2365") is tolerated.
+  const frac = lettered ?? s.match(/(?<!\d)(\d{1,3})\s*[\/|]\s*(\d{1,3})/)
+  if (frac && parseInt(frac[2], 10) >= 10) return { number: normNumber(frac[1]), total: parseInt(frac[2], 10) }
+  const promo = s.match(PROMO_RE)
+  if (promo) return { number: normNumber(promo[1]), total: null }
+  return null
+}
+
 export function parseOcr(t: OcrText): Parsed {
-  const bottom = t.bottom.replace(/[|Il]\s*(?=\d)/g, '1').replace(/[oO](?=\d|\/)/g, '0')
   let number: string | null = null
   let total: number | null = null
-  // Lettered numbering first (TG01/TG30, GG12/GG70, RC5/RC32, SV001/SV122), then plain 025/198.
-  const lettered = bottom.match(/(?<![A-Za-z])((?:TG|GG|RC|SV|SH|SL|SWSH|SM|XY|BW|DP|HGSS)\s?\d{1,3})\s*[\/|]\s*(?:[A-Z]{0,4}\s?)(\d{1,3})/i)
-  const frac = lettered ?? bottom.match(/(?<!\d)(\d{1,3})\s*[\/|]\s*(\d{1,3})(?!\d)/)
-  if (frac) {
-    number = normNumber(frac[1])
-    total = parseInt(frac[2], 10)
-  } else {
-    const promo = bottom.match(PROMO_RE)
-    if (promo) number = normNumber(promo[1])
-  }
+  // The tight corner crop is read at a higher scale, so trust it first.
+  const found = (t.corner && findNumber(t.corner)) || findNumber(t.bottom)
+  if (found) { number = found.number; total = found.total }
 
   // Illustrator credit: "Illus. Name" or "Illustrator: Name"
   let illustratorGuess: string | null = null
-  const ill = t.bottom.match(/illus(?:trator)?\.?\s*:?\s*([A-Za-z][A-Za-z .'\-]{1,40})/i)
+  const ill = `${t.bottom} ${t.corner ?? ''}`.match(/illus(?:trator)?\.?\s*:?\s*([A-Za-z0-9][A-Za-z0-9 .'\-]{1,40})/i)
   if (ill) {
     illustratorGuess = ill[1]
       .replace(/\s(?:TG|GG|RC|SV|SH|SL|SWSH|SM|XY|BW|DP|HGSS)?\d.*$/i, '') // cut at the collector number
@@ -93,10 +106,17 @@ export function matchCards(
     }
   }
 
-  if (scored.length === 0 && parsed.nameGuess.length >= 3) {
-    // Name-only fallback: top name matches, all sets
+  // Name fallback when the number gave nothing usable (misread digits are common under glare).
+  const numberWeak = scored.length === 0 || scored[0].score < 0.5
+  if (numberWeak && parsed.nameGuess.length >= 3) {
+    const seen = new Set(scored.map((c) => c.entry.id))
+    // OCR often appends junk after the name ("charizard ie of by"); try shorter prefixes too.
+    const words = parsed.nameGuess.split(' ')
+    const variants = [parsed.nameGuess, words.slice(0, 2).join(' '), words[0]].filter((v, i, a) => v.length >= 3 && a.indexOf(v) === i)
     for (const e of entries) {
-      const sim = similarity(parsed.nameGuess, e.name)
+      if (seen.has(e.id)) continue
+      let sim = 0
+      for (const v of variants) sim = Math.max(sim, similarity(v, e.name))
       if (sim > 0.55) scored.push({ entry: e, score: sim * 0.6 })
     }
   }

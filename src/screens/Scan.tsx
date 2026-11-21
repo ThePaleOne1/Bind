@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Zap, ZapOff, Search, Plus, Minus, X, ChevronLeft } from 'lucide-react'
+import { Zap, ZapOff, Search, Plus, Minus, X, ChevronLeft, Sun } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../data/db'
 import type { CardRecord, IndexEntry, ScanEvent } from '../data/types'
 import { startCamera, type CameraHandle } from '../recognition/camera'
 import { FrameAnalyzer, type Phase, type Roi } from '../recognition/frameAnalyzer'
-import { captureRoi, recognize, type Recognition } from '../recognition/recognizer'
+import { captureRoi, recognize, betterOf, setNameOf, type Recognition } from '../recognition/recognizer'
 import { warmOcr } from '../recognition/ocr'
 import { loadIndex, getCard } from '../api/tcgdex'
 import { searchIndex } from '../recognition/matcher'
@@ -33,6 +33,8 @@ export default function Scan() {
   const [phase, setPhase] = useState<Phase>('empty')
   const [camError, setCamError] = useState<string | null>(null)
   const [torch, setTorch] = useState(false)
+  const [exposure, setExposure] = useState(0)          // EV steps: 0, -1, -2 (glare)
+  const [hasExposure, setHasExposure] = useState(false)
   const [result, setResult] = useState<Result | null>(null)
   const [miss, setMiss] = useState<Recognition | null>(null)
   const [search, setSearch] = useState(false)
@@ -85,6 +87,7 @@ export default function Scan() {
     startCamera(v).then((h) => {
       if (!alive) { h.stop(); return }
       cam.current = h
+      setHasExposure(!!h.exposureRange)
       layoutFrame()
     }).catch((e) => setCamError(e?.message ?? 'Camera unavailable'))
     v.addEventListener('loadedmetadata', layoutFrame)
@@ -149,8 +152,12 @@ export default function Scan() {
     if (!v || busy.current) return
     busy.current = true
     try {
-      const canvas = captureRoi(v, roi())
-      const rec = await recognize(canvas)
+      let rec = await recognize(captureRoi(v, roi()), { debug })
+      if (!rec.card) {
+        // Glare and holo noise vary frame to frame: one quick second attempt.
+        await new Promise((r) => setTimeout(r, 180))
+        rec = betterOf(rec, await recognize(captureRoi(v, roi()), { debug }))
+      }
       if (rec.card) {
         await commit(rec.card, rec)
       } else {
@@ -164,7 +171,16 @@ export default function Scan() {
     } finally {
       busy.current = false
     }
-  }, [roi, commit])
+  }, [roi, commit, debug])
+
+  const cycleExposure = async () => {
+    if (!cam.current?.exposureRange) return
+    const next = exposure <= -2 ? 0 : exposure - 1
+    const { min, step } = cam.current.exposureRange
+    // -1 "step" = one third of the range below zero, so it works on any device scale
+    const ev = next === 0 ? 0 : Math.max(min, Math.round((next * Math.abs(min) / 3) / step) * step)
+    if (await cam.current.setExposure(ev)) setExposure(next)
+  }
 
   const pickAlternative = async (id: string) => {
     const rec = miss
@@ -180,6 +196,7 @@ export default function Scan() {
     setTorch(on)
   }
 
+  const lastRec = result?.rec ?? miss
   const statusWord = result ? 'Scanned' : phase === 'settling' ? 'Hold' : phase === 'capture' || busy.current ? 'Reading' : phase === 'busy' ? 'Next card' : 'Ready'
   const dotClass = phase === 'settling' ? 'scan__dot--hold' : phase === 'capture' || busy.current ? 'scan__dot--busy' : phase === 'empty' ? 'scan__dot--on' : ''
 
@@ -214,9 +231,16 @@ export default function Scan() {
           <span className={`scan__dot ${dotClass}`} />
           {camError ? 'No camera' : indexReady === false ? 'Offline' : statusWord}
         </div>
-        <button className="iconbtn iconbtn--ghost" style={{ background: 'rgba(7,20,17,.6)', color: torch ? 'var(--accent)' : undefined }} onClick={toggleTorch} aria-label="Torch" disabled={!cam.current?.hasTorch}>
-          {torch ? <Zap /> : <ZapOff />}
-        </button>
+        <div className="row" style={{ gap: 8 }}>
+          {hasExposure && (
+            <button className="iconbtn iconbtn--ghost" style={{ background: 'rgba(7,20,17,.6)', color: exposure ? 'var(--accent)' : undefined, width: 'auto', padding: '0 12px', borderRadius: 22, gap: 4 }} onClick={cycleExposure} aria-label="Glare">
+              <Sun size={20} />{exposure ? <b style={{ fontSize: 'var(--fs-sm)' }}>{exposure}</b> : null}
+            </button>
+          )}
+          <button className="iconbtn iconbtn--ghost" style={{ background: 'rgba(7,20,17,.6)', color: torch ? 'var(--accent)' : undefined }} onClick={toggleTorch} aria-label="Torch" disabled={!cam.current?.hasTorch}>
+            {torch ? <Zap /> : <ZapOff />}
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>
@@ -248,7 +272,13 @@ export default function Scan() {
       {debug && (
         <div className="scan__ocr" style={{ bottom: 110 }}>
           {`phase=${phase} presence=${analyzer.current.presence.toFixed(3)} motion=${analyzer.current.motion.toFixed(3)} sharp=${analyzer.current.sharpness.toFixed(4)}\n`}
-          {result ? `top="${result.rec.ocr?.top}"\nbottom="${result.rec.ocr?.bottom}"\n${result.rec.ms?.toFixed(0)}ms conf=${result.rec.confidence?.toFixed(2)}` : ''}
+          {lastRec ? `top="${lastRec.ocr?.top}"\nbottom="${lastRec.ocr?.bottom}"\n${lastRec.ms?.toFixed(0)}ms conf=${lastRec.confidence?.toFixed(2)} num=${lastRec.parsed?.number ?? '-'}/${lastRec.parsed?.total ?? '-'} name=${lastRec.parsed?.nameGuess ?? ''} illus=${lastRec.parsed?.illustratorGuess ?? '-'}` : ''}
+          {lastRec?.bands && (
+            <div style={{ marginTop: 6, display: 'grid', gap: 4 }}>
+              <img src={lastRec.bands.top} style={{ width: '100%', border: '1px solid var(--line-strong)' }} alt="" />
+              <img src={lastRec.bands.bottom} style={{ width: '100%', border: '1px solid var(--line-strong)' }} alt="" />
+            </div>
+          )}
         </div>
       )}
 
@@ -269,16 +299,15 @@ export default function Scan() {
               <span className="title title--grey title--sm">Not sure</span>
               <button className="iconbtn iconbtn--ghost" onClick={() => setMiss(null)}><X /></button>
             </div>
-            {miss.parsed.number && <div className="muted">Read <b className="mono" style={{ color: 'var(--text)' }}>{miss.parsed.number}{miss.parsed.total ? `/${miss.parsed.total}` : ''}</b>{miss.parsed.nameGuess ? <> · <b style={{ color: 'var(--text)' }}>{miss.parsed.nameGuess}</b></> : null}</div>}
+            <div className="muted">
+              Read{' '}
+              <b className="mono" style={{ color: 'var(--text)' }}>{miss.parsed.number ? `${miss.parsed.number}${miss.parsed.total ? `/${miss.parsed.total}` : ''}` : 'no number'}</b>
+              {miss.parsed.nameGuess ? <> · <b style={{ color: 'var(--text)' }}>{miss.parsed.nameGuess}</b></> : null}
+              {miss.parsed.illustratorGuess ? <> · <b style={{ color: 'var(--text)' }}>{miss.parsed.illustratorGuess}</b></> : null}
+            </div>
             {miss.alternatives.length > 0 ? (
               <div className="grid">
-                {miss.alternatives.slice(0, 8).map((a) => (
-                  <button key={a.entry.id} className="tile" onClick={() => pickAlternative(a.entry.id)}>
-                    <CardImage src={a.entry.img} alt={a.entry.name} />
-                    <div className="list__title" style={{ fontSize: 'var(--fs-sm)', marginTop: 6 }}>{a.entry.name}</div>
-                    <div className="list__sub">{a.entry.set.toUpperCase()} · {a.entry.n}/{a.entry.total}</div>
-                  </button>
-                ))}
+                {miss.alternatives.slice(0, 8).map((a) => <AltTile key={a.entry.id} entry={a.entry} onPick={() => pickAlternative(a.entry.id)} />)}
               </div>
             ) : (
               <div className="empty">No match</div>
@@ -290,6 +319,25 @@ export default function Scan() {
 
       <SearchSheet open={search} onClose={() => setSearch(false)} onPick={async (id) => { setSearch(false); await pickAlternative(id) }} />
     </div>
+  )
+}
+
+/** Candidate tile: shows set name and illustrator so look-alike cards can be told apart. */
+function AltTile({ entry, onPick }: { entry: IndexEntry; onPick: () => void }) {
+  const [sub, setSub] = useState<string>(`${entry.n}/${entry.total}`)
+  useEffect(() => {
+    let alive = true
+    Promise.all([setNameOf(entry.set), getCard(entry.id).catch(() => null)]).then(([set, card]) => {
+      if (alive) setSub(`${set} · ${entry.n}/${entry.total}${card?.illustrator ? ` · ${card.illustrator}` : ''}`)
+    })
+    return () => { alive = false }
+  }, [entry.id])
+  return (
+    <button className="tile" onClick={onPick}>
+      <CardImage src={entry.img} alt={entry.name} />
+      <div className="list__title" style={{ fontSize: 'var(--fs-sm)', marginTop: 6 }}>{entry.name}</div>
+      <div className="list__sub" style={{ whiteSpace: 'normal', lineHeight: 1.25 }}>{sub}</div>
+    </button>
   )
 }
 
