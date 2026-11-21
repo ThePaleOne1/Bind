@@ -9,6 +9,7 @@ import { startCamera, type CameraHandle } from '../recognition/camera'
 import { FrameAnalyzer, Pacer, type Phase, type Roi } from '../recognition/frameAnalyzer'
 import { captureRoi, grabRegion, cropCanvas, recognize, isBlank, setNameOf, MIN_CONTRAST, type Recognition } from '../recognition/recognizer'
 import { findCard } from '../recognition/bounds'
+import type { FoilRead } from '../recognition/foil'
 import { sharpnessOfVideo, BLUR_THRESHOLD } from '../recognition/focus'
 import { warmOcr, ocrJobs, recycleOcrIfNeeded } from '../recognition/ocr'
 import { loadIndex, getCard } from '../api/tcgdex'
@@ -89,6 +90,12 @@ export default function Scan() {
   const settleStart = useRef(0)
   const recentSets = useRef<string[]>([])                  // sets of the last few commits: cards come in batches
   const lastFrame = useRef<HTMLCanvasElement | null>(null) // the card crop last read (for the report)
+  // The last dozen card crops with what was read and what the user answered: the raw
+  // material for calibrating the finish detector across lighting setups.
+  type Crop = { i: number; at: number; jpeg: string; rec: Recognition; card?: string; outcome: string; foil?: FoilRead; sharp?: number }
+  const crops = useRef<Crop[]>([])
+  const cropSeq = useRef(0)
+  const finishByRec = useRef(new WeakMap<Recognition, { finish: Finish; answered: boolean; options: Finish[] }>())
   const [same, setSame] = useState(false)                  // the last read found the card already on the tag
   const scanPeak = useRef(0)                               // recent best preview sharpness of a confident scan (decays)
   const lastRefocus = useRef(0)
@@ -269,7 +276,9 @@ export default function Scan() {
     const plain = options.filter((f) => f !== 'reverse')
     const standardOrReverse = options.includes('reverse') && plain.length === 1 && plain[0] === 'normal'
     if (standardOrReverse && foil?.confident) return { finish: foil.guess, ask: false }
-    const guess: Finish = standardOrReverse && foil ? foil.guess : options.includes('reverse') && plain.length ? plain[0] : defaultFinish(card)
+    // Until the foil read is calibrated its guess is noise: a common is more often a standard
+    // print, a rare is more often the holo, so "likely" says that.
+    const guess: Finish = standardOrReverse ? 'normal' : options.includes('reverse') && plain.length ? plain[0] : defaultFinish(card)
     return askFinish ? { finish: guess, ask: true, options } : { finish: guess, ask: false }
   }
 
@@ -280,6 +289,7 @@ export default function Scan() {
       if (d.ask) { pausedRef.current = true; setAsk({ card, rec, options: d.options, guess: d.finish }); return }
       finish = d.finish
     }
+    finishByRec.current.set(rec, { finish, answered: !!finishIn, options: finishesOf(card) })
     logEvent('finish', `${finishesOf(card).join('/')} → ${finish}${finishIn ? ' (answered)' : ''} foil=${rec.foil?.ratio.toFixed(2) ?? '-'} rarity=${card.rarity ?? '-'} prices=${Object.keys(card.variantPrices ?? {}).join(',') || '-'} flags=${JSON.stringify(card.variants)}`)
     const ev = await applyScan(card, mode, finish)
     recentSets.current = [card.setId, ...recentSets.current.filter((x) => x !== card.setId)].slice(0, 5)
@@ -469,6 +479,15 @@ export default function Scan() {
       const ms = performance.now() - t0
       lastCapture.current = { ms, ocrMs: rec?.ocrMs ?? 0, tries, still }
       logScan({ ms, ocrMs: rec?.ocrMs ?? 0, tries, outcome: outcomeWord + (still ? '' : ' (preview frame)'), card: rec?.card ? `${rec.card.name} ${rec.card.localId}/${rec.card.setTotal}` : undefined, conf: rec?.confidence, num: rec?.parsed.number ? `${rec.parsed.number}/${rec.parsed.total ?? '?'}` : undefined, name: rec?.parsed.nameGuess || undefined, foil: rec?.foil?.ratio, sharp: rec?.sharpness })
+      const lf = lastFrame.current
+      if (rec && !rec.empty && lf && lf.width) {
+        try {
+          const sc = Math.min(1, 640 / lf.height)
+          const c = document.createElement('canvas'); c.width = Math.round(lf.width * sc); c.height = Math.round(lf.height * sc)
+          c.getContext('2d')!.drawImage(lf, 0, 0, c.width, c.height)
+          crops.current = [...crops.current.slice(-11), { i: cropSeq.current++, at: Date.now(), jpeg: c.toDataURL('image/jpeg', 0.55), rec, card: rec.card ? `${rec.card.name} ${rec.card.localId}/${rec.card.setTotal} (${rec.card.id})` : undefined, outcome: outcomeWord, foil: rec.foil, sharp: rec.sharpness }]
+        } catch { /* a crop is a nicety */ }
+      }
       if (softMiss) analyzer.current.retry()
       else analyzer.current.release()
       busy.current = false
@@ -614,7 +633,11 @@ export default function Scan() {
         alternatives: (rec.alternatives ?? []).slice(0, 6).map((a) => `${a.entry.name} ${a.entry.n}/${a.entry.total} (${a.entry.set}) ${a.score.toFixed(2)}`),
       } : null,
     }
-    return { id, text, images: { frame, cardCrop, bands } }
+    const cropMeta = crops.current.map((c) => {
+      const f = finishByRec.current.get(c.rec)
+      return { i: c.i, at: new Date(c.at).toISOString(), card: c.card, outcome: c.outcome, foil: c.foil, sharp: c.sharp, finish: f?.finish, answered: f?.answered, options: f?.options }
+    })
+    return { id, text: { ...text, crops: cropMeta }, images: { frame, cardCrop, bands }, cropImages: crops.current.map((c) => ({ i: c.i, jpeg: c.jpeg })) }
   }
   const sendReport = async () => {
     try {
@@ -622,13 +645,15 @@ export default function Scan() {
       const r = await makeReport()
       const ok1 = await sendCompanion({ type: 'report', report: r.text })
       const ok2 = await sendCompanion({ type: 'report-images', report: { id: r.id, ...r.images } })
-      toast(ok1 ? (ok2 ? 'Report sent to Desk' : 'Report sent (images too big for the link)') : 'Could not reach the Desk')
+      let sent = 0
+      for (const c of r.cropImages) { if (await sendCompanion({ type: 'report-crop', report: { id: r.id, i: c.i, jpeg: c.jpeg } })) sent++ }
+      toast(ok1 ? (ok2 ? `Report sent to Desk (${sent} card crops)` : 'Report sent (images too big for the link)') : 'Could not reach the Desk')
     } catch (e: any) { toast(e?.message ?? 'Report failed') }
   }
   const shareReport = async () => {
     try {
       const r = await makeReport()
-      const file = new File([JSON.stringify({ ...r.text, ...r.images })], `bind-report-${r.id}.json`, { type: 'application/json' })
+      const file = new File([JSON.stringify({ ...r.text, ...r.images, cropImages: r.cropImages })], `bind-report-${r.id}.json`, { type: 'application/json' })
       const n = navigator as any
       if (n.share && (!n.canShare || n.canShare({ files: [file] }))) { try { await n.share({ files: [file], title: 'Bind report' }) } catch { /* cancelled */ } }
       else { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click() }

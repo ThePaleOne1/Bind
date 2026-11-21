@@ -29,12 +29,13 @@ export default function Companion() {
   const openedRef = useRef<Set<string>>(new Set())
   // Diagnostic reports from the phone: text and images arrive as two messages; saved
   // to Downloads as one JSON file a moment after the text lands.
-  const reportsRef = useRef(new Map<string, { text?: any; images?: any; saved?: boolean; timer?: ReturnType<typeof setTimeout> }>())
+  const reportsRef = useRef(new Map<string, { text?: any; images?: any; crops?: Record<number, any>; saved?: boolean; timer?: ReturnType<typeof setTimeout> }>())
   const [reports, setReports] = useState<{ id: string; at: number; minutes?: number; fps?: string }[]>([])
   const saveReport = (id: string) => {
     const p = reportsRef.current.get(id)
     if (!p?.text) return
-    const blob = new Blob([JSON.stringify({ ...p.text, ...(p.images ?? {}) }, null, 1)], { type: 'application/json' })
+    const cropImages = p.crops ? Object.keys(p.crops).sort((a, b) => +a - +b).map((k) => p.crops![+k]) : []
+    const blob = new Blob([JSON.stringify({ ...p.text, ...(p.images ?? {}), cropImages }, null, 1)], { type: 'application/json' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
     a.download = `bind-report-${id}.json`
@@ -52,12 +53,17 @@ export default function Companion() {
       setReports((l) => [{ id, at: m.at, minutes: r?.sessionMinutes, fps }, ...l.filter((x) => x.id !== id)].slice(0, 10))
       if (p.timer) clearTimeout(p.timer)
       p.timer = setTimeout(() => saveReport(id), 2500)
+    } else if (m.type === 'report-crop') {
+      p.crops = p.crops ?? {}
+      p.crops[r.i] = { i: r.i, jpeg: r.jpeg }
+      if (p.timer) clearTimeout(p.timer)
+      p.timer = setTimeout(() => saveReport(id), 2500)   // save once the crops stop arriving
     } else {
       p.images = r
       if (p.saved) saveReport(id)
     }
     reportsRef.current.set(id, p)
-    toast('Report received from the phone')
+    if (m.type !== 'report-crop') toast('Report received from the phone')
   }
 
   useEffect(() => {

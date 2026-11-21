@@ -7,6 +7,7 @@ const API_JA = 'https://api.tcgdex.net/v2/ja'
 const INDEX_TTL = 7 * 86_400_000
 const PRICE_TTL = 86_400_000
 const INDEX_KEY = 'cardIndex:v3' // bump when the index shape or filters change (v3: Japanese catalogue)
+const CARD_SCHEMA = 2            // bump when a cached card record's derived fields change meaning
 
 /** Japanese prints live in the catalogue under a "ja:" prefix; the API id is the rest. */
 export const isJa = (id: string) => id.startsWith('ja:')
@@ -145,9 +146,11 @@ function parsePrices(detail: any) {
 export async function getCard(id: string, opts: { refresh?: boolean; quick?: boolean } = {}): Promise<CardRecord> {
   const cached = await db.cards.get(id)
   // records cached before finishes were stored have no `variants` key: fetch them again
-  const fresh = cached && cached.pricesUpdatedAt && Date.now() - cached.pricesUpdatedAt < PRICE_TTL && cached.variants !== undefined
+  // Records cached by an earlier build keep stale derived fields (a holo rare priced "normal"
+  // by Cardmarket): a schema bump refetches them once.
+  const fresh = cached && cached.pricesUpdatedAt && Date.now() - cached.pricesUpdatedAt < PRICE_TTL && cached.variants !== undefined && cached.schema === CARD_SCHEMA
   if (cached && fresh && !opts.refresh) return cached
-  if (cached && opts.quick && cached.variants !== undefined) {
+  if (cached && opts.quick && cached.variants !== undefined && (cached.schema === CARD_SCHEMA || !navigator.onLine)) {
     void getCard(id).catch(() => {})
     return cached
   }
@@ -181,6 +184,7 @@ export async function getCard(id: string, opts: { refresh?: boolean; quick?: boo
       cardmarketId: p.cardmarketId,
       pricesUpdatedAt: Date.now(),
       fetchedAt: Date.now(),
+      schema: CARD_SCHEMA,
     }
     await db.cards.put(rec)
     return rec

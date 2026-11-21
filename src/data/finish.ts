@@ -22,7 +22,9 @@ export const finishTag = (f: Finish | undefined | null): string | null =>
  */
 export function finishesOf(card: Pick<CardRecord, 'variants' | 'variantPrices' | 'rarity' | 'setId'> | null | undefined): Finish[] {
   const priced = card?.variantPrices ? (Object.keys(card.variantPrices) as Finish[]).filter((f) => FINISHES.includes(f)) : []
-  if (priced.length) return FINISHES.filter((f) => priced.includes(f))
+  // Listings can miss the reverse of a card that has one (Koraidon 116/191 was offered holo
+  // only); the database's reverse flag fills that gap. "normal" is never added back this way.
+  if (priced.length) return FINISHES.filter((f) => priced.includes(f) || (f === 'reverse' && !!card?.variants?.reverse))
   const v = card?.variants
   if (!v) return ['normal']
   const out: Finish[] = []

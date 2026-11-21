@@ -47,6 +47,8 @@ export interface CardRecord {
   cardmarketId?: number | null
   pricesUpdatedAt?: number
   fetchedAt: number
+  /** Version of the derived fields (variant prices, finishes); older records are refetched. */
+  schema?: number
 }
 
 export interface OwnedCard {

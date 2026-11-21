@@ -8,7 +8,7 @@ import type { ScanEvent } from '../data/types'
 import { supabase, useAuth } from './supabase'
 
 export interface CompanionMessage {
-  type: 'scan' | 'hello' | 'report' | 'report-images'
+  type: 'scan' | 'hello' | 'report' | 'report-images' | 'report-crop'
   from: string
   at: number
   scan?: ScanEvent

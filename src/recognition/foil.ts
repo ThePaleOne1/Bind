@@ -9,7 +9,15 @@
  *
  *   ratio ≤ FOIL_STANDARD_MAX → standard    ratio ≥ FOIL_REVERSE_MIN → reverse    between → unsure
  */
-export interface FoilRead { ratio: number; body: number; border: number; guess: 'normal' | 'reverse'; confident: boolean }
+export interface FoilRead {
+  ratio: number
+  body: number        // margins beside the attack text (foil on a reverse; the card's own print texture on some)
+  border: number      // inside the silver frame: flat on every print, the noise baseline
+  art: number         // margins beside the artwork: foil on a reverse, flat ink on standard and holo prints
+  edge: number        // the outer 1.8%: what the old baseline measured (crop edge noise)
+  guess: 'normal' | 'reverse'
+  confident: boolean
+}
 
 // Calibrated on the jig (Samsung main lens, 45° to the ceiling light), 2026-11-21:
 //   standard prints read 0.18 – 0.51 (five cards), reverse holos 0.62 – 0.66 (five cards).
@@ -27,9 +35,21 @@ const BODY: [number, number, number, number][] = [
   [0.025, 0.54, 0.05, 0.34],   // left body margin, below the artwork
   [0.925, 0.54, 0.05, 0.34],   // right body margin
 ]
+// Just inside the silver frame (which spans ~0–3.5%): flat on every print, and away from
+// the crop edge, which the old 0–1.8% baseline kept catching.
 const BORDER: [number, number, number, number][] = [
-  [0.0, 0.3, 0.018, 0.4],      // left outer border
-  [0.982, 0.3, 0.018, 0.4],    // right outer border
+  [0.012, 0.3, 0.016, 0.4],
+  [0.972, 0.3, 0.016, 0.4],
+]
+// Body margins beside the artwork (between the frame and the art box): a reverse holo's
+// foil runs through here; standard and holo-rare prints are flat ink here.
+const ART: [number, number, number, number][] = [
+  [0.04, 0.15, 0.03, 0.27],
+  [0.93, 0.15, 0.03, 0.27],
+]
+const EDGE: [number, number, number, number][] = [
+  [0.0, 0.3, 0.018, 0.4],
+  [0.982, 0.3, 0.018, 0.4],
 ]
 
 const scratch = document.createElement('canvas')
@@ -64,8 +84,10 @@ function texture(card: HTMLCanvasElement, fx: number, fy: number, fw: number, fh
 export function readFoil(card: HTMLCanvasElement): FoilRead {
   const body = BODY.reduce((a, r) => a + texture(card, ...r), 0) / BODY.length
   const border = BORDER.reduce((a, r) => a + texture(card, ...r), 0) / BORDER.length
-  const ratio = body / Math.max(1e-4, border)
+  const art = ART.reduce((a, r) => a + texture(card, ...r), 0) / ART.length
+  const edge = EDGE.reduce((a, r) => a + texture(card, ...r), 0) / EDGE.length
+  const ratio = art / Math.max(1e-4, border)
   const guess = Number.isFinite(FOIL_REVERSE_MIN) && ratio >= (FOIL_STANDARD_MAX + FOIL_REVERSE_MIN) / 2 ? 'reverse' : 'normal'
   const confident = ratio <= FOIL_STANDARD_MAX || ratio >= FOIL_REVERSE_MIN
-  return { ratio, body, border, guess, confident }
+  return { ratio, body, border, art, edge, guess, confident }
 }
