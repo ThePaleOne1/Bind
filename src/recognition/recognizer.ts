@@ -1,7 +1,7 @@
 import { loadIndex, getCard } from '../api/tcgdex'
 import type { CardRecord } from '../data/types'
 import { readPrimary, readBottom, debugBands } from './ocr'
-import { matchCards, parseOcr, type Candidate, type Parsed } from './matcher'
+import { matchCards, parseOcr, digitRuns, numberSimilarity, illustratorEvidence, type Candidate, type Parsed } from './matcher'
 import { similarity } from '../utils/text'
 import type { Roi } from './frameAnalyzer'
 import { sharpnessOf } from './focus'
@@ -77,29 +77,46 @@ export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean
   let best = m.best
   let confidence = m.confidence
 
-  // Disambiguate same-number / same-name cards using the illustrator credit
+  // Several cards within reach of each other (same name, number unreadable): rank them
+  // by the noisy digit runs and the illustrator credit, and commit when one stands out.
+  let alternatives = m.alternatives
   const close = m.alternatives.filter((a) => best && a.score >= best.score - 0.12).slice(0, 12)
-  if (best && close.length > 1 && parsed.illustratorGuess) {
-    const details = await Promise.all(close.map((c) => getCard(c.entry.id).catch(() => null)))
-    let top: { c: Candidate; s: number } | null = null
-    details.forEach((d, i) => {
-      if (!d?.illustrator) return
-      const s = similarity(parsed.illustratorGuess!, d.illustrator)
-      if (!top || s > top.s) top = { c: close[i], s }
-    })
-    if (top && (top as any).s > 0.6) {
-      best = (top as any).c
-      confidence = Math.max(confidence, 0.8)
-    }
+  if (best && close.length > 1 && confidence < 0.8) {
+    const { ranked, pick } = await tieBreak(ocr, close)
+    alternatives = [...ranked.map((r) => r.c), ...m.alternatives.filter((a) => !close.includes(a))]
+    if (pick) { best = pick.c; confidence = Math.max(confidence, pick.s >= 0.7 ? 0.9 : 0.8) }
   }
 
   let cardRec: CardRecord | null = null
   if (best && confidence >= 0.5) {
     cardRec = await getCard(best.entry.id).catch(() => null)
   }
-  const out: Recognition = { card: cardRec, confidence, alternatives: m.alternatives, parsed, ocr, ms: performance.now() - t0, sharpness: sharpnessOf(card) }
+  const out: Recognition = { card: cardRec, confidence, alternatives, parsed, ocr, ms: performance.now() - t0, sharpness: sharpnessOf(card) }
   if (opts.debug) out.bands = debugBands(card)
   return out
+}
+
+export interface Ranked { c: Candidate; num: number; ill: number; s: number }
+
+/**
+ * Rank look-alike candidates by (a) how well each card's number fits the digit runs
+ * the OCR produced, with cheap costs for the usual digit confusions, and (b) whether
+ * the card's illustrator shows up in the bottom text. Picks the top one only when it
+ * clearly beats the runner-up.
+ */
+export async function tieBreak(ocr: { corner: string; bottom: string }, close: Candidate[]): Promise<{ ranked: Ranked[]; pick: Ranked | null }> {
+  const runs = digitRuns(`${ocr.corner} ${ocr.bottom}`)
+  const details = await Promise.all(close.map((c) => getCard(c.entry.id).catch(() => null)))
+  const text = `${ocr.bottom} ${ocr.corner}`
+  const ranked: Ranked[] = close.map((c, i) => {
+    const num = numberSimilarity(runs, c.entry.n, c.entry.total)
+    const illRaw = illustratorEvidence(text, details[i]?.illustrator)
+    const ill = illRaw >= 0.5 ? illRaw : 0
+    return { c, num, ill, s: 0.65 * num + 0.35 * ill }
+  }).sort((a, b) => b.s - a.s)
+  const [t, u] = ranked
+  const pick = t && t.s >= 0.45 && (!u || t.s - u.s >= 0.1) ? t : null
+  return { ranked, pick }
 }
 
 /** True when the OCR found essentially nothing: an empty jig, a hand, the table. */

@@ -217,6 +217,83 @@ export function matchCards(
   return { best, alternatives: scored.slice(0, 12), parsed, confidence }
 }
 
+/* ---------- Fuzzy number comparison ----------
+ * Italic digits on foil come back noisy: "032/191" as "10327757", "1032719110" or
+ * "F357 79110". The slash turns into 7 or 1, 1 and 7 swap, 9 and 5 swap, and the
+ * rarity dot after the number becomes a 0. Once the name has narrowed the field,
+ * each candidate's number is scored against the digit runs with cheap costs for
+ * exactly those confusions.
+ */
+const CONFUSABLE: Record<string, string> = { '1': '7/|', '7': '1/', '9': '5', '5': '9', '0': '8', '8': '03', '3': '8', '6': '8', '2': '7' }
+const confusable = (a: string, b: string) => a === b ? 0 : (CONFUSABLE[a]?.includes(b) || CONFUSABLE[b]?.includes(a)) ? 0.3 : 1
+
+/** All digit runs in a piece of OCR (spaces inside a run removed), longest first. */
+export function digitRuns(text: string): string[] {
+  const runs = new Set<string>()
+  for (const m of text.matchAll(/\d[\d /|]*\d/g)) {
+    const r = m[0].replace(/[^\d]/g, '')
+    if (r.length >= 4) runs.add(r)
+    for (const part of m[0].split(/[ /|]+/)) if (part.length >= 4) runs.add(part)
+  }
+  return [...runs].sort((a, b) => b.length - a.length)
+}
+
+/**
+ * Cost of finding `canon` (e.g. "032191") somewhere inside `run`: substitutions by
+ * confusability, an extra character in the run (slash, dot) costs 0.4, a missing one
+ * costs 1. Leading and trailing junk in the run is free.
+ */
+function containCost(run: string, canon: string): number {
+  const n = run.length, m = canon.length
+  let prev = new Float32Array(m + 1), cur = new Float32Array(m + 1)
+  for (let j = 1; j <= m; j++) prev[j] = j
+  let best = prev[m]
+  for (let i = 1; i <= n; i++) {
+    cur[0] = 0 // free prefix
+    for (let j = 1; j <= m; j++) {
+      cur[j] = Math.min(prev[j - 1] + confusable(run[i - 1], canon[j - 1]), prev[j] + 0.4, cur[j - 1] + 1)
+    }
+    best = Math.min(best, cur[m]) // free suffix: the match may end here
+    ;[prev, cur] = [cur, prev]
+  }
+  return best
+}
+
+/** 0–1 similarity between a card's number and the digit runs read from the card. */
+export function numberSimilarity(runs: string[], n: string, total: number): number {
+  if (!/^\d+$/.test(n) || !total) return 0
+  const canon = n.padStart(3, '0') + String(total).padStart(3, '0')
+  let best = 0
+  for (const r of runs) {
+    if (r.length < 4) continue
+    best = Math.max(best, 1 - containCost(r, canon) / canon.length)
+  }
+  return best
+}
+
+/**
+ * How strongly the OCR text supports a given illustrator. The credit line comes back
+ * as "ilu YKarivg", "illysYKariyol" or "3Karival" for "Illus. Kariya", so instead of
+ * parsing the prefix, look for the illustrator's main name token inside each OCR
+ * word: the share of its letter bigrams that the word contains (0–1).
+ */
+export function illustratorEvidence(text: string, illustrator: string | null | undefined): number {
+  if (!illustrator) return 0
+  const tokens = illustrator.toLowerCase().replace(/[^a-z ]/g, ' ').split(' ').filter((t) => t.length >= 4)
+  if (!tokens.length) return 0
+  const name = tokens.reduce((a, b) => (b.length > a.length ? b : a))
+  const grams: string[] = []
+  for (let i = 0; i < name.length - 1; i++) grams.push(name.slice(i, i + 2))
+  const words = text.toLowerCase().replace(/[^a-z]+/g, ' ').split(' ').filter((w) => w.length >= 4)
+  let best = 0
+  for (const w of words) {
+    let hit = 0
+    for (const g of grams) if (w.includes(g)) hit++
+    best = Math.max(best, hit / grams.length)
+  }
+  return best
+}
+
 /** Search the local index by free text ("pikachu 25/102", "charizard 006") */
 export function searchIndex(q: string, index: { entries: IndexEntry[]; sets: Record<string, SetInfo> }, limit = 40) {
   const text = q.trim()
