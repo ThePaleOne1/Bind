@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Zap, ZapOff, Search, Plus, Minus, X, ChevronLeft, Sun } from 'lucide-react'
+import { Zap, ZapOff, Search, Plus, Minus, X, ChevronLeft, Sun, SlidersHorizontal, SwitchCamera, ZoomIn, Focus } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../data/db'
 import type { CardRecord, IndexEntry, ScanEvent } from '../data/types'
 import { startCamera, type CameraHandle } from '../recognition/camera'
 import { FrameAnalyzer, type Phase, type Roi } from '../recognition/frameAnalyzer'
-import { captureRoi, recognize, betterOf, setNameOf, type Recognition } from '../recognition/recognizer'
+import { captureRoi, recognize, betterOf, isBlank, setNameOf, type Recognition } from '../recognition/recognizer'
+import { sharpnessOf, sharpnessOfVideo, BLUR_THRESHOLD } from '../recognition/focus'
 import { warmOcr } from '../recognition/ocr'
 import { loadIndex, getCard } from '../api/tcgdex'
 import { searchIndex } from '../recognition/matcher'
@@ -30,11 +31,23 @@ export default function Scan() {
   const analyzer = useRef(new FrameAnalyzer())
   const particles = useRef<Particles | null>(null)
   const busy = useRef(false)
-  const [phase, setPhase] = useState<Phase>('empty')
+  const [phase, setPhase] = useState<Phase>('settling')
   const [camError, setCamError] = useState<string | null>(null)
   const [torch, setTorch] = useState(false)
   const [exposure, setExposure] = useState(0)          // EV steps: 0, -1, -2 (glare)
-  const [hasExposure, setHasExposure] = useState(false)
+  const [camInfo, setCamInfo] = useState<{ exposure: boolean; zoom: boolean; focus: boolean; manual: { min: number; max: number; step: number } | null; devices: number; label: string } | null>(null)
+  const [tune, setTune] = useState(false)
+  const [zoom, setZoom] = useState(1)
+  const [focusDist, setFocusDist] = useState<number | null>(null)
+  const [blurry, setBlurry] = useState(false)
+  const [note, setNote] = useState<string | null>(null)     // brief hint under the frame: No card / Same card
+  const [, setTick] = useState(0)                           // re-render for the debug overlay
+  const liveSharp = useRef(0)
+  const lastRefocus = useRef(0)
+  const lastSharpAt = useRef(0)
+  const lastCommit = useRef<{ id: string; at: number } | null>(null)
+  const resultTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const noteTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [result, setResult] = useState<Result | null>(null)
   const [miss, setMiss] = useState<Recognition | null>(null)
   const [search, setSearch] = useState(false)
@@ -42,6 +55,7 @@ export default function Scan() {
   const [debug, setDebug] = useState(false)
   const [indexReady, setIndexReady] = useState<boolean | null>(null)
   const mode = useSettings((s) => s.scanMode)
+  const cameraId = useSettings((s) => s.cameraId)
   const setSettings = useSettings((s) => s.set)
   const { sound, haptics, highValueAud } = useSettings()
   const todayCount = useLiveQuery(async () => {
@@ -84,12 +98,22 @@ export default function Scan() {
     const v = videoRef.current!
     warmOcr()
     loadIndex().then(() => alive && setIndexReady(true)).catch(() => alive && setIndexReady(false))
-    startCamera(v).then((h) => {
+    setCamError(null)
+    startCamera(v, { deviceId: cameraId || null }).then((h) => {
       if (!alive) { h.stop(); return }
       cam.current = h
-      setHasExposure(!!h.exposureRange)
+      analyzer.current.reset()
+      setCamInfo({
+        exposure: !!h.exposureRange,
+        zoom: !!h.zoomRange,
+        focus: h.focusModes.length > 0,
+        manual: h.focusRange,
+        devices: h.devices.length,
+        label: h.devices.find((d) => d.id === h.deviceId)?.label ?? '',
+      })
+      setZoom(1); setFocusDist(null); setExposure(0); setTorch(false)
       layoutFrame()
-    }).catch((e) => setCamError(e?.message ?? 'Camera unavailable'))
+    }).catch((e) => { if (alive) setCamError(e?.message ?? 'Camera unavailable') })
     v.addEventListener('loadedmetadata', layoutFrame)
     window.addEventListener('resize', layoutFrame)
     if (fxRef.current) particles.current = new Particles(fxRef.current)
@@ -100,7 +124,7 @@ export default function Scan() {
       window.removeEventListener('resize', layoutFrame)
       particles.current?.destroy()
     }
-  }, [layoutFrame])
+  }, [layoutFrame, cameraId])
 
   // Hands-free analysis loop (~12 fps)
   useEffect(() => {
@@ -111,14 +135,25 @@ export default function Scan() {
       if (t - last < 80) return
       last = t
       const v = videoRef.current
-      if (!v || !cam.current || busy.current || result) return
-      const fire = analyzer.current.step(v, roi(), t)
-      setPhase(analyzer.current.phase)
-      if (fire) void capture()
+      if (!v || !cam.current || busy.current) return
+      const a = analyzer.current
+      const fire = a.step(v, roi(), t)
+      setPhase(a.phase)
+      // While the picture is settling, check focus and kick the autofocus if it is soft.
+      if (a.phase === 'settling' && t - lastSharpAt.current > 400) {
+        lastSharpAt.current = t
+        const s = sharpnessOfVideo(v, roi())
+        liveSharp.current = s
+        const soft = s < BLUR_THRESHOLD
+        setBlurry(soft)
+        if (soft && t - lastRefocus.current > 1500) { lastRefocus.current = t; void cam.current.refocus() }
+      } else if (a.phase !== 'settling') setBlurry(false)
+      if (debug && t - lastSharpAt.current > 400) { lastSharpAt.current = t; liveSharp.current = sharpnessOfVideo(v, roi()); setTick((n) => n + 1) }
+      if (fire) void captureRef.current()
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [roi, result])
+  }, [roi, debug])
 
   const feedback = (kind: 'ok' | 'alert' | 'remove' | 'fail', pattern: number | number[]) => {
     if (sound) chime(kind)
@@ -142,33 +177,56 @@ export default function Scan() {
     else if (ev.highValue) feedback('alert', [40, 60, 40, 60, 120])
     else feedback('ok', ev.artistStatus === 'collecting' ? [25, 40, 25] : 25)
     sendCompanion({ type: 'scan', scan: ev })
+    lastCommit.current = { id: card.id, at: Date.now() }
     setResult({ ev, card, rec })
-    // Result stays visible until the card leaves the frame (or 2.5s on desktop with no movement)
-    setTimeout(() => { setResult(null); analyzer.current.release() }, 1800)
+    if (resultTimer.current) clearTimeout(resultTimer.current)
+    resultTimer.current = setTimeout(() => setResult(null), 1800)
   }, [mode, frameBox, sound, haptics])
+
+  const showNote = (text: string) => {
+    setNote(text)
+    if (noteTimer.current) clearTimeout(noteTimer.current)
+    noteTimer.current = setTimeout(() => setNote(null), 1400)
+  }
 
   const capture = useCallback(async () => {
     const v = videoRef.current
     if (!v || busy.current) return
     busy.current = true
     try {
-      let rec = await recognize(captureRoi(v, roi()), { debug })
+      let frame = captureRoi(v, roi())
+      let sharp = sharpnessOf(frame)
+      if (sharp < BLUR_THRESHOLD && cam.current) {
+        // Soft frame: force an autofocus sweep and take the sharper of the two.
+        lastRefocus.current = performance.now()
+        await cam.current.refocus()
+        await new Promise((r) => setTimeout(r, 550))
+        const again = captureRoi(v, roi())
+        const s2 = sharpnessOf(again)
+        if (s2 > sharp) { frame = again; sharp = s2 }
+      }
+      let rec = await recognize(frame, { debug })
       if (!rec.card) {
         // Glare and holo noise vary frame to frame: one quick second attempt.
         await new Promise((r) => setTimeout(r, 180))
         rec = betterOf(rec, await recognize(captureRoi(v, roi()), { debug }))
       }
+      const a = analyzer.current
       if (rec.card) {
-        await commit(rec.card, rec)
+        const last = lastCommit.current
+        const same = last && last.id === rec.card.id && a.change < 0.05 && Date.now() - last.at < 20000
+        if (same) showNote('Same card')   // nothing moved: a hand passed over, not a new card
+        else await commit(rec.card, rec)
+      } else if (isBlank(rec)) {
+        showNote(a.scans <= 1 ? 'Ready' : 'No card')   // empty jig, table, hand
       } else {
         feedback('fail', 60)
         setMiss(rec)
-        analyzer.current.release()
       }
     } catch (e: any) {
       toast(e?.message ?? 'Scan failed')
-      analyzer.current.release()
     } finally {
+      analyzer.current.release()
       busy.current = false
     }
   }, [roi, commit, debug])
@@ -180,6 +238,38 @@ export default function Scan() {
     // -1 "step" = one third of the range below zero, so it works on any device scale
     const ev = next === 0 ? 0 : Math.max(min, Math.round((next * Math.abs(min) / 3) / step) * step)
     if (await cam.current.setExposure(ev)) setExposure(next)
+  }
+
+  // The analysis loop is a long-lived effect: always call the latest capture (mode, debug flag, …).
+  const captureRef = useRef(capture)
+  captureRef.current = capture
+
+  const cycleZoom = async () => {
+    const r = cam.current?.zoomRange
+    if (!r) return
+    const steps = [1, 1.5, 2, 3].filter((z) => z <= r.max && z >= r.min)
+    const next = steps[(steps.indexOf(zoom) + 1) % steps.length] ?? 1
+    if (await cam.current!.setZoom(next)) setZoom(next)
+  }
+
+  const refocus = async () => {
+    if (!cam.current) return
+    if (focusDist != null) { await cam.current.setFocusDistance(null); setFocusDist(null) }
+    lastRefocus.current = performance.now()
+    await cam.current.refocus()
+  }
+
+  const setManualFocus = async (d: number) => {
+    if (!cam.current) return
+    if (await cam.current.setFocusDistance(d)) setFocusDist(d)
+  }
+
+  const switchCamera = () => {
+    const h = cam.current
+    if (!h || h.devices.length < 2) return
+    const i = h.devices.findIndex((d) => d.id === h.deviceId)
+    const next = h.devices[(i + 1) % h.devices.length]
+    setSettings({ cameraId: next.id })   // the camera effect restarts the stream
   }
 
   const pickAlternative = async (id: string) => {
@@ -197,8 +287,9 @@ export default function Scan() {
   }
 
   const lastRec = result?.rec ?? miss
-  const statusWord = result ? 'Scanned' : phase === 'settling' ? 'Hold' : phase === 'capture' || busy.current ? 'Reading' : phase === 'busy' ? 'Next card' : 'Ready'
-  const dotClass = phase === 'settling' ? 'scan__dot--hold' : phase === 'capture' || busy.current ? 'scan__dot--busy' : phase === 'empty' ? 'scan__dot--on' : ''
+  const statusWord = result ? 'Scanned' : phase === 'capture' || busy.current ? 'Reading' : phase === 'settling' ? (blurry ? 'Focus' : 'Hold') : 'Ready'
+  const dotClass = phase === 'settling' ? 'scan__dot--hold' : phase === 'capture' || busy.current ? 'scan__dot--busy' : 'scan__dot--on'
+  const camSettings = cam.current?.settings() ?? {}
 
   return (
     <div className="scan" onDoubleClick={() => setDebug((d) => !d)}>
@@ -216,11 +307,11 @@ export default function Scan() {
           <i className="scan__corner tl" /><i className="scan__corner tr" /><i className="scan__corner bl" /><i className="scan__corner br" />
         </div>
       )}
-      {frameBox && !result && phase === 'empty' && (
-        <div className="scan__hint" style={{ top: frameBox.top + frameBox.height + 14 }}>Place card</div>
+      {frameBox && !result && note && (
+        <div className="scan__hint" style={{ top: frameBox.top + frameBox.height + 14 }}>{note}</div>
       )}
-      {frameBox && !result && phase === 'busy' && !busy.current && (
-        <div className="scan__hint" style={{ top: frameBox.top + frameBox.height + 14 }}>Lift card</div>
+      {frameBox && !result && !note && phase === 'idle' && analyzer.current.scans > 0 && (
+        <div className="scan__hint" style={{ top: frameBox.top + frameBox.height + 14 }}>Next card</div>
       )}
 
       <canvas ref={fxRef} className="fx" />
@@ -232,16 +323,47 @@ export default function Scan() {
           {camError ? 'No camera' : indexReady === false ? 'Offline' : statusWord}
         </div>
         <div className="row" style={{ gap: 8 }}>
-          {hasExposure && (
-            <button className="iconbtn iconbtn--ghost" style={{ background: 'rgba(7,20,17,.6)', color: exposure ? 'var(--accent)' : undefined, width: 'auto', padding: '0 12px', borderRadius: 22, gap: 4 }} onClick={cycleExposure} aria-label="Glare">
-              <Sun size={20} />{exposure ? <b style={{ fontSize: 'var(--fs-sm)' }}>{exposure}</b> : null}
-            </button>
-          )}
+          <button className="iconbtn iconbtn--ghost" style={{ background: 'rgba(7,20,17,.6)', color: tune || zoom !== 1 || exposure || focusDist != null ? 'var(--accent)' : undefined }} onClick={() => setTune((t) => !t)} aria-label="Camera settings">
+            <SlidersHorizontal />
+          </button>
           <button className="iconbtn iconbtn--ghost" style={{ background: 'rgba(7,20,17,.6)', color: torch ? 'var(--accent)' : undefined }} onClick={toggleTorch} aria-label="Torch" disabled={!cam.current?.hasTorch}>
             {torch ? <Zap /> : <ZapOff />}
           </button>
         </div>
       </div>
+
+      <AnimatePresence>
+        {tune && camInfo && (
+          <motion.div className="scan__tune" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+            <div className="scan__tunerow">
+              <button className={`scan__tunebtn ${focusDist == null ? '' : 'on'}`} onClick={refocus} aria-label="Focus"><Focus size={20} /><span>Focus</span></button>
+              {camInfo.zoom && (
+                <button className={`scan__tunebtn ${zoom !== 1 ? 'on' : ''}`} onClick={cycleZoom} aria-label="Zoom"><ZoomIn size={20} /><span>{zoom}×</span></button>
+              )}
+              {camInfo.exposure && (
+                <button className={`scan__tunebtn ${exposure ? 'on' : ''}`} onClick={cycleExposure} aria-label="Glare"><Sun size={20} /><span>{exposure ? `${exposure} EV` : 'Glare'}</span></button>
+              )}
+              {camInfo.devices > 1 && (
+                <button className="scan__tunebtn" onClick={switchCamera} aria-label="Switch lens"><SwitchCamera size={20} /><span>Lens</span></button>
+              )}
+            </div>
+            {camInfo.manual && (
+              <div className="scan__tunerow" style={{ paddingTop: 0 }}>
+                <input
+                  className="range"
+                  type="range"
+                  min={camInfo.manual.min}
+                  max={camInfo.manual.max}
+                  step={camInfo.manual.step}
+                  value={focusDist ?? camSettings.focusDistance ?? camInfo.manual.min}
+                  onChange={(e) => void setManualFocus(parseFloat(e.target.value))}
+                  aria-label="Manual focus"
+                />
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {result && (
@@ -271,12 +393,14 @@ export default function Scan() {
 
       {debug && (
         <div className="scan__ocr" style={{ bottom: 110 }}>
-          {`phase=${phase} presence=${analyzer.current.presence.toFixed(3)} motion=${analyzer.current.motion.toFixed(3)} sharp=${analyzer.current.sharpness.toFixed(4)}\n`}
-          {lastRec ? `top="${lastRec.ocr?.top}"\nbottom="${lastRec.ocr?.bottom}"\n${lastRec.ms?.toFixed(0)}ms conf=${lastRec.confidence?.toFixed(2)} num=${lastRec.parsed?.number ?? '-'}/${lastRec.parsed?.total ?? '-'} name=${lastRec.parsed?.nameGuess ?? ''} illus=${lastRec.parsed?.illustratorGuess ?? '-'}` : ''}
+          {`${videoRef.current?.videoWidth ?? 0}x${videoRef.current?.videoHeight ?? 0} focus=${camSettings.focusMode ?? '-'}${camSettings.focusDistance != null ? `@${camSettings.focusDistance}` : ''} zoom=${camSettings.zoom ?? '-'} modes=${cam.current?.focusModes.join(',') || '-'} cam="${camInfo?.label ?? ''}"\n`}
+          {`phase=${phase} motion=${analyzer.current.motion.toFixed(3)} change=${analyzer.current.change.toFixed(3)} sharp=${liveSharp.current.toFixed(3)} (min ${BLUR_THRESHOLD}) scans=${analyzer.current.scans}\n`}
+          {lastRec ? `top="${lastRec.ocr?.top}"\nbottom="${lastRec.ocr?.bottom}"\ncorner="${lastRec.ocr?.corner}"\n${lastRec.ms?.toFixed(0)}ms conf=${lastRec.confidence?.toFixed(2)} sharp=${lastRec.sharpness?.toFixed(3)} num=${lastRec.parsed?.number ?? '-'}/${lastRec.parsed?.total ?? '-'} name=${lastRec.parsed?.nameGuess ?? ''} illus=${lastRec.parsed?.illustratorGuess ?? '-'}` : ''}
           {lastRec?.bands && (
             <div style={{ marginTop: 6, display: 'grid', gap: 4 }}>
               <img src={lastRec.bands.top} style={{ width: '100%', border: '1px solid var(--line-strong)' }} alt="" />
               <img src={lastRec.bands.bottom} style={{ width: '100%', border: '1px solid var(--line-strong)' }} alt="" />
+              <img src={lastRec.bands.corner} style={{ width: '60%', border: '1px solid var(--line-strong)' }} alt="" />
             </div>
           )}
         </div>

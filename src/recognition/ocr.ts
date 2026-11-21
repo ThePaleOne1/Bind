@@ -5,11 +5,15 @@ let workers: Promise<Worker>[] | null = null
 /** Three workers so the name band, bottom band and number corner are read in parallel. */
 function pool(): Promise<Worker>[] {
   if (workers) return workers
-  workers = [0, 1, 2].map(() =>
+  workers = [0, 1, 2].map((i) =>
     createWorker('eng', 1, { logger: () => {} }).then(async (w) => {
       await w.setParameters({
         preserve_interword_spaces: '1',
         tessedit_pageseg_mode: PSM.SINGLE_BLOCK, // bands are a uniform block of 1–2 lines
+        // The number corner only ever holds digits, a slash and set-code capitals
+        // (TG12/TG30, SV001/SV122): restricting the alphabet stops "004/189"
+        // coming back as "poas189".
+        ...(i === 2 ? { tessedit_char_whitelist: '0123456789/ABCDEFGHIJKLMNOPQRSTUVWXYZ ' } : {}),
       })
       return w
     }),

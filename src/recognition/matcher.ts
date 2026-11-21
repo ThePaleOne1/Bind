@@ -8,9 +8,15 @@ export interface OcrText {
   corner?: string  // tight bottom-left crop, number only (read at higher scale)
 }
 
+export interface NumberRead { number: string; total: number | null; weak?: boolean }
+
 export interface Parsed {
   number: string | null
   total: number | null
+  /** The main reading was a guessed split of a digit run with no slash. */
+  numberWeak: boolean
+  /** Other ways the digits could be read (slash dropped, second band); tried when the first finds nothing. */
+  numberAlts: NumberRead[]
   nameGuess: string
   illustratorGuess: string | null
 }
@@ -31,24 +37,45 @@ const fixDigits = (s: string) =>
     .replace(/(?<=\d)[oO]|[oO](?=\d{2})/g, '0')     // "1o0/167" → "100/167"
     .replace(/(?<=\d)[sS](?=\d|\/)/g, '5')
 
-function findNumber(text: string): { number: string; total: number | null } | null {
+/** Every plausible collector-number reading in a piece of OCR text, best first. */
+function findNumbers(text: string): NumberRead[] {
   const s = fixDigits(text)
+  const out: NumberRead[] = []
+  const push = (number: string, total: number | null, weak = false) => {
+    if (total != null && (total < 10 || total > 999)) return
+    if (!out.some((o) => o.number === number && o.total === total)) out.push(weak ? { number, total, weak } : { number, total })
+  }
   // Lettered numbering first (TG01/TG30, GG12/GG70, RC5/RC32, SV001/SV122), then plain 025/198.
   const lettered = s.match(/(?<![A-Za-z])((?:TG|GG|RC|SV|SH|SL|SWSH|SM|XY|BW|DP|HGSS)\s?\d{1,3})\s*[\/|]\s*(?:[A-Z]{0,4}\s?)(\d{1,3})/i)
+  if (lettered) push(normNumber(lettered[1]), parseInt(lettered[2], 10))
   // Plain: a stray digit glued on after the total ("230/2365") is tolerated.
-  const frac = lettered ?? s.match(/(?<!\d)(\d{1,3})\s*[\/|]\s*(\d{1,3})/)
-  if (frac && parseInt(frac[2], 10) >= 10) return { number: normNumber(frac[1]), total: parseInt(frac[2], 10) }
+  for (const m of s.matchAll(/(?<!\d)(\d{1,3})\s*[\/|]\s*(\d{1,3})/g)) push(normNumber(m[1]), parseInt(m[2], 10))
+  // Slash lost by the OCR ("04189", "0 04189", "4 189"): split a digit run as n/total both ways.
+  for (const m of s.matchAll(/(?<![A-Za-z\d])(\d[\d ]{2,10}\d)(?![A-Za-z\d])/g)) {
+    const tokens = m[1].split(' ').filter(Boolean)
+    const runs = [tokens.join(''), tokens[tokens.length - 1], tokens.slice(-2).join('')].filter((r, i, a) => r.length >= 4 && r.length <= 6 && a.indexOf(r) === i)
+    for (const run of runs) {
+      if (/(?:19|20)\d\d$/.test(run)) continue // the copyright year, not a number
+      for (const cut of [3, 2]) {
+        const total = parseInt(run.slice(-cut), 10), n = run.slice(0, -cut)
+        if (n.length < 1 || n.length > 3) continue
+        if (parseInt(n, 10) <= total * 1.5) push(normNumber(n), total, true)
+      }
+    }
+  }
   const promo = s.match(PROMO_RE)
-  if (promo) return { number: normNumber(promo[1]), total: null }
-  return null
+  if (promo) push(normNumber(promo[1]), null)
+  return out
 }
 
 export function parseOcr(t: OcrText): Parsed {
-  let number: string | null = null
-  let total: number | null = null
-  // The tight corner crop is read at a higher scale, so trust it first.
-  const found = (t.corner && findNumber(t.corner)) || findNumber(t.bottom)
-  if (found) { number = found.number; total = found.total }
+  // The tight corner crop is read at a higher scale, so trust it first; the rest are fallbacks.
+  const reads = [...(t.corner ? findNumbers(t.corner) : []), ...findNumbers(t.bottom)]
+    .filter((r, i, a) => a.findIndex((o) => o.number === r.number && o.total === r.total) === i)
+  const number = reads[0]?.number ?? null
+  const total = reads[0]?.total ?? null
+  const numberWeak = !!reads[0]?.weak
+  const numberAlts = reads.slice(1, 8)
 
   // Illustrator credit: "Illus. Name" or "Illustrator: Name"
   let illustratorGuess: string | null = null
@@ -65,8 +92,9 @@ export function parseOcr(t: OcrText): Parsed {
   const words = norm(t.top)
     .split(' ')
     .filter((w) => w && !STOP.has(w) && !/^\d+$/.test(w) && !/^(hp\d*|\d+hp|lv\d*)$/.test(w) && w.length > 1)
-  const nameGuess = words.slice(0, 5).join(' ')
-  return { number, total, nameGuess, illustratorGuess }
+  const joined = words.slice(0, 5).join(' ')
+  const nameGuess = joined.length >= 3 ? joined : '' // one or two letters is noise, not a name
+  return { number, total, numberWeak, numberAlts, nameGuess, illustratorGuess }
 }
 
 export interface Candidate {
@@ -82,27 +110,49 @@ export interface MatchResult {
 }
 
 export function matchCards(
-  parsed: Parsed,
+  parsedIn: Parsed,
   index: { entries: IndexEntry[]; sets: Record<string, SetInfo> },
 ): MatchResult {
+  let parsed = parsedIn
   const { entries } = index
-  let pool: IndexEntry[] = []
-  const scored: Candidate[] = []
+  let scored: Candidate[] = []
 
-  if (parsed.number) {
-    pool = entries.filter((e) => e.n === parsed.number)
-    for (const e of pool) {
+  const scoreNumber = (read: NumberRead): Candidate[] => {
+    const out: Candidate[] = []
+    for (const e of entries) {
+      if (e.n !== read.number) continue
       let s = 0.45
-      if (parsed.total != null) {
-        if (e.total === parsed.total) s += 0.35
-        else if (Math.abs(e.total - parsed.total) <= 2) s += 0.1
+      if (read.total != null) {
+        if (e.total === read.total) s += 0.35
+        else if (Math.abs(e.total - read.total) <= 2) s += 0.1
         else s -= 0.2
       }
       if (parsed.nameGuess) {
         const sim = similarity(parsed.nameGuess, e.name)
-        s += 0.3 * sim - (sim < 0.2 ? 0.25 : 0) // a clearly different name is strong evidence against
+        // A clearly different name is evidence against, but only when enough of it was read.
+        s += 0.3 * sim - (sim < 0.2 && parsed.nameGuess.length >= 4 ? 0.25 : 0)
       }
-      scored.push({ entry: e, score: s })
+      out.push({ entry: e, score: s })
+    }
+    return out.sort((a, b) => b.score - a.score)
+  }
+
+  if (parsed.number) {
+    scored = scoreNumber({ number: parsed.number, total: parsed.total })
+    if (parsed.numberWeak && scored.length && scored[0].score < 0.92) scored = []
+  }
+  // The first reading found no card with that number and total: try the other readings.
+  // A reading with a real slash needs number + total to match a card outright; a guessed
+  // split (slash dropped) also needs the name to agree, or it is too easy to hit by chance.
+  if (!scored.length || scored[0].score < 0.8) {
+    for (const alt of parsed.numberAlts) {
+      const alted = scoreNumber(alt)
+      const need = alt.weak ? 0.92 : 0.8
+      if (alted.length && alted[0].score >= need) {
+        scored = alted
+        parsed = { ...parsed, number: alt.number, total: alt.total }
+        break
+      }
     }
   }
 
@@ -117,7 +167,11 @@ export function matchCards(
       if (seen.has(e.id)) continue
       let sim = 0
       for (const v of variants) sim = Math.max(sim, similarity(v, e.name))
-      if (sim > 0.55) scored.push({ entry: e, score: sim * 0.6 })
+      if (sim <= 0.55) continue
+      // The set total is usually read right even when the number is not: a name match
+      // in a set with that total is near-certain.
+      const totalHit = parsed.total != null && e.total === parsed.total
+      scored.push({ entry: e, score: sim * 0.6 + (totalHit ? 0.3 : 0) })
     }
   }
 

@@ -12,6 +12,7 @@ export interface Settings {
   supabaseUrl: string
   supabaseKey: string
   scanMode: ScanMode
+  cameraId: string
   set: (p: Partial<Settings>) => void
 }
 
@@ -27,6 +28,7 @@ export const useSettings = create<Settings>()(
       supabaseUrl: '',
       supabaseKey: '',
       scanMode: 'add',
+      cameraId: '',
       set: (p) => set(p),
     }),
     { name: 'bind-settings', partialize: (s) => Object.fromEntries(Object.entries(s).filter(([k]) => k !== 'set')) as any },
