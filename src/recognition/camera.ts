@@ -221,9 +221,18 @@ export async function startCamera(video: HTMLVideoElement, opts: { deviceId?: st
           if (focusModes.includes('manual')) await apply({ focusMode: 'manual' })
           await apply({ focusMode: 'continuous' })
         }
-        if (!o || !focusRange) return true
-        await sleep(700)
-        if (o.measure() >= o.good) return true   // the autofocus did its job
+        if (!o) return true
+        // Every kick restarts the hunt, so do not stack them: wait here until the lens has
+        // landed (sharp enough and two readings agreeing), up to 1.6 s.
+        let prev = -1
+        const until = performance.now() + 1600
+        while (performance.now() < until) {
+          await sleep(150)
+          const m = o.measure()
+          if (m >= o.good && prev >= 0 && Math.abs(m - prev) <= 0.15 * Math.max(m, prev, 1e-3)) return true
+          prev = m
+        }
+        if (o.measure() >= o.good || !focusRange) return true
       }
       if (!o || !focusRange) return false
       // Distance-only lens (or the autofocus could not lock): a nudge around the last

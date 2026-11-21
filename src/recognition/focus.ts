@@ -13,14 +13,20 @@ const BANDS: [number, number, number, number][] = [
 ]
 const MAX_W = 480
 
+// GPU-backed canvas does the crop/downscale of the live frame; the software
+// canvas only ever receives the small result (see FrameAnalyzer for why).
+const gpu = document.createElement('canvas')
+const gctx = gpu.getContext('2d')!
 const scratch = document.createElement('canvas')
 const sctx = scratch.getContext('2d', { willReadFrequently: true })!
 
 function bandSharpness(src: CanvasImageSource, sx: number, sy: number, sw: number, sh: number): { lap: number; variance: number } {
   const scale = Math.min(1, MAX_W / sw)
   const w = Math.max(8, Math.round(sw * scale)), h = Math.max(8, Math.round(sh * scale))
-  scratch.width = w; scratch.height = h
-  sctx.drawImage(src, sx, sy, sw, sh, 0, 0, w, h)
+  if (gpu.width !== w || gpu.height !== h) { gpu.width = w; gpu.height = h }
+  if (scratch.width !== w || scratch.height !== h) { scratch.width = w; scratch.height = h }
+  gctx.drawImage(src, sx, sy, sw, sh, 0, 0, w, h)
+  sctx.drawImage(gpu, 0, 0)
   const d = sctx.getImageData(0, 0, w, h).data
   const g = new Float32Array(w * h)
   let s = 0, s2 = 0

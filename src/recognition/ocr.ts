@@ -16,7 +16,6 @@ function pool(): Promise<Worker>[] {
       await w.setParameters({
         preserve_interword_spaces: '1',
         tessedit_pageseg_mode: PSM.SINGLE_BLOCK, // bands are a uniform block of 1–2 lines
-        tessedit_do_invert: '0',                 // we already choose the polarity; skip the inverted second pass
         // The number corner only ever holds digits, a slash and set-code capitals
         // (TG12/TG30, SV001/SV122): restricting the alphabet stops "004/189"
         // coming back as "poas189".
@@ -117,7 +116,7 @@ export interface OcrBands { top: string; bottom: string; corner: string }
 // Regions as fractions of the card: [x, y, w, h, output height in px]
 // Output heights are chosen so the smallest text in the band comes out ~25–35 px tall.
 const REGIONS = {
-  top: [0.03, 0.015, 0.94, 0.14, 150] as const,     // name + HP (large print)
+  top: [0.03, 0.015, 0.94, 0.14, 220] as const,     // name + HP (large print)
   bottom: [0.02, 0.85, 0.96, 0.15, 400] as const,   // illustrator credit, number (small print, any era)
   corner: [0, 0.9, 0.5, 0.1, 360] as const,         // bottom-left: number on BW → SV era
 }

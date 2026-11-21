@@ -29,6 +29,12 @@ const DISTURB_FRAMES = 2
 const CHANGE_SLOW = 0.12        // still frame differing this much from the last scan → new card placed gently
 
 export class FrameAnalyzer {
+  // Two canvases on purpose. Drawing a live camera frame into a canvas that is
+  // marked for pixel reads makes the browser copy the whole 1080x1920 frame out
+  // of the GPU and colour-convert it on the CPU, twelve times a second. Instead
+  // the GPU-backed canvas does the downscale, and only the 48x64 result is read.
+  private gpu = document.createElement('canvas')
+  private gctx = this.gpu.getContext('2d')!
   private canvas = document.createElement('canvas')
   private ctx = this.canvas.getContext('2d', { willReadFrequently: true })!
   private prev: Float32Array | null = null
@@ -46,7 +52,28 @@ export class FrameAnalyzer {
   constructor() {
     this.canvas.width = W
     this.canvas.height = H
+    this.gpu.width = W
+    this.gpu.height = H
     this.settleSince = performance.now()
+  }
+
+  /** The read failed for a reason that may clear (soft focus): keep the old reference and settle again. */
+  retry() {
+    if (this.phase !== 'capture' && this.phase !== 'busy') return
+    this.captured = null
+    this.disturbFrames = 0
+    this.disturbedWhileBusy = false
+    this.phase = 'settling'
+    this.settleSince = performance.now()
+  }
+
+  /** Not ready yet (autofocus still moving): fire again in `ms`. */
+  postpone(now: number, ms = 200) {
+    if (this.phase !== 'capture') return
+    this.phase = 'settling'
+    this.settleSince = now - HOLD_MS + ms
+    this.captured = null
+    this.scans--
   }
 
   reset() {
@@ -77,7 +104,8 @@ export class FrameAnalyzer {
 
   private gray(video: HTMLVideoElement, roi: Roi): Float32Array {
     const vw = video.videoWidth, vh = video.videoHeight
-    this.ctx.drawImage(video, roi.x * vw, roi.y * vh, roi.w * vw, roi.h * vh, 0, 0, W, H)
+    this.gctx.drawImage(video, roi.x * vw, roi.y * vh, roi.w * vw, roi.h * vh, 0, 0, W, H)
+    this.ctx.drawImage(this.gpu, 0, 0)
     const d = this.ctx.getImageData(0, 0, W, H).data
     const g = new Float32Array(W * H)
     for (let i = 0, j = 0; i < d.length; i += 4, j++) g[j] = (d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114) / 255

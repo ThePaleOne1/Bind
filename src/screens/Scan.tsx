@@ -58,6 +58,9 @@ export default function Scan() {
   const [note, setNote] = useState<string | null>(null)     // brief hint under the frame: No card / Same card
   const [, setTick] = useState(0)                           // re-render for the debug overlay
   const liveSharp = useRef(0)
+  const sharpHist = useRef<number[]>([])                   // recent sharpness samples while settling
+  const settleStart = useRef(0)
+  const scanPeak = useRef(0)                               // best sharpness of a confident scan on this lens
   const lastRefocus = useRef(0)
   const lastSharpAt = useRef(0)
   const lastCommit = useRef<{ id: string; at: number } | null>(null)
@@ -131,6 +134,7 @@ export default function Scan() {
       })
       setZoom(1); setFocusDist(null); setExposure(0); setTorch(false)
       runningRef.current = false; setRunning(false)
+      scanPeak.current = 0
       layoutFrame()
     }).catch((e) => { if (alive) setCamError(e?.message ?? 'Camera unavailable') })
     v.addEventListener('loadedmetadata', layoutFrame)
@@ -146,40 +150,59 @@ export default function Scan() {
   }, [layoutFrame, lensRequest])
 
   /** How the camera judges focus: sharpness of the text bands in the guide region. */
-  const focusOpts = useCallback(() => ({ measure: () => (videoRef.current ? sharpnessOfVideo(videoRef.current, roi()) : 0), good: BLUR_THRESHOLD }), [roi])
-  /** Soft when under the fixed floor, or well below the best this lens has shown (the stack getting shorter). */
-  const isSoft = (s: number) => s < BLUR_THRESHOLD || s < (cam.current?.focusPeak() ?? 0) * 0.6
+  const focusOpts = useCallback(() => ({
+    measure: () => (videoRef.current ? sharpnessOfVideo(videoRef.current, roi()) : 0),
+    // "good" is the same bar the scan gate uses: the floor, or well within this lens's best
+    good: Math.max(BLUR_THRESHOLD, Math.max(cam.current?.focusPeak() ?? 0, scanPeak.current) * 0.6),
+  }), [roi])
+  /** Soft when under the fixed floor, or well below the best this lens has shown (autofocus mid-hunt, stack getting shorter). */
+  const isSoft = (s: number) => s < BLUR_THRESHOLD || s < Math.max(cam.current?.focusPeak() ?? 0, scanPeak.current) * 0.6
 
-  // Hands-free analysis loop (~12 fps)
+  // Hands-free analysis loop: ~8 fps while waiting, ~12 fps while a card is settling.
   useEffect(() => {
     let raf = 0
     let last = 0
+    let wasSettling = false
     const tick = (t: number) => {
       raf = requestAnimationFrame(tick)
-      if (t - last < 80) return
+      const a = analyzer.current
+      if (t - last < (a.phase === 'settling' ? 80 : 125)) return
       last = t
       const v = videoRef.current
       if (!v || !cam.current || busy.current || !runningRef.current) return
-      const a = analyzer.current
       const fire = a.step(v, roi(), t)
       setPhase(a.phase)
-      // While the picture is settling, check focus and kick the autofocus if it is soft.
-      if (a.phase === 'settling' && t - lastSharpAt.current > 400) {
+      const settling = a.phase === 'settling' || a.phase === 'capture'
+      if (settling && !wasSettling) { settleStart.current = t; sharpHist.current = [] }
+      wasSettling = settling
+      // While the picture is settling, watch the focus: kick the autofocus if it is soft.
+      if (settling && t - lastSharpAt.current > 150) {
         lastSharpAt.current = t
         const s = sharpnessOfVideo(v, roi())
         liveSharp.current = s
+        sharpHist.current = [...sharpHist.current.slice(-2), s]
         const soft = isSoft(s)
         setBlurry(soft || cam.current.focusing())
-        if (soft && t - lastRefocus.current > 1500 && !cam.current.focusing()) {
+        // A continuous autofocus usually lands by itself; only kick it when the picture is
+        // still soft after 1.2 s of stillness, and never more than once every 2.5 s.
+        if (soft && t - settleStart.current > 1200 && t - lastRefocus.current > 2500 && !cam.current.focusing()) {
           lastRefocus.current = t
           // After the lens has moved, look at the card afresh (settle again, then scan).
-          void cam.current.refocus(focusOpts()).then((moved) => { if (moved) analyzer.current.reset() })
+          void cam.current.refocus(focusOpts()).then((moved) => { if (moved) { analyzer.current.reset(); settleStart.current = performance.now(); sharpHist.current = [] } })
         }
-      } else if (a.phase !== 'settling') setBlurry(cam.current.focusing())
-      if (debug && t - lastSharpAt.current > 400) { lastSharpAt.current = t; liveSharp.current = sharpnessOfVideo(v, roi()); setTick((n) => n + 1) }
+      } else if (!settling) setBlurry(cam.current.focusing())
+      if (debug && !settling && t - lastSharpAt.current > 500) { lastSharpAt.current = t; liveSharp.current = sharpnessOfVideo(v, roi()); setTick((n) => n + 1) }
+      else if (debug && settling) setTick((n) => n + 1)
       if (fire) {
-        if (cam.current.focusing()) a.release()   // mid-sweep frame: let the sweep finish, the next stillness will scan
-        else void captureRef.current()
+        if (cam.current.focusing()) { a.release(); return }   // mid-sweep frame: let the sweep finish, the next stillness will scan
+        // The hand has gone, but the autofocus may still be converging: wait until two
+        // consecutive sharpness samples agree (within 15%) before reading, up to 1.5 s.
+        const h = sharpHist.current
+        const n = h.length
+        const stable = n >= 2 && Math.abs(h[n - 1] - h[n - 2]) <= 0.15 * Math.max(h[n - 1], h[n - 2], 1e-3)
+        const ready = stable && !isSoft(h[n - 1])   // agreeing samples at the bottom of a focus hunt are not "stable"
+        if (ready || t - settleStart.current > 2000) void captureRef.current()
+        else a.postpone(t, 160)
       }
     }
     raf = requestAnimationFrame(tick)
@@ -224,20 +247,26 @@ export default function Scan() {
     const v = videoRef.current
     if (!v || busy.current) return
     busy.current = true
+    let softMiss = false
     try {
       let frame = captureRoi(v, roi())
       let sharp = sharpnessOf(frame)
       if (isSoft(sharp) && cam.current) {
-        // Soft frame: get the lens focused (autofocus pass or distance sweep), then look again.
+        // Soft frame: get the lens focused (autofocus pass or distance sweep), then give it
+        // up to a second to land before looking again. Reading a soft frame is slow and useless.
         lastRefocus.current = performance.now()
         setBlurry(true)
         await cam.current.refocus(focusOpts())
+        const until = performance.now() + 1000
+        do {
+          await new Promise((r) => setTimeout(r, 150))
+          const again = captureRoi(v, roi())
+          const s2 = sharpnessOf(again)
+          if (s2 > sharp) { frame = again; sharp = s2 }
+        } while (isSoft(sharp) && performance.now() < until)
         setBlurry(false)
-        await new Promise((r) => setTimeout(r, 300))
-        const again = captureRoi(v, roi())
-        const s2 = sharpnessOf(again)
-        if (s2 > sharp) { frame = again; sharp = s2 }
       }
+      softMiss = false
       let rec = await recognize(frame, { debug })
       if (!rec.card) {
         // Glare and holo noise vary frame to frame: one quick second attempt.
@@ -250,7 +279,12 @@ export default function Scan() {
         const last = lastCommit.current
         const same = last && last.id === rec.card.id && a.change < 0.05 && Date.now() - last.at < 20000
         if (same) showNote('Same card')   // nothing moved: a hand passed over, not a new card
-        else await commit(rec.card, rec)
+        else {
+          if (rec.confidence >= 0.8) scanPeak.current = Math.max(scanPeak.current, rec.sharpness)
+          await commit(rec.card, rec)
+        }
+      } else if (isSoft(rec.sharpness) && rec.sharpness > 0) {
+        softMiss = true                                  // the lens was still moving: try this card again
       } else if (isBlank(rec)) {
         showNote(a.scans <= 1 ? 'Ready' : 'No card')   // empty jig, table, hand
       } else {
@@ -260,7 +294,8 @@ export default function Scan() {
     } catch (e: any) {
       toast(e?.message ?? 'Scan failed')
     } finally {
-      analyzer.current.release()
+      if (softMiss) analyzer.current.retry()
+      else analyzer.current.release()
       busy.current = false
     }
   }, [roi, commit, debug, focusOpts])
@@ -446,7 +481,7 @@ export default function Scan() {
       {debug && (
         <div className="scan__ocr" style={{ bottom: 110 }}>
           {`${videoRef.current?.videoWidth ?? 0}x${videoRef.current?.videoHeight ?? 0} focus=${camSettings.focusMode ?? '-'}${camSettings.focusDistance != null ? `@${camSettings.focusDistance}` : ''} zoom=${camSettings.zoom ?? '-'} modes=${cam.current?.focusModes.join(',') || '-'} cam="${camInfo?.label ?? ''}"\n`}
-          {`phase=${phase} motion=${analyzer.current.motion.toFixed(3)} change=${analyzer.current.change.toFixed(3)} sharp=${liveSharp.current.toFixed(3)} (min ${BLUR_THRESHOLD}, peak ${(cam.current?.focusPeak() ?? 0).toFixed(3)}) scans=${analyzer.current.scans}\n`}
+          {`phase=${phase} motion=${analyzer.current.motion.toFixed(3)} change=${analyzer.current.change.toFixed(3)} sharp=${liveSharp.current.toFixed(3)} (min ${BLUR_THRESHOLD}, peak ${Math.max(cam.current?.focusPeak() ?? 0, scanPeak.current).toFixed(3)}) scans=${analyzer.current.scans}\n`}
           {lastRec ? `top="${lastRec.ocr?.top}"\nbottom="${lastRec.ocr?.bottom}"\ncorner="${lastRec.ocr?.corner}"\n${lastRec.ms?.toFixed(0)}ms conf=${lastRec.confidence?.toFixed(2)} sharp=${lastRec.sharpness?.toFixed(3)} num=${lastRec.parsed?.number ?? '-'}/${lastRec.parsed?.total ?? '-'} name=${lastRec.parsed?.nameGuess ?? ''} illus=${lastRec.parsed?.illustratorGuess ?? '-'}` : ''}
           {lastRec?.bands && (
             <div style={{ marginTop: 6, display: 'grid', gap: 4 }}>
