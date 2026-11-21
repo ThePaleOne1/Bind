@@ -46,7 +46,9 @@ function findNumbers(text: string): NumberRead[] {
     if (!out.some((o) => o.number === number && o.total === total)) out.push(weak ? { number, total, weak } : { number, total })
   }
   // Lettered numbering first (TG01/TG30, GG12/GG70, RC5/RC32, SV001/SV122), then plain 025/198.
-  const lettered = s.match(/(?<![A-Za-z])((?:TG|GG|RC|SV|SH|SL|SWSH|SM|XY|BW|DP|HGSS)\s?\d{1,3})\s*[\/|]\s*(?:[A-Z]{0,4}\s?)(\d{1,3})/i)
+  // Lettered numbering carries the letters on both sides (TG12/TG30); "SV 025/198" is the
+  // set code sitting next to a plain number and must not be read as SV25.
+  const lettered = s.match(/(?<![A-Za-z])((?:TG|GG|RC|SV|SH|SL|SWSH|SM|XY|BW|DP|HGSS)\s?\d{1,3})\s*[\/|]\s*[A-Z]{1,4}\s?(\d{1,3})/i)
   if (lettered) push(normNumber(lettered[1]), parseInt(lettered[2], 10))
   // Plain: a stray digit glued on after the total ("230/2365") is tolerated.
   for (const m of s.matchAll(/(?<!\d)(\d{1,3})\s*[\/|]\s*(\d{1,3})/g)) push(normNumber(m[1]), parseInt(m[2], 10))

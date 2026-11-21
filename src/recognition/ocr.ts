@@ -77,8 +77,21 @@ function band(src: HTMLCanvasElement, fx: number, fy: number, fw: number, fh: nu
   ctx.drawImage(src, sx, sy, sw, sh, 0, 0, w, h)
   const img = ctx.getImageData(0, 0, w, h)
   const d = img.data
-  const g = new Float32Array(w * h)
-  for (let i = 0, j = 0; i < d.length; i += 4, j++) g[j] = d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114
+  // Two greyscales: luminance, and the brightest channel. A saturated red or blue
+  // background is *dark* in luminance, so black text on it loses its contrast; in
+  // the brightest channel that background stays bright. Keep whichever band has
+  // more contrast.
+  const lum = new Float32Array(w * h), val = new Float32Array(w * h)
+  let s1 = 0, q1 = 0, s2 = 0, q2 = 0
+  for (let i = 0, j = 0; i < d.length; i += 4, j++) {
+    const r = d[i], gg = d[i + 1], b = d[i + 2]
+    const l = r * 0.299 + gg * 0.587 + b * 0.114
+    const v = r > gg ? (r > b ? r : b) : (gg > b ? gg : b)
+    lum[j] = l; val[j] = v
+    s1 += l; q1 += l * l; s2 += v; q2 += v * v
+  }
+  const n0 = w * h
+  const g = (q1 / n0 - (s1 / n0) ** 2) >= (q2 / n0 - (s2 / n0) ** 2) ? lum : val
 
   // illumination flattening
   const bg = boxBlur(g, w, h, Math.max(8, Math.round(h / 3)))
@@ -116,7 +129,7 @@ export interface OcrBands { top: string; bottom: string; corner: string }
 // Regions as fractions of the card: [x, y, w, h, output height in px]
 // Output heights are chosen so the smallest text in the band comes out ~25–35 px tall.
 const REGIONS = {
-  top: [0.03, 0.015, 0.94, 0.14, 220] as const,     // name + HP (large print)
+  top: [0.03, 0.02, 0.94, 0.095, 220] as const,     // name + HP: stops above the artwork, which otherwise reads as junk lines
   bottom: [0.02, 0.85, 0.96, 0.15, 400] as const,   // illustrator credit, number (small print, any era)
   corner: [0, 0.9, 0.5, 0.1, 360] as const,         // bottom-left: number on BW → SV era
 }
