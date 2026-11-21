@@ -53,18 +53,36 @@ export function StatusChip({ status }: { status: ArtistStatus }) {
 }
 
 /* ---------- Card image with shimmer ---------- */
-export function CardImage({ src, alt, className, style, quality = 'low', onClick }: {
-  src: string | null | undefined; alt?: string; className?: string; style?: React.CSSProperties; quality?: 'low' | 'high'; onClick?: () => void
+/**
+ * Card art. `quality="high"` is progressive: the small image (a few KB, usually
+ * already cached) shows at once and the large one fades in over it when it
+ * arrives, so a result card never sits on a shimmer waiting for a big download.
+ * `eager` asks the browser to fetch it ahead of other work (scan result overlay).
+ */
+export function CardImage({ src, alt, className, style, quality = 'low', eager = false, onClick }: {
+  src: string | null | undefined; alt?: string; className?: string; style?: React.CSSProperties; quality?: 'low' | 'high'; eager?: boolean; onClick?: () => void
 }) {
   const [loaded, setLoaded] = useState(false)
-  const url = src ? `${src}/${quality}.webp` : null
-  useEffect(() => setLoaded(false), [url])
+  const [hiLoaded, setHiLoaded] = useState(false)
+  const low = src ? `${src}/low.webp` : null
+  const high = src && quality === 'high' ? `${src}/high.webp` : null
+  useEffect(() => { setLoaded(false); setHiLoaded(false) }, [src])
+  const imgProps = { loading: eager ? ('eager' as const) : ('lazy' as const), decoding: 'async' as const, draggable: false, ...(eager ? { fetchPriority: 'high' as const } : {}) }
   return (
     <div className={`cardimg ${className ?? ''}`} style={style} onClick={onClick}>
       {!loaded && <div className="cardimg__shimmer" />}
-      {url && <img src={url} alt={alt ?? ''} loading="lazy" decoding="async" className={loaded ? 'loaded' : ''} onLoad={() => setLoaded(true)} draggable={false} />}
+      {low && <img src={low} alt={alt ?? ''} {...imgProps} className={loaded ? 'loaded' : ''} onLoad={() => setLoaded(true)} />}
+      {high && <img src={high} alt="" {...imgProps} className={`cardimg__hi ${hiLoaded ? 'loaded' : ''}`} onLoad={() => setHiLoaded(true)} aria-hidden />}
     </div>
   )
+}
+
+/** Warm the browser cache for a card's art before it is shown. */
+export function prefetchCardImage(src: string | null | undefined, quality: 'low' | 'high' = 'low') {
+  if (!src) return
+  const i = new Image()
+  ;(i as any).fetchPriority = 'high'
+  i.src = `${src}/${quality}.webp`
 }
 
 /* ---------- Bottom sheet ---------- */

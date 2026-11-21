@@ -22,7 +22,7 @@ export interface Roi { x: number; y: number; w: number; h: number } // fractions
 
 const W = 48
 const H = 64
-const HOLD_MS = 450
+const HOLD_MS = 350
 const MOTION_MAX = 0.025        // frame-to-frame change considered "still"
 const DISTURB = 0.035          // frame-to-frame change considered "something moved"
 const DISTURB_FRAMES = 2

@@ -18,7 +18,7 @@ import { sendCompanion } from '../sync/companion'
 import { buzz, chime } from '../utils/haptics'
 import { fmtAud } from '../utils/price'
 import { Particles, PALETTES } from '../components/Particles'
-import { CardImage, Sheet, STATUS_WORD, toast } from '../components/ui'
+import { CardImage, prefetchCardImage, Sheet, STATUS_WORD, toast } from '../components/ui'
 
 type Result = { ev: ScanEvent; card: CardRecord; rec: Recognition }
 
@@ -70,8 +70,8 @@ export default function Scan() {
   const [debug, setDebug] = useState(false)
   const [indexReady, setIndexReady] = useState<boolean | null>(null)
   const mode = useSettings((s) => s.scanMode)
-  const cameraId = useSettings((s) => s.cameraId)
   const setSettings = useSettings((s) => s.set)
+  const [lensRequest, setLensRequest] = useState(0)        // bump to reopen the camera on the chosen lens
   const { sound, haptics, highValueAud } = useSettings()
   const todayCount = useLiveQuery(async () => {
     const start = new Date(); start.setHours(0, 0, 0, 0)
@@ -114,9 +114,11 @@ export default function Scan() {
     warmOcr()
     loadIndex().then(() => alive && setIndexReady(true)).catch(() => alive && setIndexReady(false))
     setCamError(null)
-    startCamera(v, { deviceId: cameraId || null }).then((h) => {
+    startCamera(v, { deviceId: useSettings.getState().cameraId || null }).then((h) => {
       if (!alive) { h.stop(); return }
       cam.current = h
+      // Remember the lens that opened, so every later start goes straight to it.
+      if (h.deviceId && h.deviceId !== useSettings.getState().cameraId) useSettings.getState().set({ cameraId: h.deviceId })
       analyzer.current.reset()
       setCamInfo({
         exposure: !!h.exposureRange,
@@ -141,7 +143,7 @@ export default function Scan() {
       window.removeEventListener('resize', layoutFrame)
       particles.current?.destroy()
     }
-  }, [layoutFrame, cameraId])
+  }, [layoutFrame, lensRequest])
 
   /** How the camera judges focus: sharpness of the text bands in the guide region. */
   const focusOpts = useCallback(() => ({ measure: () => (videoRef.current ? sharpnessOfVideo(videoRef.current, roi()) : 0), good: BLUR_THRESHOLD }), [roi])
@@ -209,7 +211,7 @@ export default function Scan() {
     lastCommit.current = { id: card.id, at: Date.now() }
     setResult({ ev, card, rec })
     if (resultTimer.current) clearTimeout(resultTimer.current)
-    resultTimer.current = setTimeout(() => setResult(null), 1800)
+    resultTimer.current = setTimeout(() => setResult(null), 2200)
   }, [mode, frameBox, sound, haptics])
 
   const showNote = (text: string) => {
@@ -244,6 +246,7 @@ export default function Scan() {
       }
       const a = analyzer.current
       if (rec.card) {
+        prefetchCardImage(rec.card.image, 'low'); prefetchCardImage(rec.card.image, 'high')
         const last = lastCommit.current
         const same = last && last.id === rec.card.id && a.change < 0.05 && Date.now() - last.at < 20000
         if (same) showNote('Same card')   // nothing moved: a hand passed over, not a new card
@@ -317,7 +320,8 @@ export default function Scan() {
     if (!h || h.devices.length < 2) return
     const i = h.devices.findIndex((d) => d.id === h.deviceId)
     const next = h.devices[(i + 1) % h.devices.length]
-    setSettings({ cameraId: next.id })   // the camera effect restarts the stream
+    setSettings({ cameraId: next.id })
+    setLensRequest((n) => n + 1)   // the camera effect restarts the stream
   }
 
   const pickAlternative = async (id: string) => {
@@ -423,7 +427,7 @@ export default function Scan() {
               exit={{ scale: 0.85, y: -30, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 380, damping: 26 }}
             >
-              <CardImage src={result.card.image} alt={result.card.name} quality="high" />
+              <CardImage src={result.card.image} alt={result.card.name} quality="high" eager />
             </motion.div>
             <motion.div className="scan__word" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 22, delay: 0.08 }}>
               <span className={`title ${result.ev.action === 'remove' ? 'title--danger' : result.ev.highValue ? 'title--value' : result.ev.artistStatus === 'unknown' ? 'title--new' : result.ev.artistStatus === 'not-collecting' ? 'title--grey' : ''}`} style={{ fontSize: 'clamp(22px, 6vw, 34px)' }}>

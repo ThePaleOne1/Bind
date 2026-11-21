@@ -84,16 +84,19 @@ export async function startCamera(video: HTMLVideoElement, opts: { deviceId?: st
     const known = await listBackCameras(null)
     if (known.some((d) => /facing|camera/i.test(d.label))) wanted = preferredDevice(known)?.id ?? null
   }
+  const open = (v: MediaTrackConstraints) => navigator.mediaDevices.getUserMedia({ audio: false, video: v })
   let stream: MediaStream
   try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: wanted ? { ...base, deviceId: { exact: wanted } } : { ...base, facingMode: { ideal: 'environment' } },
-    })
+    stream = await open(wanted ? { ...base, deviceId: { exact: wanted } } : { ...base, facingMode: { ideal: 'environment' } })
   } catch (e) {
     if (!wanted) throw e
-    // the remembered camera is gone: fall back to any rear camera
-    stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { ...base, facingMode: { ideal: 'environment' } } })
+    // Some phones refuse a lens that was released a moment ago: one more try, then any rear camera.
+    await new Promise((r) => setTimeout(r, 500))
+    try {
+      stream = await open({ ...base, deviceId: { exact: wanted } })
+    } catch {
+      stream = await open({ ...base, facingMode: { ideal: 'environment' } })
+    }
   }
   video.srcObject = stream
   video.setAttribute('playsinline', 'true')
@@ -110,6 +113,7 @@ export async function startCamera(video: HTMLVideoElement, opts: { deviceId?: st
     const pref = preferredDevice(devices)
     if (pref && pref.id !== deviceId) {
       stream.getTracks().forEach((t) => t.stop())
+      await new Promise((r) => setTimeout(r, 350))   // let the driver release the lens first
       return startCamera(video, { deviceId: pref.id, _retry: true })
     }
   }

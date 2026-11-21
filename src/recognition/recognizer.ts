@@ -1,6 +1,6 @@
 import { loadIndex, getCard } from '../api/tcgdex'
 import type { CardRecord } from '../data/types'
-import { readCard, debugBands } from './ocr'
+import { readPrimary, readBottom, debugBands } from './ocr'
 import { matchCards, parseOcr, type Candidate, type Parsed } from './matcher'
 import { similarity } from '../utils/text'
 import type { Roi } from './frameAnalyzer'
@@ -61,9 +61,19 @@ export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean
     if (opts.debug) out.bands = debugBands(card)
     return out
   }
-  const [index, ocr] = await Promise.all([loadIndex(), readCard(card)])
-  const parsed = parseOcr(ocr)
-  const m = matchCards(parsed, index)
+  // Phase 1: name band + number corner (parallel). That settles most modern cards.
+  const [index, primary] = await Promise.all([loadIndex(), readPrimary(card)])
+  const ocr = { top: primary.top, bottom: '', corner: primary.corner }
+  let parsed = parseOcr(ocr)
+  let m = matchCards(parsed, index)
+  // Phase 2: the wide bottom band, only when the corner did not settle it
+  // (number missing, weak match, or two cards within reach of each other).
+  const settled = m.best && m.confidence >= 0.8 && !(m.alternatives[1] && m.alternatives[1].score >= m.best.score - 0.12)
+  if (!settled) {
+    ocr.bottom = await readBottom(card)
+    parsed = parseOcr(ocr)
+    m = matchCards(parsed, index)
+  }
   let best = m.best
   let confidence = m.confidence
 

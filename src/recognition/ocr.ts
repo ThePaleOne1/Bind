@@ -2,18 +2,25 @@ import { createWorker, PSM, type Worker } from 'tesseract.js'
 
 let workers: Promise<Worker>[] | null = null
 
-/** Three workers so the name band, bottom band and number corner are read in parallel. */
+const OUTPUT = { text: true, blocks: false, layoutBlocks: false, hocr: false, tsv: false, box: false, unlv: false, osd: false, pdf: false, imageColor: false, imageGrey: false, imageBinary: false, debug: false } as const
+
+/**
+ * Two workers: the name band and the number corner are read in parallel; the
+ * wide bottom band (illustrator credit, number on old cards) is read afterwards
+ * on the first worker, and only when it is needed.
+ */
 function pool(): Promise<Worker>[] {
   if (workers) return workers
-  workers = [0, 1, 2].map((i) =>
+  workers = [0, 1].map((i) =>
     createWorker('eng', 1, { logger: () => {} }).then(async (w) => {
       await w.setParameters({
         preserve_interword_spaces: '1',
         tessedit_pageseg_mode: PSM.SINGLE_BLOCK, // bands are a uniform block of 1–2 lines
+        tessedit_do_invert: '0',                 // we already choose the polarity; skip the inverted second pass
         // The number corner only ever holds digits, a slash and set-code capitals
         // (TG12/TG30, SV001/SV122): restricting the alphabet stops "004/189"
         // coming back as "poas189".
-        ...(i === 2 ? { tessedit_char_whitelist: '0123456789/ABCDEFGHIJKLMNOPQRSTUVWXYZ ' } : {}),
+        ...(i === 1 ? { tessedit_char_whitelist: '0123456789/ABCDEFGHIJKLMNOPQRSTUVWXYZ ' } : {}),
       })
       return w
     }),
@@ -50,7 +57,8 @@ function boxBlur(src: Float32Array, w: number, h: number, r: number): Float32Arr
 
 /**
  * Crop a band from the card canvas and prepare it for OCR:
- *  1. upscale (small print on the card),
+ *  1. resample to a fixed height (small print is enlarged, big print is not
+ *     blown up needlessly: OCR time grows with pixel count),
  *  2. greyscale,
  *  3. flatten illumination: divide by a heavy local blur so a shadow across the
  *     band or a glare hot-spot becomes a flat background instead of a cliff,
@@ -58,9 +66,10 @@ function boxBlur(src: Float32Array, w: number, h: number, r: number): Float32Arr
  *  5. if the band is mostly dark (full-art cards with light text), invert so
  *     Tesseract sees dark text on light.
  */
-function band(src: HTMLCanvasElement, fx: number, fy: number, fw: number, fh: number, scale = 2.5): HTMLCanvasElement {
+function band(src: HTMLCanvasElement, fx: number, fy: number, fw: number, fh: number, targetH: number): HTMLCanvasElement {
   const sx = Math.round(fx * src.width), sy = Math.round(fy * src.height)
   const sw = Math.round(fw * src.width), sh = Math.round(fh * src.height)
+  const scale = Math.min(5, Math.max(0.5, targetH / Math.max(1, sh)))
   const c = document.createElement('canvas')
   const w = (c.width = Math.max(1, Math.round(sw * scale)))
   const h = (c.height = Math.max(1, Math.round(sh * scale)))
@@ -105,23 +114,31 @@ function band(src: HTMLCanvasElement, fx: number, fy: number, fw: number, fh: nu
 
 export interface OcrBands { top: string; bottom: string; corner: string }
 
-// Regions as fractions of the card: [x, y, w, h, upscale]
+// Regions as fractions of the card: [x, y, w, h, output height in px]
+// Output heights are chosen so the smallest text in the band comes out ~25–35 px tall.
 const REGIONS = {
-  top: [0.03, 0.015, 0.94, 0.14, 3] as const,      // name + HP
-  bottom: [0.02, 0.85, 0.96, 0.15, 3] as const,    // illustrator credit, number (any era)
-  corner: [0, 0.9, 0.5, 0.1, 4] as const,          // bottom-left: number on BW → SV era, read big
+  top: [0.03, 0.015, 0.94, 0.14, 150] as const,     // name + HP (large print)
+  bottom: [0.02, 0.85, 0.96, 0.15, 400] as const,   // illustrator credit, number (small print, any era)
+  corner: [0, 0.9, 0.5, 0.1, 360] as const,         // bottom-left: number on BW → SV era
 }
 
 const clean = (t: string) => t.replace(/\s+/g, ' ').trim()
 
-export async function readCard(card: HTMLCanvasElement): Promise<OcrBands> {
-  const [w1, w2, w3] = await Promise.all(pool())
-  const [r1, r2, r3] = await Promise.all([
-    w1.recognize(band(card, ...REGIONS.top)),
-    w2.recognize(band(card, ...REGIONS.bottom)),
-    w3.recognize(band(card, ...REGIONS.corner)),
+/** Name band and number corner, in parallel. Enough for most modern cards. */
+export async function readPrimary(card: HTMLCanvasElement): Promise<{ top: string; corner: string }> {
+  const [w1, w2] = await Promise.all(pool())
+  const [r1, r2] = await Promise.all([
+    w1.recognize(band(card, ...REGIONS.top), {}, OUTPUT),
+    w2.recognize(band(card, ...REGIONS.corner), {}, OUTPUT),
   ])
-  return { top: clean(r1.data.text), bottom: clean(r2.data.text), corner: clean(r3.data.text) }
+  return { top: clean(r1.data.text), corner: clean(r2.data.text) }
+}
+
+/** Wide bottom band: illustrator credit and the number on older layouts. */
+export async function readBottom(card: HTMLCanvasElement): Promise<string> {
+  const [w1] = await Promise.all(pool())
+  const r = await w1.recognize(band(card, ...REGIONS.bottom), {}, OUTPUT)
+  return clean(r.data.text)
 }
 
 /** For the debug overlay: the preprocessed bands as data URLs. */

@@ -7,19 +7,25 @@ export class Particles {
   private ps: P[] = []
   private raf = 0
   private ctx: CanvasRenderingContext2D
+  private w = 0
+  private h = 0
+  /** Phones get fewer, cheaper particles: the camera and OCR already have the CPU busy. */
+  private budget = window.matchMedia('(max-width: 959px)').matches ? 0.5 : 1
   constructor(private canvas: HTMLCanvasElement) {
-    this.ctx = canvas.getContext('2d')!
+    this.ctx = canvas.getContext('2d', { alpha: true, desynchronized: true })!
     this.resize()
   }
   resize() {
-    const dpr = Math.min(2, window.devicePixelRatio || 1)
+    const dpr = Math.min(this.budget < 1 ? 1.25 : 2, window.devicePixelRatio || 1)
     const r = this.canvas.getBoundingClientRect()
+    this.w = r.width; this.h = r.height
     this.canvas.width = r.width * dpr
     this.canvas.height = r.height * dpr
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
   }
   /** Burst from a point (CSS px). colors: array of CSS colors. */
   burst(x: number, y: number, colors: string[], count = 90, power = 1) {
+    count = Math.round(count * this.budget)
     for (let i = 0; i < count; i++) {
       const a = Math.random() * Math.PI * 2
       const sp = (4 + Math.random() * 9) * power
@@ -34,6 +40,7 @@ export class Particles {
   }
   /** Ring sweep around a rectangle (CSS px) — used when a card is locked. */
   ring(cx: number, cy: number, radius: number, colors: string[], count = 60) {
+    count = Math.round(count * this.budget)
     for (let i = 0; i < count; i++) {
       const a = (i / count) * Math.PI * 2
       this.ps.push({
@@ -49,8 +56,7 @@ export class Particles {
     cancelAnimationFrame(this.raf)
     const tick = () => {
       const { ctx } = this
-      const r = this.canvas.getBoundingClientRect()
-      ctx.clearRect(0, 0, r.width, r.height)
+      ctx.clearRect(0, 0, this.w, this.h)
       this.ps = this.ps.filter((p) => p.life < p.max)
       for (const p of this.ps) {
         p.life++
@@ -73,6 +79,7 @@ export class Particles {
       }
       ctx.globalAlpha = 1
       if (this.ps.length) this.raf = requestAnimationFrame(tick)
+      else ctx.clearRect(0, 0, this.w, this.h)
     }
     this.raf = requestAnimationFrame(tick)
   }
