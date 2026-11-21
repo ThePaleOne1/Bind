@@ -118,6 +118,10 @@ export default function Settings() {
             <Switch on={s.askFinish} onChange={(v) => s.set({ askFinish: v })} />
           </div>
           <div className="setting">
+            <div><div className="setting__label">Expect Japanese cards</div><div className="setting__sub">A Japanese print with the right number wins even when its set code cannot be read (also the JP button on the camera)</div></div>
+            <Switch on={s.japanese} onChange={(v) => s.set({ japanese: v })} />
+          </div>
+          <div className="setting">
             <div><div className="setting__label">Effects</div><div className="setting__sub">Confetti and animations on a scan</div></div>
             <Switch on={s.effects} onChange={(v) => s.set({ effects: v })} />
           </div>

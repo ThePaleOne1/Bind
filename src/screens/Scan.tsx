@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Zap, ZapOff, Search, Plus, Minus, X, ChevronLeft, Sun, SlidersHorizontal, SwitchCamera, ZoomIn, Focus, Play, Square, Sparkles, Check, Eye, Send, Share2 } from 'lucide-react'
+import { Zap, ZapOff, Search, Plus, Minus, X, ChevronLeft, Sun, SlidersHorizontal, SwitchCamera, ZoomIn, Focus, Play, Square, Sparkles, Check, Eye, Send, Share2, Languages } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../data/db'
-import type { CardRecord, IndexEntry, ScanEvent } from '../data/types'
+import { setCode, type CardRecord, type IndexEntry, type ScanEvent } from '../data/types'
 import { startCamera, type CameraHandle } from '../recognition/camera'
 import { FrameAnalyzer, Pacer, type Phase, type Roi } from '../recognition/frameAnalyzer'
 import { captureRoi, grabRegion, cropCanvas, recognize, isBlank, setNameOf, MIN_CONTRAST, type Recognition } from '../recognition/recognizer'
@@ -255,7 +255,7 @@ export default function Scan() {
     p.ring(f.left + f.width / 2, f.top + f.height / 2, Math.min(f.width, f.height) * 0.45, palette)
   }
 
-  const { askFinish, effects } = useSettings()
+  const { askFinish, effects, japanese } = useSettings()
 
   /**
    * Work out the finish. The foil read tells a standard print from a reverse holo
@@ -401,7 +401,8 @@ export default function Scan() {
       still = grab.still
       let frame = locate(grab.canvas, wide)
       lastFrame.current = frame
-      rec = await recognize(frame, { debug, prefer })
+      const ja = useSettings.getState().japanese
+      rec = await recognize(frame, { debug, prefer, ja })
       // A soft still (lens still hunting, stack height changed): one focus pass and one retake.
       if (!rec.empty && rec.sharpness > 0 && rec.sharpness < BLUR_THRESHOLD && cam.current) {
         setBlurry(true)
@@ -412,7 +413,7 @@ export default function Scan() {
         tries++
         const g = await grabWide(wide, grab.canvas)
         const retaken = locate(g.canvas, wide, frame)
-        const again = await recognize(retaken, { debug, prefer })
+        const again = await recognize(retaken, { debug, prefer, ja })
         if (again.sharpness > rec.sharpness) { rec = again; frame = retaken; lastFrame.current = frame }
       }
       // Foil and glare change frame to frame: before giving up, read up to two more
@@ -423,7 +424,7 @@ export default function Scan() {
         await new Promise((r) => setTimeout(r, 200))
         tries++
         const g = await grabWide(wide)
-        const again = await recognize(locate(g.canvas, wide), { debug, prior: rec, prefer })
+        const again = await recognize(locate(g.canvas, wide), { debug, prior: rec, prefer, ja })
         rec = again.empty ? rec : again
       }
       const a = analyzer.current
@@ -759,6 +760,7 @@ export default function Scan() {
               )}
               <button className={`scan__tunebtn ${preview4k ? 'on' : ''}`} onClick={toggleRes} aria-label="Preview resolution"><Focus size={20} /><span>{preview4k ? '4K' : '720p'}</span></button>
               <button className={`scan__tunebtn ${effects ? '' : 'on'}`} onClick={() => setSettings({ effects: !effects })} aria-label="Effects"><Sparkles size={20} /><span>{effects ? 'FX on' : 'Lite'}</span></button>
+              <button className={`scan__tunebtn ${japanese ? 'on' : ''}`} onClick={() => setSettings({ japanese: !japanese })} aria-label="Expect Japanese cards"><Languages size={20} /><span>JP</span></button>
             </div>
             {camInfo.manual && (
               <div className="scan__tunerow" style={{ paddingTop: 0 }}>
@@ -928,7 +930,7 @@ export function SearchSheet({ open, onClose, onPick }: { open: boolean; onClose:
             <button key={e.id} className="tile" onClick={() => onPick(e.id)}>
               <CardImage src={e.img} alt={e.name} />
               <div className="list__title" style={{ fontSize: 'var(--fs-sm)', marginTop: 6 }}>{e.name}</div>
-              <div className="list__sub">{e.set.toUpperCase()} · {e.n}/{e.total}</div>
+              <div className="list__sub">{setCode(e.set).toUpperCase()} · {e.n}/{e.total}</div>
             </button>
           ))}
         </div>

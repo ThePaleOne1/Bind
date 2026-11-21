@@ -427,6 +427,7 @@ img { display: block; max-width: 100%; }
   transition: opacity 0.2s;
 }
 .scan__tag--stale { opacity: 0.5; }
+.cardimg--none { display: grid; place-items: center; background: var(--surface-2); color: var(--text-2); font-weight: 800; font-size: var(--fs-xs); text-align: center; padding: 8px; }
 .scan__tagmain { display: flex; align-items: center; gap: 10px; }
 /* "Same card" notice: the card was read again and taken to be the same copy */
 .scan__same { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; border-radius: 10px; background: rgba(233, 245, 240, 0.08); font-weight: 800; font-size: var(--fs-sm); }

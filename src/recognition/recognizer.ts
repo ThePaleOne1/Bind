@@ -20,7 +20,7 @@ export interface Recognition {
   /** Nothing printed in the frame (empty jig, table): OCR was skipped. */
   empty?: boolean
   foil?: FoilRead
-  bands?: { top: string; bottom: string; corner: string } // preprocessed band images (debug)
+  bands?: { top: string; bottom: string; corner: string; code?: string } // preprocessed band images (debug)
 }
 
 /**
@@ -87,7 +87,7 @@ export const MIN_CONTRAST = 0.06
 
 const EMPTY: Omit<Recognition, 'ms' | 'sharpness'> = {
   card: null, confidence: 0, alternatives: [],
-  parsed: { number: null, total: null, numberWeak: false, numberAlts: [], nameGuess: '', illustratorGuess: null },
+  parsed: { number: null, total: null, numberWeak: false, numberAlts: [], nameGuess: '', illustratorGuess: null, setCodes: [] },
   ocr: { top: '', bottom: '', corner: '' },
 }
 
@@ -96,7 +96,7 @@ const EMPTY: Omit<Recognition, 'ms' | 'sharpness'> = {
  * card) the OCR text of both frames is pooled: foil makes digits come out differently
  * each frame, so two noisy reads give the number and illustrator matching more to go on.
  */
-export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean; prior?: Recognition; prefer?: Set<string> } = {}): Promise<Recognition> {
+export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean; prior?: Recognition; prefer?: Set<string>; ja?: boolean } = {}): Promise<Recognition> {
   const t0 = performance.now()
   // Nothing printed in the frame (empty jig, table): skip the OCR, which is slow on noise.
   if (contrastOf(card) < MIN_CONTRAST) {
@@ -112,7 +112,7 @@ export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean
   const join = (a: string, b?: string) => (b ? `${a} ${b}` : a)
   const ocr = { top: join(primary.top, prior?.top), bottom: prior?.bottom ?? '', corner: join(primary.corner, prior?.corner) }
   let parsed = parseOcr(ocr)
-  let m = matchCards(parsed, index, { prefer: opts.prefer })
+  let m = matchCards(parsed, index, { prefer: opts.prefer, ja: opts.ja })
   // Phase 2: the wide bottom band, only when the corner did not settle it
   // (number missing, weak match, or two cards within reach of each other).
   const settled = m.best && m.confidence >= 0.8 && !(m.alternatives[1] && m.alternatives[1].score >= m.best.score - 0.12)
@@ -121,7 +121,7 @@ export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean
     ocr.bottom = join(await readBottom(card), prior?.bottom)
     ocrMs += performance.now() - t2
     parsed = parseOcr(ocr)
-    m = matchCards(parsed, index, { prefer: opts.prefer })
+    m = matchCards(parsed, index, { prefer: opts.prefer, ja: opts.ja })
   }
   let best = m.best
   let confidence = m.confidence

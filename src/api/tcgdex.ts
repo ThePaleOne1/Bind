@@ -3,9 +3,15 @@ import { db, getMeta, setMeta } from '../data/db'
 import type {CardRecord, IndexEntry, SetInfo, Finish } from '../data/types'
 
 const API = 'https://api.tcgdex.net/v2/en'
+const API_JA = 'https://api.tcgdex.net/v2/ja'
 const INDEX_TTL = 7 * 86_400_000
 const PRICE_TTL = 86_400_000
-const INDEX_KEY = 'cardIndex:v2' // bump when the index shape or filters change
+const INDEX_KEY = 'cardIndex:v3' // bump when the index shape or filters change (v3: Japanese catalogue)
+
+/** Japanese prints live in the catalogue under a "ja:" prefix; the API id is the rest. */
+export const isJa = (id: string) => id.startsWith('ja:')
+const apiId = (id: string) => (isJa(id) ? id.slice(3) : id)
+const apiFor = (id: string) => (isJa(id) ? API_JA : API)
 
 /** "025" -> "25", "TG01" -> "TG1", "SWSH001" -> "SWSH1" */
 export const normNumber = (n: string) =>
@@ -37,6 +43,21 @@ export async function loadIndex(force = false) {
         const setId = c.id.slice(0, c.id.lastIndexOf('-'))
         return { id: c.id, n: normNumber(c.localId), name: c.name, set: setId, total: sets[setId]?.total ?? 0, img: c.image ?? null }
       })
+    // Japanese prints: the set code (M2a, SV8a) is printed beside the number and is what
+    // tells a Japanese card from the English card with the same number. Without the
+    // Japanese catalogue the app can only ever land on the English look-alike.
+    try {
+      const [jc, js] = await Promise.all([fetch(`${API_JA}/cards`), fetch(`${API_JA}/sets`)])
+      const jcards: any[] = await jc.json()
+      const jsets: any[] = await js.json()
+      for (const s of jsets) {
+        sets[`ja:${s.id}`] = { id: `ja:${s.id}`, name: s.name, total: s.cardCount?.official ?? 0, totalAll: s.cardCount?.total ?? 0, lang: 'ja' }
+      }
+      for (const c of jcards) {
+        const setId = `ja:${c.id.slice(0, c.id.lastIndexOf('-'))}`
+        entries.push({ id: `ja:${c.id}`, n: normNumber(c.localId), name: c.name, set: setId, total: sets[setId]?.total ?? 0, img: c.image ?? null, lang: 'ja' })
+      }
+    } catch { /* the English catalogue alone is still useful */ }
     indexCache = { entries, sets }
     await setMeta(INDEX_KEY, indexCache)
     return indexCache
@@ -134,16 +155,18 @@ export async function getCard(id: string, opts: { refresh?: boolean; quick?: boo
     const t0 = performance.now()
     const ctl = opts.quick ? new AbortController() : null
     const timer = ctl ? setTimeout(() => ctl.abort(), 5000) : null
-    const r = await fetch(`${API}/cards/${encodeURIComponent(id)}`, ctl ? { signal: ctl.signal } : undefined).finally(() => { if (timer) clearTimeout(timer) })
+    const r = await fetch(`${apiFor(id)}/cards/${encodeURIComponent(apiId(id))}`, ctl ? { signal: ctl.signal } : undefined).finally(() => { if (timer) clearTimeout(timer) })
     if (!r.ok) throw new Error(`card ${id}: ${r.status}`)
     const d = await r.json()
     logEvent('net', `card ${id}`, performance.now() - t0)
     const p = parsePrices(d)
+    const ja = isJa(id)
     const rec: CardRecord = {
-      id: d.id,
+      id,
       name: d.name,
       localId: d.localId,
-      setId: d.set?.id ?? id.slice(0, id.lastIndexOf('-')),
+      setId: (ja ? 'ja:' : '') + (d.set?.id ?? apiId(id).slice(0, apiId(id).lastIndexOf('-'))),
+      ...(ja ? { lang: 'ja' as const } : {}),
       setName: d.set?.name ?? '',
       setTotal: d.set?.cardCount?.official ?? 0,
       image: d.image ?? null,

@@ -36,6 +36,7 @@ export interface CardRecord {
   illustrator?: string | null
   rarity?: string | null
   category?: string | null
+  lang?: 'ja'
   /** Finishes this card was printed in, from the card database. */
   variants?: { normal: boolean; reverse: boolean; holo: boolean; firstEdition: boolean } | null
   /** Market price per finish, where the database prices them separately. */
@@ -79,12 +80,14 @@ export interface ScanEvent {
 }
 
 export interface IndexEntry {
+  /** Card id; Japanese catalogue ids carry a "ja:" prefix (set ids like "neo1" exist in both languages). */
   id: string
   n: string        // normalised collector number
   name: string
   set: string      // set id
   total: number    // official card count of the set
   img: string | null // image base URL (append /low.webp)
+  lang?: 'ja'        // Japanese print: the name is in Japanese and cannot be read by the OCR
 }
 
 export interface SetInfo {
@@ -92,7 +95,11 @@ export interface SetInfo {
   name: string
   total: number
   totalAll: number
+  lang?: 'ja'
 }
+
+/** "ja:M2a" → "M2a": the code printed on the card, without the catalogue prefix. */
+export const setCode = (setId: string) => setId.replace(/^ja:/, '')
 
 export interface Meta<T = unknown> {
   key: string

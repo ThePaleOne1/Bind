@@ -15,6 +15,7 @@ export interface Settings {
   cameraId: string
   preview4k: boolean      // 4K preview (only for lenses that cannot take a full-resolution still); default 720p
   askFinish: boolean      // when a card comes in several finishes and the foil read is unsure, ask before adding
+  japanese: boolean       // expect Japanese prints: a Japanese card with the right number needs no readable set code
   effects: boolean        // confetti, flash and spring animations on a scan (off = lighter on slow phones)
   set: (p: Partial<Settings>) => void
 }
@@ -34,6 +35,7 @@ export const useSettings = create<Settings>()(
       cameraId: '',
       preview4k: false,
       askFinish: true,
+      japanese: false,
       effects: true,
       set: (p) => set(p),
     }),

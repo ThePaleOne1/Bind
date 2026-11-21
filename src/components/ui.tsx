@@ -71,6 +71,13 @@ export function CardImage({ src, alt, className, style, quality = 'low', eager =
   // Slow data: after a while show whatever has arrived instead of a shimmer forever.
   useEffect(() => { if (loaded || !src) return; const t = setTimeout(() => setLoaded(true), 6000); return () => clearTimeout(t) }, [loaded, src])
   const imgProps = { loading: eager ? ('eager' as const) : ('lazy' as const), decoding: 'async' as const, draggable: false, ...(eager ? ({ fetchpriority: 'high' } as Record<string, string>) : {}) }
+  if (!src) {
+    return (
+      <div className={`cardimg cardimg--none ${className ?? ''}`} style={style} onClick={onClick}>
+        <span>{alt ?? 'No art'}</span>
+      </div>
+    )
+  }
   return (
     <div className={`cardimg ${className ?? ''}`} style={style} onClick={onClick}>
       {!loaded && <div className="cardimg__shimmer" />}

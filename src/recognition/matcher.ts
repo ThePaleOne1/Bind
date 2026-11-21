@@ -19,6 +19,8 @@ export interface Parsed {
   numberAlts: NumberRead[]
   nameGuess: string
   illustratorGuess: string | null
+  /** Set-code-shaped tokens near the number (M2A, SV8A, S6K), uppercased: how a Japanese print is told apart. */
+  setCodes: string[]
 }
 
 const STOP = new Set([
@@ -103,7 +105,21 @@ export function parseOcr(t: OcrText): Parsed {
     .filter((w) => w && !STOP.has(w) && !/^\d+$/.test(w) && !/^(hp\d*|\d+hp|lv\d*)$/.test(w) && w.length > 1)
   const joined = words.slice(0, 14).join(' ') // several frames may be pooled: keep enough for the name to survive junk
   const nameGuess = joined.length >= 3 ? joined : '' // one or two letters is noise, not a name
-  return { number, total, numberWeak, numberAlts, nameGuess, illustratorGuess }
+  const setCodes = Array.from(new Set(
+    `${t.corner ?? ''} ${t.bottom}`.toUpperCase().replace(/-/g, '').split(/[^A-Z0-9+]+/)
+      .filter((w) => /^[A-Z]{1,4}\d{1,2}[A-Z]?$|^[A-Z]{1,2}\d?[A-Z]$/.test(w) && w.length >= 2 && w.length <= 6),
+  ))
+  return { number, total, numberWeak, numberAlts, nameGuess, illustratorGuess, setCodes }
+}
+
+/** Set id as the OCR would see the printed code: "ja:M2a" → "M2A". */
+export const codeOf = (set: string) => set.replace(/^ja:/, '').replace(/-/g, '').toUpperCase()
+
+/** A read token stands for the code when equal, or one character off on a code of four or more. */
+export function codeHit(tokens: string[], code: string): boolean {
+  if (tokens.includes(code)) return true
+  if (code.length < 4) return false
+  return tokens.some((t) => t.length === code.length && t.slice(0, 2) === code.slice(0, 2) && [...t].filter((ch, i) => ch !== code[i]).length <= 1)
 }
 
 /**
@@ -149,7 +165,7 @@ export interface MatchResult {
 export function matchCards(
   parsedIn: Parsed,
   index: { entries: IndexEntry[]; sets: Record<string, SetInfo> },
-  opts: { prefer?: Set<string> } = {},
+  opts: { prefer?: Set<string>; ja?: boolean } = {},
 ): MatchResult {
   // Cards come in set batches: a candidate from a recently scanned set gets a small nudge.
   const nudge = (set: string) => (opts.prefer?.has(set) ? 0.04 : 0)
@@ -170,7 +186,12 @@ export function matchCards(
         else s -= 0.2
       }
       s += nudge(e.set)
-      if (variants.length) {
+      if (e.lang === 'ja') {
+        // The name is Japanese and unreadable; the printed set code decides instead. Without
+        // it the English card with the same number keeps winning, as it should.
+        // "Expect Japanese" mode: a Japanese print needs no code to be in the running.
+        s += codeHit(parsed.setCodes, codeOf(e.set)) ? 0.3 : opts.ja ? 0.1 : -0.35
+      } else if (variants.length) {
         const sim = bestSim(variants, e.name)
         // A clearly different name is evidence against, but only when enough of it was read.
         s += 0.3 * sim - (sim < 0.2 && parsed.nameGuess.length >= 4 ? 0.25 : 0)
@@ -204,7 +225,7 @@ export function matchCards(
   if (numberWeak && parsed.nameGuess.length >= 3) {
     const seen = new Set(scored.map((c) => c.entry.id))
     for (const e of entries) {
-      if (seen.has(e.id)) continue
+      if (seen.has(e.id) || e.lang === 'ja') continue
       const sim = bestSim(variants, e.name)
       if (sim <= 0.55) continue
       // The set total is usually read right even when the number is not: a name match
@@ -219,7 +240,21 @@ export function matchCards(
   const second = scored[1]
   let confidence = best ? Math.min(1, best.score) : 0
   if (best && second && second.score > best.score - 0.05) confidence *= 0.6 // ambiguous
-  return { best, alternatives: scored.slice(0, 12), parsed, confidence }
+  // A Japanese print with the same number and set size as an English best whose name did
+  // not really read: do not commit the English card; bring the twin within reach and let
+  // the tie-break decide on the illustrator credit, which is Latin on Japanese cards too.
+  if (best && best.entry.lang !== 'ja') {
+    const simBest = variants.length ? bestSim(variants, best.entry.name) : 0
+    if (simBest < 0.5) {
+      const twin = scored.find((c) => c.entry.lang === 'ja' && c.entry.n === best.entry.n && c.entry.total === best.entry.total)
+      if (twin) {
+        twin.score = Math.max(twin.score, best.score - 0.05)
+        confidence = Math.min(confidence, 0.6)
+        scored.sort((a, b) => b.score - a.score)
+      }
+    }
+  }
+  return { best: scored[0] ?? null, alternatives: scored.slice(0, 12), parsed, confidence }
 }
 
 /* ---------- Fuzzy number comparison ----------

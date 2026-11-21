@@ -1,6 +1,8 @@
+import { logEvent } from '../utils/perfLog'
 import { createWorker, PSM, type Worker } from 'tesseract.js'
 
 let workers: Promise<Worker>[] | null = null
+const CORNER_CHARS = '0123456789/ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz '
 let jobs = 0                 // recognitions since the workers were (re)created
 const RECYCLE_AFTER = 40     // Tesseract's wasm heap only ever grows: start fresh now and then, while idle
 let recycling = false
@@ -19,10 +21,11 @@ function pool(): Promise<Worker>[] {
       await w.setParameters({
         preserve_interword_spaces: '1',
         tessedit_pageseg_mode: PSM.SINGLE_BLOCK, // bands are a uniform block of 1–2 lines
-        // The number corner only ever holds digits, a slash and set-code capitals
-        // (TG12/TG30, SV001/SV122): restricting the alphabet stops "004/189"
-        // coming back as "poas189".
-        ...(i === 1 ? { tessedit_char_whitelist: '0123456789/ABCDEFGHIJKLMNOPQRSTUVWXYZ ' } : {}),
+        // The number corner holds digits, a slash and set codes. Japanese set codes are
+        // printed in lower case ("sv3a" in a box), so lower case stays in; the number
+        // itself comes from the separate digits-only line read, which is what stops
+        // "004/189" coming back as "poas189".
+        ...(i === 1 ? { tessedit_char_whitelist: CORNER_CHARS } : {}),
       })
       return w
     }),
@@ -90,7 +93,7 @@ function boxBlur(src: Float32Array, w: number, h: number, r: number): Float32Arr
  *     Tesseract sees dark text on light.
  */
 const bandCanvases = new Map<string, HTMLCanvasElement>()
-function band(src: HTMLCanvasElement, fx: number, fy: number, fw: number, fh: number, targetH: number, slot = 'x'): HTMLCanvasElement {
+function band(src: HTMLCanvasElement, fx: number, fy: number, fw: number, fh: number, targetH: number, slot = 'x', delines = false): HTMLCanvasElement {
   const sx = Math.round(fx * src.width), sy = Math.round(fy * src.height)
   const sw = Math.round(fw * src.width), sh = Math.round(fh * src.height)
   const scale = Math.min(5, Math.max(0.5, targetH / Math.max(1, sh)))
@@ -140,6 +143,32 @@ function band(src: HTMLCanvasElement, fx: number, fy: number, fw: number, fh: nu
     out[i] = v < 0 ? 0 : v > 255 ? 255 : v
     if (out[i] < 110) dark++
   }
+  // The regulation mark and the set code sit in thin bordered boxes ("[H] [SSP EN]",
+  // "[G] [sv3a]"); the box lines wreck the segmentation of what is inside them. Long
+  // thin dark runs (a box edge, not a glyph stroke) are painted out, on the band as
+  // Tesseract will see it (dark on light), so a mostly dark band is flipped first.
+  if (delines) {
+    if (dark > n * 0.55) { for (let i = 0; i < out.length; i++) out[i] = 255 - out[i] }
+    const isDark = (v: number) => v < 110
+    const minV = Math.max(6, Math.round(h * 0.45)), minH = Math.max(8, Math.round(w * 0.06))
+    for (let x = 0; x < w; x++) {
+      let run = 0
+      for (let y = 0; y <= h; y++) {
+        if (y < h && isDark(out[y * w + x])) { run++; continue }
+        if (run >= minV) for (let k = y - run; k < y; k++) out[k * w + x] = 255
+        run = 0
+      }
+    }
+    for (let y = 0; y < h; y++) {
+      let run = 0
+      for (let x = 0; x <= w; x++) {
+        if (x < w && isDark(out[y * w + x])) { run++; continue }
+        if (run >= minH) for (let k = x - run; k < x; k++) out[y * w + k] = 255
+        run = 0
+      }
+    }
+    dark = 0   // already upright: never flip again below
+  }
   const invert = dark > n * 0.55
   for (let i = 0, j = 0; i < d.length; i += 4, j++) {
     const v = invert ? 255 - out[j] : out[j]
@@ -166,17 +195,40 @@ const clean = (t: string) => t.replace(/\s+/g, ' ').trim()
 /** Name band and number corner, in parallel. Enough for most modern cards. */
 export async function readPrimary(card: HTMLCanvasElement): Promise<{ top: string; corner: string }> {
   const [w1, w2] = await Promise.all(pool())
-  jobs += 3
+  jobs += 4
   // The corner block (set code boxes, number, rarity dot) confuses the segmenter on italic
   // bold digits: "032/191" came back "5357797". A second, tight read of just the number
   // line as a single line of digits is cheap and usually clean.
   const cornerRead = async () => {
     const r2 = await w2.recognize(band(card, ...REGIONS.corner, 'corner'), {}, OUTPUT)
-    await w2.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_LINE, tessedit_char_whitelist: '0123456789/ ' })
-    let line = ''
-    try { line = clean((await w2.recognize(band(card, ...REGIONS.number, 'number'), {}, OUTPUT)).data.text) } catch { /* ignore */ }
-    await w2.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_BLOCK, tessedit_char_whitelist: '0123456789/ABCDEFGHIJKLMNOPQRSTUVWXYZ ' })
-    return `${line} ${clean(r2.data.text)}`.trim()
+    // Digits only over the number line (two lines on some layouts: the illustrator credit
+    // sits just above on Japanese cards, so a block, not a single line).
+    await w2.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_BLOCK, tessedit_char_whitelist: '0123456789/ ' })
+    let line = '', codes = ''
+    try {
+      const nb = band(card, ...REGIONS.number, 'number', true)
+      const r3 = await w2.recognize(nb, {}, { ...OUTPUT, blocks: true })
+      line = clean(r3.data.text)
+      // The set code sits on the same line, left of the number ("[G] [sv3a] 038/062",
+      // "[H] [SSP EN] 032/191"). The number's own box from this pass says where the line
+      // is, so the code is read from exactly that strip, boxes erased, at a large scale:
+      // it is what tells a Japanese print from the English card with the same number.
+      const words: any[] = ((r3.data as any).blocks ?? []).flatMap((b: any) => b.paragraphs.flatMap((pg: any) => pg.lines.flatMap((l: any) => l.words)))
+      const num = words.find((w) => /\d{1,3}\/\d{1,3}/.test(w.text))
+      if (num) {
+        const [fx, fy, fw, fh] = REGIONS.number
+        const sx = fx + (num.bbox.x0 / nb.width) * fw
+        const y0 = fy + (num.bbox.y0 / nb.height) * fh, y1 = fy + (num.bbox.y1 / nb.height) * fh
+        const ch = (y1 - y0) * 1.7, cy = Math.max(0, y0 - (ch - (y1 - y0)) / 2)
+        const cw = sx - fx - 0.004
+        if (cw > 0.04) {
+          await w2.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_LINE, tessedit_char_whitelist: CORNER_CHARS })
+          codes = clean((await w2.recognize(band(card, fx, cy, cw, ch, 120, 'code', true), {}, OUTPUT)).data.text)
+        }
+      }
+    } catch (e: any) { logEvent('ocr', `number line failed: ${e?.message ?? e}`); console.warn('number line read failed', e) }
+    await w2.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_BLOCK, tessedit_char_whitelist: CORNER_CHARS })
+    return `${line} ${codes} ${clean(r2.data.text)}`.trim()
   }
   const [r1, corner] = await Promise.all([
     w1.recognize(band(card, ...REGIONS.top, 'top'), {}, OUTPUT),
@@ -195,5 +247,5 @@ export async function readBottom(card: HTMLCanvasElement): Promise<string> {
 
 /** For the debug overlay: the preprocessed bands as data URLs. */
 export function debugBands(card: HTMLCanvasElement) {
-  return { top: band(card, ...REGIONS.top, 'd').toDataURL(), bottom: band(card, ...REGIONS.bottom, 'd').toDataURL(), corner: band(card, ...REGIONS.corner, 'd').toDataURL() }
+  return { top: band(card, ...REGIONS.top, 'd').toDataURL(), bottom: band(card, ...REGIONS.bottom, 'd').toDataURL(), corner: band(card, ...REGIONS.corner, 'd').toDataURL(), code: band(card, ...REGIONS.number, 'd', true).toDataURL() }
 }

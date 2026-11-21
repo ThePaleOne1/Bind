@@ -33,7 +33,7 @@ export function finishesOf(card: Pick<CardRecord, 'variants' | 'variantPrices' |
   // Without market data: from Scarlet & Violet on, a "Rare" (and anything rarer) is a
   // holo print; the flags still claim a standard one exists.
   const r = (card?.rarity ?? '').toLowerCase()
-  const modern = /^(sv|me)/.test(card?.setId ?? '')
+  const modern = /^(sv|me|ja:(sv|m))/i.test(card?.setId ?? '')
   const holoRarity = r === 'rare' || /holo|ultra|double|illustration|special|hyper|secret|ace|shiny|amazing|radiant/.test(r)
   if (modern && holoRarity && !r.includes('reverse') && out.includes('normal') && out.length > 1) return out.filter((f) => f !== 'normal')
   return out.length ? out : ['normal']
