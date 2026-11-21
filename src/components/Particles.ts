@@ -10,7 +10,7 @@ export class Particles {
   private w = 0
   private h = 0
   /** Phones get fewer, cheaper particles: the camera and OCR already have the CPU busy. */
-  private budget = window.matchMedia('(max-width: 959px)').matches ? 0.5 : 1
+  private budget = window.matchMedia('(max-width: 959px)').matches ? 0.35 : 1
   private startedAt = 0
   private lastT = 0
   constructor(private canvas: HTMLCanvasElement) {
@@ -20,12 +20,18 @@ export class Particles {
   resize() {
     // A full-screen canvas is re-uploaded to the GPU every frame it changes, on top of
     // the live video. Phones get it at 0.75x: soft confetti does not need more.
-    const dpr = Math.min(this.budget < 1 ? 0.75 : 2, window.devicePixelRatio || 1)
+    const dpr = Math.min(this.budget < 1 ? 0.5 : 2, window.devicePixelRatio || 1)
     const r = this.canvas.getBoundingClientRect()
     this.w = r.width; this.h = r.height
     this.canvas.width = r.width * dpr
     this.canvas.height = r.height * dpr
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+  }
+  /** Drop every particle and wipe the canvas (resetting the bitmap, so nothing can linger). */
+  clear() {
+    cancelAnimationFrame(this.raf)
+    this.ps = []
+    this.resize()
   }
   /** Burst from a point (CSS px). colors: array of CSS colors. */
   burst(x: number, y: number, colors: string[], count = 90, power = 1) {
@@ -61,6 +67,13 @@ export class Particles {
     this.startedAt = performance.now()
     this.lastT = this.startedAt
     const tick = (now: number) => {
+      try { this.frame(now) } catch { this.clear() }
+    }
+    this.raf = requestAnimationFrame(tick)
+  }
+  private frame(now: number) {
+    const tick = (t: number) => { try { this.frame(t) } catch { this.clear() } }
+    {
       const { ctx } = this
       // Time-based, so a dropped frame rate shortens nothing and lengthens nothing;
       // and a hard stop at 2.5 s whatever happens.
@@ -77,11 +90,13 @@ export class Particles {
         p.x += p.vx * dt
         p.y += p.vy * dt
         p.rot += p.spin * dt
-        const t = 1 - p.life / p.max
+        // life can overshoot max within a tick; a negative radius makes arc() throw and
+        // kills the loop with the last frame still painted (the "stuck confetti").
+        const t = Math.max(0, 1 - p.life / p.max)
         ctx.globalAlpha = Math.min(1, t * 1.6)
         ctx.fillStyle = p.color
         if (p.shape === 0) {
-          ctx.beginPath(); ctx.arc(p.x, p.y, p.size * t, 0, Math.PI * 2); ctx.fill()
+          ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.01, p.size * t), 0, Math.PI * 2); ctx.fill()
         } else {
           ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot)
           ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2)
@@ -90,9 +105,8 @@ export class Particles {
       }
       ctx.globalAlpha = 1
       if (this.ps.length) this.raf = requestAnimationFrame(tick)
-      else ctx.clearRect(0, 0, this.w, this.h)
+      else this.resize() // bitmap reset so nothing can linger
     }
-    this.raf = requestAnimationFrame(tick)
   }
   destroy() { cancelAnimationFrame(this.raf) }
 }

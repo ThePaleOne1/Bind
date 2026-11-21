@@ -7,7 +7,7 @@ import { db } from '../data/db'
 import type { CardRecord, IndexEntry, ScanEvent } from '../data/types'
 import { startCamera, type CameraHandle } from '../recognition/camera'
 import { FrameAnalyzer, type Phase, type Roi } from '../recognition/frameAnalyzer'
-import { captureRoi, recognize, betterOf, isBlank, setNameOf, type Recognition } from '../recognition/recognizer'
+import { captureRoi, recognize, isBlank, setNameOf, type Recognition } from '../recognition/recognizer'
 import { sharpnessOf, sharpnessOfVideo, BLUR_THRESHOLD } from '../recognition/focus'
 import { warmOcr } from '../recognition/ocr'
 import { loadIndex, getCard } from '../api/tcgdex'
@@ -63,6 +63,7 @@ export default function Scan() {
   const scanPeak = useRef(0)                               // best sharpness of a confident scan on this lens
   const lastRefocus = useRef(0)
   const lastSharpAt = useRef(0)
+  const lastDebugTick = useRef(0)
   const lastCommit = useRef<{ id: string; at: number } | null>(null)
   const resultTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const noteTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -117,7 +118,7 @@ export default function Scan() {
     warmOcr()
     loadIndex().then(() => alive && setIndexReady(true)).catch(() => alive && setIndexReady(false))
     setCamError(null)
-    startCamera(v, { deviceId: useSettings.getState().cameraId || null }).then((h) => {
+    startCamera(v, { deviceId: useSettings.getState().cameraId || null, hiRes: useSettings.getState().hiRes }).then((h) => {
       if (!alive) { h.stop(); return }
       cam.current = h
       // Remember the lens that opened, so every later start goes straight to it.
@@ -192,7 +193,7 @@ export default function Scan() {
         }
       } else if (!settling) setBlurry(cam.current.focusing())
       if (debug && !settling && t - lastSharpAt.current > 500) { lastSharpAt.current = t; liveSharp.current = sharpnessOfVideo(v, roi()); setTick((n) => n + 1) }
-      else if (debug && settling) setTick((n) => n + 1)
+      else if (debug && settling && t - lastDebugTick.current > 400) { lastDebugTick.current = t; setTick((n) => n + 1) }
       if (fire) {
         if (cam.current.focusing()) { a.release(); return }   // mid-sweep frame: let the sweep finish, the next stillness will scan
         // The hand has gone, but the autofocus may still be converging: wait until two
@@ -220,6 +221,7 @@ export default function Scan() {
   const burstAt = (palette: string[], power = 1) => {
     const p = particles.current, f = frameBox
     if (!p || !f) return
+    p.clear()
     p.burst(f.left + f.width / 2, f.top + f.height / 2, palette, 110, power)
     p.ring(f.left + f.width / 2, f.top + f.height / 2, Math.min(f.width, f.height) * 0.45, palette)
   }
@@ -271,10 +273,12 @@ export default function Scan() {
       }
       softMiss = false
       let rec = await recognize(frame, { debug })
-      if (!rec.card) {
-        // Glare and holo noise vary frame to frame: one quick second attempt.
-        await new Promise((r) => setTimeout(r, 180))
-        rec = betterOf(rec, await recognize(captureRoi(v, roi()), { debug }))
+      // Foil and glare change frame to frame: before giving up, read up to two more
+      // frames, pooling their OCR text with what has been read so far.
+      for (let attempt = 0; attempt < 2 && !rec.card && !isBlank(rec) && !isSoft(rec.sharpness); attempt++) {
+        await new Promise((r) => setTimeout(r, 350))
+        const again = await recognize(captureRoi(v, roi()), { debug, prior: rec })
+        rec = isBlank(again) ? rec : again
       }
       const a = analyzer.current
       if (rec.card) {
@@ -351,6 +355,12 @@ export default function Scan() {
   const setManualFocus = async (d: number) => {
     if (!cam.current) return
     if (await cam.current.setFocusDistance(d)) setFocusDist(d)
+  }
+
+  const hiRes = useSettings((s) => s.hiRes)
+  const toggleRes = () => {
+    setSettings({ hiRes: !hiRes })
+    setLensRequest((n) => n + 1)   // reopen the camera at the new size
   }
 
   const switchCamera = () => {
@@ -444,6 +454,7 @@ export default function Scan() {
               {camInfo.devices > 1 && (
                 <button className="scan__tunebtn" onClick={switchCamera} aria-label="Switch lens"><SwitchCamera size={20} /><span>Lens {camInfo.lens}</span></button>
               )}
+              <button className={`scan__tunebtn ${hiRes ? 'on' : ''}`} onClick={toggleRes} aria-label="Resolution"><Focus size={20} /><span>{hiRes ? '4K' : 'HD'}</span></button>
             </div>
             {camInfo.manual && (
               <div className="scan__tunerow" style={{ paddingTop: 0 }}>

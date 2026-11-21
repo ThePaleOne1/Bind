@@ -69,12 +69,13 @@ async function listBackCameras(currentId: string | null): Promise<CameraDevice[]
   }
 }
 
-export async function startCamera(video: HTMLVideoElement, opts: { deviceId?: string | null; _retry?: boolean } = {}): Promise<CameraHandle> {
+export async function startCamera(video: HTMLVideoElement, opts: { deviceId?: string | null; hiRes?: boolean; _retry?: boolean } = {}): Promise<CameraHandle> {
   const base: MediaTrackConstraints = {
-    // Ask for 4K: the collector number is ~9 px tall at 1080p and foil patterns eat it.
-    // Analysis and OCR costs do not grow (GPU downscale, bands resampled to fixed heights).
-    width: { ideal: 3840 },
-    height: { ideal: 2160 },
+    // 4K by default: the collector number is ~9 px tall at 1080p and foil patterns eat it.
+    // Analysis and OCR costs do not grow (GPU downscale, bands resampled to fixed heights),
+    // but the preview itself is heavier, so it can be turned down.
+    width: { ideal: opts.hiRes === false ? 1920 : 3840 },
+    height: { ideal: opts.hiRes === false ? 1080 : 2160 },
     frameRate: { ideal: 30 },
     // Advanced constraints are ignored by browsers that do not support them.
     advanced: [{ focusMode: 'continuous' } as any],
@@ -116,7 +117,7 @@ export async function startCamera(video: HTMLVideoElement, opts: { deviceId?: st
     if (pref && pref.id !== deviceId) {
       stream.getTracks().forEach((t) => t.stop())
       await new Promise((r) => setTimeout(r, 350))   // let the driver release the lens first
-      return startCamera(video, { deviceId: pref.id, _retry: true })
+      return startCamera(video, { deviceId: pref.id, hiRes: opts.hiRes, _retry: true })
     }
   }
 

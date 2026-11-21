@@ -101,7 +101,7 @@ export function parseOcr(t: OcrText): Parsed {
   const words = norm(t.top)
     .split(' ')
     .filter((w) => w && !STOP.has(w) && !/^\d+$/.test(w) && !/^(hp\d*|\d+hp|lv\d*)$/.test(w) && w.length > 1)
-  const joined = words.slice(0, 5).join(' ')
+  const joined = words.slice(0, 14).join(' ') // several frames may be pooled: keep enough for the name to survive junk
   const nameGuess = joined.length >= 3 ? joined : '' // one or two letters is noise, not a name
   return { number, total, numberWeak, numberAlts, nameGuess, illustratorGuess }
 }

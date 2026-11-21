@@ -53,7 +53,12 @@ const EMPTY: Omit<Recognition, 'ms' | 'sharpness'> = {
   ocr: { top: '', bottom: '', corner: '' },
 }
 
-export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean } = {}): Promise<Recognition> {
+/**
+ * Recognise a card. With `prior` (a failed attempt on an earlier frame of the same
+ * card) the OCR text of both frames is pooled: foil makes digits come out differently
+ * each frame, so two noisy reads give the number and illustrator matching more to go on.
+ */
+export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean; prior?: Recognition } = {}): Promise<Recognition> {
   const t0 = performance.now()
   // Nothing printed in the frame (empty jig, table): skip the OCR, which is slow on noise.
   if (contrastOf(card) < MIN_CONTRAST) {
@@ -63,14 +68,16 @@ export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean
   }
   // Phase 1: name band + number corner (parallel). That settles most modern cards.
   const [index, primary] = await Promise.all([loadIndex(), readPrimary(card)])
-  const ocr = { top: primary.top, bottom: '', corner: primary.corner }
+  const prior = opts.prior?.ocr
+  const join = (a: string, b?: string) => (b ? `${a} ${b}` : a)
+  const ocr = { top: join(primary.top, prior?.top), bottom: prior?.bottom ?? '', corner: join(primary.corner, prior?.corner) }
   let parsed = parseOcr(ocr)
   let m = matchCards(parsed, index)
   // Phase 2: the wide bottom band, only when the corner did not settle it
   // (number missing, weak match, or two cards within reach of each other).
   const settled = m.best && m.confidence >= 0.8 && !(m.alternatives[1] && m.alternatives[1].score >= m.best.score - 0.12)
   if (!settled) {
-    ocr.bottom = await readBottom(card)
+    ocr.bottom = join(await readBottom(card), prior?.bottom)
     parsed = parseOcr(ocr)
     m = matchCards(parsed, index)
   }
