@@ -1,0 +1,1055 @@
+{
+  "artists": [
+    {
+      "name": "0313",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Yuka Morii",
+      "status": "collecting",
+      "favourite": 1,
+      "style": "Photography",
+      "note": "Porceline",
+      "binderPage": 1
+    },
+    {
+      "name": "5ban Graphics",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Asako Ito",
+      "status": "collecting",
+      "favourite": 1,
+      "style": "Photography",
+      "note": "knitted",
+      "binderPage": 2
+    },
+    {
+      "name": "akagi",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Shinji Kanda",
+      "status": "collecting",
+      "favourite": 1,
+      "style": "Trippy, Detailed",
+      "note": null,
+      "binderPage": 3
+    },
+    {
+      "name": "Akira Komayama",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Tomokazu Komiya",
+      "status": "collecting",
+      "favourite": 2,
+      "style": "Trippy, Detailed",
+      "note": null,
+      "binderPage": 4
+    },
+    {
+      "name": "Aky CG Works",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Mori Yuu",
+      "status": "collecting",
+      "favourite": 2,
+      "style": "Thatching, Clean",
+      "note": null,
+      "binderPage": 5
+    },
+    {
+      "name": "Anesaki Dynamic",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Nakamura Ippan",
+      "status": "collecting",
+      "favourite": 3,
+      "style": "Thatching, Clean",
+      "note": null,
+      "binderPage": 6
+    },
+    {
+      "name": "aoki",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Tetsu Kayama",
+      "status": "collecting",
+      "favourite": 2,
+      "style": "Thatching, Trippy",
+      "note": null,
+      "binderPage": 7
+    },
+    {
+      "name": "Apios",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "AKIRA EGAWA",
+      "status": "collecting",
+      "favourite": 2,
+      "style": "painterly, detailed",
+      "note": null,
+      "binderPage": 9
+    },
+    {
+      "name": "aspara",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Mugi Hamada",
+      "status": "collecting",
+      "favourite": 2,
+      "style": "painterly, detailed",
+      "note": null,
+      "binderPage": 10
+    },
+    {
+      "name": "Atsuko Nishida",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "REND",
+      "status": "collecting",
+      "favourite": 3,
+      "style": "painterly, chill",
+      "note": null,
+      "binderPage": 11
+    },
+    {
+      "name": "Atsushi Furusawa",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Scav",
+      "status": "collecting",
+      "favourite": 4,
+      "style": "painterly, clean",
+      "note": null,
+      "binderPage": 12
+    },
+    {
+      "name": "Aya Kusube",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "HYOGONOSUKE",
+      "status": "collecting",
+      "favourite": 1,
+      "style": "Clean , Texture",
+      "note": null,
+      "binderPage": 13
+    },
+    {
+      "name": "Ayaka Yoshida",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "OKACHEKE",
+      "status": "collecting",
+      "favourite": 1,
+      "style": "Clean , Texture",
+      "note": null,
+      "binderPage": 14
+    },
+    {
+      "name": "AYUMI ODASHIMA",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Taiga Kasai",
+      "status": "collecting",
+      "favourite": 2,
+      "style": "Clean, Texture",
+      "note": null,
+      "binderPage": 15
+    },
+    {
+      "name": "The Pokemon Company Art-Team",
+      "status": "collecting",
+      "favourite": 1,
+      "style": "Clean, Patturns",
+      "note": null,
+      "binderPage": 16
+    },
+    {
+      "name": "Bun Toujo",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Shibuzah",
+      "status": "collecting",
+      "favourite": 3,
+      "style": "Clean , Texture",
+      "note": null,
+      "binderPage": 17
+    },
+    {
+      "name": "chibi",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Jerky",
+      "status": "collecting",
+      "favourite": null,
+      "style": "Clean , Texture",
+      "note": null,
+      "binderPage": 18
+    },
+    {
+      "name": "cochi8i",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Oswaldo KATO",
+      "status": "collecting",
+      "favourite": 4,
+      "style": "Clean , Texture",
+      "note": null,
+      "binderPage": 19
+    },
+    {
+      "name": "danciao",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Kariya",
+      "status": "collecting",
+      "favourite": 2,
+      "style": "Clean, Detailed",
+      "note": null,
+      "binderPage": 20
+    },
+    {
+      "name": "DOM",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "OKUBO",
+      "status": "collecting",
+      "favourite": 2,
+      "style": "Clean",
+      "note": null,
+      "binderPage": 21
+    },
+    {
+      "name": "Dsuke",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Whisker",
+      "status": "collecting",
+      "favourite": 3,
+      "style": "Clean , Texture",
+      "note": null,
+      "binderPage": 22
+    },
+    {
+      "name": "En Morikura",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "sowsow",
+      "status": "collecting",
+      "favourite": 4,
+      "style": "Clean, Hand Drawn",
+      "note": null,
+      "binderPage": 23
+    },
+    {
+      "name": "Eri Kamei",
+      "status": "not-collecting",
+      "reason": "Not enough cards"
+    },
+    {
+      "name": "Tomomi Ozaki",
+      "status": "collecting",
+      "favourite": 4,
+      "style": "Clean, Hand Drawn",
+      "note": null,
+      "binderPage": 24
+    },
+    {
+      "name": "Gapao",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Amelicart",
+      "status": "collecting",
+      "favourite": 2,
+      "style": "Clean , Texture",
+      "note": null,
+      "binderPage": 25
+    },
+    {
+      "name": "Gemi",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Mina Nakai",
+      "status": "collecting",
+      "favourite": 3,
+      "style": "Clean , Texture",
+      "note": null,
+      "binderPage": 26
+    },
+    {
+      "name": "GIDORA",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Shimaris Yukichi",
+      "status": "collecting",
+      "favourite": 2,
+      "style": "Clean, Outline",
+      "note": null,
+      "binderPage": 27
+    },
+    {
+      "name": "HACCAN",
+      "status": "not-collecting",
+      "reason": "Not enough cards"
+    },
+    {
+      "name": "ryoma uratsuka",
+      "status": "collecting",
+      "favourite": 3,
+      "style": "Clean, Outline",
+      "note": null,
+      "binderPage": 28
+    },
+    {
+      "name": "Haru Akasaka",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Saya Tsuruta",
+      "status": "collecting",
+      "favourite": 3,
+      "style": "Clean, Hand Drawn",
+      "note": null,
+      "binderPage": 29
+    },
+    {
+      "name": "Hasegawa Saki",
+      "status": "not-collecting",
+      "reason": "Not enough cards"
+    },
+    {
+      "name": "Yukihiro Tada",
+      "status": "collecting",
+      "favourite": 3,
+      "style": "Clean, Detailed",
+      "note": null,
+      "binderPage": 30
+    },
+    {
+      "name": "Hasuno",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Saboteri",
+      "status": "collecting",
+      "favourite": 2,
+      "style": "Clean, Outline",
+      "note": null,
+      "binderPage": 31
+    },
+    {
+      "name": "osare",
+      "status": "collecting",
+      "favourite": 2,
+      "style": "Clean, Outline",
+      "note": null,
+      "binderPage": 32
+    },
+    {
+      "name": "Heisuke",
+      "status": "not-collecting",
+      "reason": "Not enough cards"
+    },
+    {
+      "name": "Ayako Ozaki",
+      "status": "collecting",
+      "favourite": 4,
+      "style": "Clean",
+      "note": null,
+      "binderPage": 33
+    },
+    {
+      "name": "Hideki Ishikawa",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Taiga Kayama",
+      "status": "collecting",
+      "favourite": 3,
+      "style": "Clean, Outline",
+      "note": null,
+      "binderPage": 34
+    },
+    {
+      "name": "Hitoshi Ariga",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Sekio",
+      "status": "collecting",
+      "favourite": 2,
+      "style": "Painterly, pastel",
+      "note": null,
+      "binderPage": 35
+    },
+    {
+      "name": "hncl",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "mashu",
+      "status": "collecting",
+      "favourite": 3,
+      "style": "Painterly, Shaded",
+      "note": null,
+      "binderPage": 36
+    },
+    {
+      "name": "IKEDA Saki",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "imonii",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "inose yukie",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Iori Suzuki",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Jiro Sasumo",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Kagemaru Himeno",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Kamome Shirahama",
+      "status": "not-collecting",
+      "reason": "Not enough cards"
+    },
+    {
+      "name": "kamonabe",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Kanami Ogata",
+      "status": "not-collecting",
+      "reason": "Not enough cards"
+    },
+    {
+      "name": "Kannnu",
+      "status": "not-collecting",
+      "reason": "Not enough cards"
+    },
+    {
+      "name": "kantaro",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Katsunori Sato",
+      "status": "not-collecting",
+      "reason": "Not enough cards"
+    },
+    {
+      "name": "Kazuhisa Uragami",
+      "status": "not-collecting",
+      "reason": "Not enough cards"
+    },
+    {
+      "name": "Kazuma Koda",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Kazumasa Yasukuni",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Kedamahadaitai Yawarakai",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "KEIICHIRO ITO",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Kinu Nishimura",
+      "status": "not-collecting",
+      "reason": "Not enough cards"
+    },
+    {
+      "name": "kodama",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Kouki Saitou",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Krgc",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Kurata So",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Kuroimori",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "kurumitsu",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Kyoko Umemoto",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Ligton",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "MAHOU",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "MARINA Chikazawa",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Masako Tomii",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "matazo",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Mekayu",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "miki kudo",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Miki Tanaka",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Minahamu",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "MINAMINAMI Take",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Mingo",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Mitsuhiro Arita",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Mousho",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Nagimiso",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Naoyo Kimura",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Narumi Sato",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Natsumi Miyanose",
+      "status": "not-collecting",
+      "reason": "Not enough cards"
+    },
+    {
+      "name": "Natsumi Yoshida",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "NC Empire",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Nelnal",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "nisimono",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Nisota Niso",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Noaki Saito",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Nurikabe",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Oku",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Orca",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "otumami",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Ounishi",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Pani Kobayashi",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "PLANETA Mochizuki",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Ryota Murayama",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Ryuta Fuse",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Saino Misaki",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Sanosuke Sakuma",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Satoma",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Satoshi Ito",
+      "status": "not-collecting",
+      "reason": "Not enough cards"
+    },
+    {
+      "name": "Shin Nagasawa",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "shinya Komatsu",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Souichirou Gunjima",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Studio Bora Inc.",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Sui",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Sumiyoshi Kizuki",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Susumu Maeya",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "svlt",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Taira Akitsu",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "takashi shiraishi",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Takeshi Nakamura",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Takumi Wada",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "takuyoa",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Teeziro",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Terada Tera",
+      "status": "not-collecting",
+      "reason": "Not enough cards"
+    },
+    {
+      "name": "Tika Matsuno",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "toi8",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Tomowaka",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "tono",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "toriyufu",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Toyste Beach",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Uninori",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "USGMEN",
+      "status": "not-collecting",
+      "reason": "Not enough cards"
+    },
+    {
+      "name": "Uta",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "Wintr Wandr",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    },
+    {
+      "name": "yoko hishida",
+      "status": "not-collecting",
+      "reason": "Not enough cards"
+    },
+    {
+      "name": "yoshimi miyoshi",
+      "status": "not-collecting",
+      "reason": "Not enough cards"
+    },
+    {
+      "name": "yukiko baba",
+      "status": "not-collecting",
+      "reason": "Too many cards"
+    },
+    {
+      "name": "Yuriko Akase",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "zig",
+      "status": "not-collecting",
+      "reason": "A few hits, mostly mid"
+    },
+    {
+      "name": "Yoshioka",
+      "status": "not-collecting",
+      "reason": "Mid art"
+    }
+  ],
+  "pages": [
+    {
+      "page": 1,
+      "artist": "Yuka Morii"
+    },
+    {
+      "page": 2,
+      "artist": "Asako Ito"
+    },
+    {
+      "page": 3,
+      "artist": "Shinji Kanda"
+    },
+    {
+      "page": 4,
+      "artist": "Tomokazu Komiya"
+    },
+    {
+      "page": 5,
+      "artist": "Mori Yuu"
+    },
+    {
+      "page": 6,
+      "artist": "Nakamura Ippan"
+    },
+    {
+      "page": 7,
+      "artist": "Tetsu Kayama"
+    },
+    {
+      "page": 8,
+      "artist": null
+    },
+    {
+      "page": 9,
+      "artist": "AKIRA EGAWA"
+    },
+    {
+      "page": 10,
+      "artist": "Mugi Hamada"
+    },
+    {
+      "page": 11,
+      "artist": "REND"
+    },
+    {
+      "page": 12,
+      "artist": "Scav"
+    },
+    {
+      "page": 13,
+      "artist": "HYOGONOSUKE"
+    },
+    {
+      "page": 14,
+      "artist": "OKACHEKE"
+    },
+    {
+      "page": 15,
+      "artist": "Taiga Kasai"
+    },
+    {
+      "page": 16,
+      "artist": "The Pokemon Company Art-Team"
+    },
+    {
+      "page": 17,
+      "artist": "Shibuzah"
+    },
+    {
+      "page": 18,
+      "artist": "Jerky"
+    },
+    {
+      "page": 19,
+      "artist": "Oswaldo KATO"
+    },
+    {
+      "page": 20,
+      "artist": "Kariya"
+    },
+    {
+      "page": 21,
+      "artist": "OKUBO"
+    },
+    {
+      "page": 22,
+      "artist": "Whisker"
+    },
+    {
+      "page": 23,
+      "artist": "sowsow"
+    },
+    {
+      "page": 24,
+      "artist": "Tomomi Ozaki"
+    },
+    {
+      "page": 25,
+      "artist": "Amelicart"
+    },
+    {
+      "page": 26,
+      "artist": "Mina Nakai"
+    },
+    {
+      "page": 27,
+      "artist": "Shimaris Yukichi"
+    },
+    {
+      "page": 28,
+      "artist": "ryoma uratsuka"
+    },
+    {
+      "page": 29,
+      "artist": "Saya Tsuruta"
+    },
+    {
+      "page": 30,
+      "artist": "Yukihiro Tada"
+    },
+    {
+      "page": 31,
+      "artist": "Saboteri"
+    },
+    {
+      "page": 32,
+      "artist": "osare"
+    },
+    {
+      "page": 33,
+      "artist": "Ayako Ozaki"
+    },
+    {
+      "page": 34,
+      "artist": "Taiga Kayama"
+    },
+    {
+      "page": 35,
+      "artist": "Sekio"
+    },
+    {
+      "page": 36,
+      "artist": "mashu"
+    }
+  ]
+}
