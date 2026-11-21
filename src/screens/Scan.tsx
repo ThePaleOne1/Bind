@@ -180,7 +180,7 @@ export default function Scan() {
         lastSharpAt.current = t
         const s = sharpnessOfVideo(v, roi())
         liveSharp.current = s
-        sharpHist.current = [...sharpHist.current.slice(-2), s]
+        sharpHist.current = [...sharpHist.current.slice(-3), s]
         const soft = isSoft(s)
         setBlurry(soft || cam.current.focusing())
         // A continuous autofocus usually lands by itself; only kick it when the picture is
@@ -197,9 +197,12 @@ export default function Scan() {
         if (cam.current.focusing()) { a.release(); return }   // mid-sweep frame: let the sweep finish, the next stillness will scan
         // The hand has gone, but the autofocus may still be converging: wait until two
         // consecutive sharpness samples agree (within 15%) before reading, up to 1.5 s.
+        // A slow autofocus creeps up 5–10% per sample, so two samples can "agree" while
+        // still rising: require a plateau over the last three (within 15%, ~450 ms).
         const h = sharpHist.current
         const n = h.length
-        const stable = n >= 2 && Math.abs(h[n - 1] - h[n - 2]) <= 0.15 * Math.max(h[n - 1], h[n - 2], 1e-3)
+        const last3 = h.slice(-3)
+        const stable = n >= 3 && Math.max(...last3) <= 1.15 * Math.max(Math.min(...last3), 1e-3)
         const ready = stable && !isSoft(h[n - 1])   // agreeing samples at the bottom of a focus hunt are not "stable"
         if (ready || t - settleStart.current > 2000) void captureRef.current()
         else a.postpone(t, 160)
@@ -520,6 +523,17 @@ export default function Scan() {
               {miss.parsed.nameGuess ? <> · <b style={{ color: 'var(--text)' }}>{miss.parsed.nameGuess}</b></> : null}
               {miss.parsed.illustratorGuess ? <> · <b style={{ color: 'var(--text)' }}>{miss.parsed.illustratorGuess}</b></> : null}
             </div>
+            {miss.bands && (
+              <div className="stack" style={{ gap: 4 }}>
+                <img src={miss.bands.top} style={{ width: '100%', border: '1px solid var(--line-strong)', borderRadius: 6 }} alt="" />
+                <img src={miss.bands.bottom} style={{ width: '100%', border: '1px solid var(--line-strong)', borderRadius: 6 }} alt="" />
+                <img src={miss.bands.corner} style={{ width: '70%', border: '1px solid var(--line-strong)', borderRadius: 6 }} alt="" />
+                <div className="muted mono" style={{ fontSize: 10, wordBreak: 'break-all' }}>{`top="${miss.ocr.top}"
+corner="${miss.ocr.corner}"
+bottom="${miss.ocr.bottom}"
+sharp=${miss.sharpness.toFixed(3)}`}</div>
+              </div>
+            )}
             {miss.alternatives.length > 0 ? (
               <div className="grid">
                 {miss.alternatives.slice(0, 8).map((a) => <AltTile key={a.entry.id} entry={a.entry} onPick={() => pickAlternative(a.entry.id)} />)}
