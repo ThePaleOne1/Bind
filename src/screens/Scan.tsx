@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Zap, ZapOff, Search, Plus, Minus, X, ChevronLeft, Sun, SlidersHorizontal, SwitchCamera, ZoomIn, Focus, Play, Square } from 'lucide-react'
+import { Zap, ZapOff, Search, Plus, Minus, X, ChevronLeft, Sun, SlidersHorizontal, SwitchCamera, ZoomIn, Focus, Play, Square, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../data/db'
@@ -13,7 +13,7 @@ import { warmOcr } from '../recognition/ocr'
 import { loadIndex, getCard } from '../api/tcgdex'
 import { searchIndex } from '../recognition/matcher'
 import { applyScan, setFinishOne, cardValueAud } from '../store/collection'
-import { finishesOf, FINISH_LABEL, rarityTag } from '../data/finish'
+import { finishesOf, FINISH_LABEL, rarityTag, defaultFinish } from '../data/finish'
 import type { Finish } from '../data/types'
 import { useSettings } from '../store/settings'
 import { sendCompanion } from '../sync/companion'
@@ -69,6 +69,8 @@ export default function Scan() {
   const lastCommit = useRef<{ id: string; at: number } | null>(null)
   const resultTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const resultRef = useRef(false)
+  const pausedRef = useRef(false)                          // a sheet is waiting for an answer
+  const [ask, setAsk] = useState<{ card: CardRecord; rec: Recognition; options: Finish[]; guess: Finish } | null>(null)
   const noteTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [result, setResult] = useState<Result | null>(null)
   const [miss, setMiss] = useState<Recognition | null>(null)
@@ -160,7 +162,7 @@ export default function Scan() {
     good: Math.max(BLUR_THRESHOLD, Math.max(cam.current?.focusPeak() ?? 0, scanPeak.current) * 0.6),
   }), [roi])
   /** Soft when under the fixed floor, or well below the best this lens has shown (autofocus mid-hunt, stack getting shorter). */
-  const isSoft = (s: number) => s < BLUR_THRESHOLD || s < Math.max(cam.current?.focusPeak() ?? 0, scanPeak.current) * 0.6
+  const isSoft = (s: number) => s < BLUR_THRESHOLD || s < Math.max(cam.current?.focusPeak() ?? 0, scanPeak.current) * 0.5
 
   // Hands-free analysis loop: ~8 fps while waiting, ~12 fps while a card is settling.
   useEffect(() => {
@@ -173,7 +175,7 @@ export default function Scan() {
       if (t - last < (a.phase === 'settling' ? 80 : resultRef.current ? 250 : 125)) return
       last = t
       const v = videoRef.current
-      if (!v || !cam.current || busy.current || !runningRef.current) return
+      if (!v || !cam.current || busy.current || !runningRef.current || pausedRef.current) return
       const fire = a.step(v, roi(), t)
       setPhase(a.phase)
       const settling = a.phase === 'settling' || a.phase === 'capture'
@@ -208,7 +210,7 @@ export default function Scan() {
         const last3 = h.slice(-3)
         const stable = n >= 3 && Math.max(...last3) <= 1.15 * Math.max(Math.min(...last3), 1e-3)
         const ready = stable && !isSoft(h[n - 1])   // agreeing samples at the bottom of a focus hunt are not "stable"
-        if (ready || t - settleStart.current > 2000) void captureRef.current()
+        if (ready || t - settleStart.current > 2500) void captureRef.current()
         else a.postpone(t, 160)
       }
     }
@@ -229,12 +231,33 @@ export default function Scan() {
     p.ring(f.left + f.width / 2, f.top + f.height / 2, Math.min(f.width, f.height) * 0.45, palette)
   }
 
-  const commit = useCallback(async (card: CardRecord, rec: Recognition) => {
-    const ev = await applyScan(card, mode)
+  const { askFinish, effects } = useSettings()
+
+  /** Work out the finish, asking when the foil read cannot tell and the card comes in several. */
+  const decideFinish = (card: CardRecord, rec: Recognition): { finish: Finish; ask: false } | { finish: Finish; ask: true; options: Finish[] } => {
+    const options = finishesOf(card)
+    if (options.length === 1) return { finish: options[0], ask: false }
+    const foil = rec.foil
+    const both = options.includes('normal') && options.includes('reverse')
+    if (both && foil?.confident) return { finish: foil.guess, ask: false }
+    const guess: Finish = both && foil ? foil.guess : defaultFinish(card)
+    return askFinish ? { finish: guess, ask: true, options } : { finish: guess, ask: false }
+  }
+
+  const commit = useCallback(async (card: CardRecord, rec: Recognition, finishIn?: Finish) => {
+    let finish = finishIn
+    if (!finish) {
+      const d = decideFinish(card, rec)
+      if (d.ask) { pausedRef.current = true; setAsk({ card, rec, options: d.options, guess: d.finish }); return }
+      finish = d.finish
+    }
+    const ev = await applyScan(card, mode, finish)
     const palette = mode === 'remove' ? PALETTES.remove : ev.highValue ? PALETTES.value : PALETTES[ev.artistStatus]
-    burstAt(palette, ev.highValue ? 1.5 : 1)
-    setFlash(mode === 'remove' ? 'var(--danger)' : ev.highValue ? 'var(--value)' : ev.artistStatus === 'collecting' ? 'var(--accent)' : ev.artistStatus === 'unknown' ? 'var(--new)' : 'transparent')
-    setTimeout(() => setFlash(null), 350)
+    if (effects) {
+      burstAt(palette, ev.highValue ? 1.5 : 1)
+      setFlash(mode === 'remove' ? 'var(--danger)' : ev.highValue ? 'var(--value)' : ev.artistStatus === 'collecting' ? 'var(--accent)' : ev.artistStatus === 'unknown' ? 'var(--new)' : 'transparent')
+      setTimeout(() => setFlash(null), 350)
+    }
     if (mode === 'remove') feedback('remove', [30, 40, 30])
     else if (ev.highValue) feedback('alert', [40, 60, 40, 60, 120])
     else feedback('ok', ev.artistStatus === 'collecting' ? [25, 40, 25] : 25)
@@ -244,7 +267,16 @@ export default function Scan() {
     resultRef.current = true
     if (resultTimer.current) clearTimeout(resultTimer.current)
     resultTimer.current = setTimeout(() => { setResult(null); resultRef.current = false }, 2200)
-  }, [mode, frameBox, sound, haptics])
+  }, [mode, frameBox, sound, haptics, askFinish, effects])
+
+  const answerFinish = async (finish: Finish) => {
+    const a = ask
+    setAsk(null)
+    pausedRef.current = false
+    if (!a) return
+    busy.current = true
+    try { await commit(a.card, a.rec, finish) } finally { busy.current = false }
+  }
 
   /** Tap the finish chip on the result: step through the finishes this card exists in. */
   const cycleFinish = async () => {
@@ -314,6 +346,7 @@ export default function Scan() {
         showNote(a.scans <= 1 ? 'Ready' : 'No card')   // empty jig, table, hand
       } else {
         feedback('fail', 60)
+        pausedRef.current = true
         setMiss(rec)
       }
     } catch (e: any) {
@@ -393,6 +426,7 @@ export default function Scan() {
   const pickAlternative = async (id: string) => {
     const rec = miss
     setMiss(null)
+    pausedRef.current = false
     const card = await getCard(id)
     busy.current = true
     try { await commit(card, rec ?? ({} as Recognition)) } finally { busy.current = false }
@@ -405,7 +439,7 @@ export default function Scan() {
   }
 
   const lastRec = result?.rec ?? miss
-  const statusWord = result ? 'Scanned' : blurry ? 'Focus' : !running ? 'Paused' : phase === 'capture' || busy.current ? 'Reading' : phase === 'settling' ? 'Hold' : 'Ready'
+  const statusWord = ask ? 'Finish?' : miss ? 'Not sure' : result ? 'Scanned' : blurry ? 'Focus' : !running ? 'Paused' : phase === 'capture' || busy.current ? 'Reading' : phase === 'settling' ? 'Hold' : 'Ready'
   const dotClass = !running && !blurry ? '' : phase === 'settling' || blurry ? 'scan__dot--hold' : phase === 'capture' || busy.current ? 'scan__dot--busy' : 'scan__dot--on'
   const camSettings = cam.current?.settings() ?? {}
 
@@ -473,6 +507,7 @@ export default function Scan() {
                 <button className="scan__tunebtn" onClick={switchCamera} aria-label="Switch lens"><SwitchCamera size={20} /><span>Lens {camInfo.lens}</span></button>
               )}
               <button className={`scan__tunebtn ${hiRes ? 'on' : ''}`} onClick={toggleRes} aria-label="Resolution"><Focus size={20} /><span>{hiRes ? '4K' : 'HD'}</span></button>
+              <button className={`scan__tunebtn ${effects ? '' : 'on'}`} onClick={() => setSettings({ effects: !effects })} aria-label="Effects"><Sparkles size={20} /><span>{effects ? 'FX on' : 'Lite'}</span></button>
             </div>
             {camInfo.manual && (
               <div className="scan__tunerow" style={{ paddingTop: 0 }}>
@@ -497,14 +532,14 @@ export default function Scan() {
           <motion.div className="scan__result" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.25 } }}>
             <motion.div
               className="scan__resultcard"
-              initial={{ scale: 0.4, rotate: -8, y: 60 }}
-              animate={{ scale: 1, rotate: 0, y: 0 }}
-              exit={{ scale: 0.85, y: -30, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 380, damping: 26 }}
+              initial={effects ? { scale: 0.4, rotate: -8, y: 60 } : { opacity: 0 }}
+              animate={effects ? { scale: 1, rotate: 0, y: 0 } : { opacity: 1 }}
+              exit={effects ? { scale: 0.85, y: -30, opacity: 0 } : { opacity: 0 }}
+              transition={effects ? { type: 'spring', stiffness: 380, damping: 26 } : { duration: 0.15 }}
             >
               <CardImage src={result.card.image} alt={result.card.name} eager />
             </motion.div>
-            <motion.div className="scan__word" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 22, delay: 0.08 }}>
+            <motion.div className="scan__word" initial={effects ? { scale: 0.6, opacity: 0 } : { opacity: 0 }} animate={effects ? { scale: 1, opacity: 1 } : { opacity: 1 }} transition={effects ? { type: 'spring', stiffness: 400, damping: 22, delay: 0.08 } : { duration: 0.15 }}>
               <span className={`title ${result.ev.action === 'remove' ? 'title--danger' : result.ev.highValue ? 'title--value' : result.ev.artistStatus === 'unknown' ? 'title--new' : result.ev.artistStatus === 'not-collecting' ? 'title--grey' : ''}`} style={{ fontSize: 'clamp(22px, 6vw, 34px)' }}>
                 {result.ev.action === 'remove' ? 'Removed' : result.ev.highValue ? 'High value' : STATUS_WORD[result.ev.artistStatus]}
               </span>
@@ -533,7 +568,7 @@ export default function Scan() {
         <div className="scan__ocr" style={{ bottom: 110 }}>
           {`${videoRef.current?.videoWidth ?? 0}x${videoRef.current?.videoHeight ?? 0} focus=${camSettings.focusMode ?? '-'}${camSettings.focusDistance != null ? `@${camSettings.focusDistance}` : ''} zoom=${camSettings.zoom ?? '-'} modes=${cam.current?.focusModes.join(',') || '-'} cam="${camInfo?.label ?? ''}"\n`}
           {`phase=${phase} motion=${analyzer.current.motion.toFixed(3)} change=${analyzer.current.change.toFixed(3)} sharp=${liveSharp.current.toFixed(3)} (min ${BLUR_THRESHOLD}, peak ${Math.max(cam.current?.focusPeak() ?? 0, scanPeak.current).toFixed(3)}) scans=${analyzer.current.scans}\n`}
-          {lastRec ? `top="${lastRec.ocr?.top}"\nbottom="${lastRec.ocr?.bottom}"\ncorner="${lastRec.ocr?.corner}"\n${lastRec.ms?.toFixed(0)}ms conf=${lastRec.confidence?.toFixed(2)} sharp=${lastRec.sharpness?.toFixed(3)} num=${lastRec.parsed?.number ?? '-'}/${lastRec.parsed?.total ?? '-'} name=${lastRec.parsed?.nameGuess ?? ''} illus=${lastRec.parsed?.illustratorGuess ?? '-'}` : ''}
+          {lastRec ? `top="${lastRec.ocr?.top}"\nbottom="${lastRec.ocr?.bottom}"\ncorner="${lastRec.ocr?.corner}"\n${lastRec.ms?.toFixed(0)}ms conf=${lastRec.confidence?.toFixed(2)} sharp=${lastRec.sharpness?.toFixed(3)} foil=${lastRec.foil ? `${lastRec.foil.ratio.toFixed(2)} (body ${lastRec.foil.body.toFixed(4)} border ${lastRec.foil.border.toFixed(4)} → ${lastRec.foil.guess}${lastRec.foil.confident ? '' : '?'})` : '-'} num=${lastRec.parsed?.number ?? '-'}/${lastRec.parsed?.total ?? '-'} name=${lastRec.parsed?.nameGuess ?? ''} illus=${lastRec.parsed?.illustratorGuess ?? '-'}` : ''}
           {lastRec?.bands && (
             <div style={{ marginTop: 6, display: 'grid', gap: 4 }}>
               <img src={lastRec.bands.top} style={{ width: '100%', border: '1px solid var(--line-strong)' }} alt="" />
@@ -557,13 +592,37 @@ export default function Scan() {
         <button className="iconbtn" style={{ background: 'rgba(7,20,17,.72)' }} onClick={() => setSearch(true)} aria-label="Search"><Search /></button>
       </div>
 
+      {/* Which finish? Stays until answered; scanning waits. */}
+      <Sheet open={!!ask} onClose={() => { /* must answer */ }}>
+        {ask && (
+          <div className="stack">
+            <div className="row row--between">
+              <span className="title title--new title--sm">Which finish?</span>
+            </div>
+            <div className="row" style={{ gap: 12, alignItems: 'flex-start' }}>
+              <div style={{ width: 96, flex: 'none' }}><CardImage src={ask.card.image} alt={ask.card.name} /></div>
+              <div className="stack" style={{ gap: 4 }}>
+                <div className="list__title">{ask.card.name}</div>
+                <div className="list__sub">{ask.card.setName} · {ask.card.localId}/{ask.card.setTotal || '?'}</div>
+                {ask.rec.foil && <div className="muted mono" style={{ fontSize: 'var(--fs-xs)' }}>foil {ask.rec.foil.ratio.toFixed(2)}</div>}
+              </div>
+            </div>
+            <div className="stack" style={{ gap: 8 }}>
+              {ask.options.map((f) => (
+                <button key={f} className={`btn btn--block ${f === ask.guess ? 'btn--accent' : ''}`} onClick={() => void answerFinish(f)}>{FINISH_LABEL[f]}{f === ask.guess ? ' · likely' : ''}</button>
+              ))}
+            </div>
+          </div>
+        )}
+      </Sheet>
+
       {/* Not recognised → pick from candidates or search */}
-      <Sheet open={!!miss} onClose={() => setMiss(null)}>
+      <Sheet open={!!miss} onClose={() => { setMiss(null); pausedRef.current = false }}>
         {miss && (
           <div className="stack">
             <div className="row row--between">
               <span className="title title--grey title--sm">Not sure</span>
-              <button className="iconbtn iconbtn--ghost" onClick={() => setMiss(null)}><X /></button>
+              <button className="iconbtn iconbtn--ghost" onClick={() => { setMiss(null); pausedRef.current = false }}><X /></button>
             </div>
             <div className="muted">
               Read{' '}
@@ -589,7 +648,7 @@ sharp=${miss.sharpness.toFixed(3)}`}</div>
             ) : (
               <div className="empty">No match</div>
             )}
-            <button className="btn btn--accent btn--block" onClick={() => { setMiss(null); setSearch(true) }}><Search size={18} /> Search</button>
+            <button className="btn btn--accent btn--block" onClick={() => { setMiss(null); pausedRef.current = false; setSearch(true) }}><Search size={18} /> Search</button>
           </div>
         )}
       </Sheet>

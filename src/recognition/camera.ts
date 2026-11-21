@@ -215,6 +215,21 @@ export async function startCamera(video: HTMLVideoElement, opts: { deviceId?: st
     if (o?.full) { locked = null; peak = 0 }   // calibrate from scratch
     const run = async (): Promise<boolean> => {
       if (hasAf && !manual) {
+        // A lens with continuous autofocus settles by itself; a single-shot request on top
+        // restarts the hunt and lands the next capture in the blur. Only lenses without
+        // continuous mode get the kick.
+        if (focusModes.includes('continuous')) {
+          if (!o) return true
+          let prev = -1
+          const until = performance.now() + 1600
+          while (performance.now() < until) {
+            await sleep(150)
+            const m = o.measure()
+            if (m >= o.good && prev >= 0 && Math.abs(m - prev) <= 0.15 * Math.max(m, prev, 1e-3)) return true
+            prev = m
+          }
+          return o.measure() >= o.good || !focusRange
+        }
         if (focusModes.includes('single-shot')) {
           // A single-shot request forces one autofocus pass; then go back to tracking.
           await apply({ focusMode: 'single-shot' })

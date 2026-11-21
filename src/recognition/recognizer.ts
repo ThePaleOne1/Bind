@@ -5,6 +5,7 @@ import { matchCards, parseOcr, digitRuns, numberSimilarity, illustratorEvidence,
 import { similarity } from '../utils/text'
 import type { Roi } from './frameAnalyzer'
 import { sharpnessOf } from './focus'
+import { readFoil, type FoilRead } from './foil'
 
 export interface Recognition {
   card: CardRecord | null
@@ -14,6 +15,7 @@ export interface Recognition {
   ocr: { top: string; bottom: string; corner: string }
   ms: number
   sharpness: number
+  foil?: FoilRead
   bands?: { top: string; bottom: string; corner: string } // preprocessed band images (debug)
 }
 
@@ -98,7 +100,7 @@ export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean
   if (best && confidence >= 0.5) {
     cardRec = await getCard(best.entry.id).catch(() => null)
   }
-  const out: Recognition = { card: cardRec, confidence, alternatives, parsed, ocr, ms: performance.now() - t0, sharpness: sharpnessOf(card) }
+  const out: Recognition = { card: cardRec, confidence, alternatives, parsed, ocr, ms: performance.now() - t0, sharpness: sharpnessOf(card), foil: readFoil(card) }
   if (opts.debug) out.bands = debugBands(card)
   return out
 }

@@ -107,6 +107,14 @@ export default function Settings() {
             <div><div className="setting__label">Page capacity</div><div className="setting__sub">Cards per binder page</div></div>
             <Stepper value={s.pageCapacity} onChange={(v) => s.set({ pageCapacity: v })} min={1} max={36} />
           </div>
+          <div className="setting">
+            <div><div className="setting__label">Ask finish</div><div className="setting__sub">When the foil read is unsure</div></div>
+            <Switch on={s.askFinish} onChange={(v) => s.set({ askFinish: v })} />
+          </div>
+          <div className="setting">
+            <div><div className="setting__label">Effects</div><div className="setting__sub">Confetti and animations on a scan</div></div>
+            <Switch on={s.effects} onChange={(v) => s.set({ effects: v })} />
+          </div>
           <div className="setting"><div className="setting__label">Sound</div><Switch on={s.sound} onChange={(v) => s.set({ sound: v })} /></div>
           <div className="setting"><div className="setting__label">Haptics</div><Switch on={s.haptics} onChange={(v) => s.set({ haptics: v })} /></div>
         </section>
