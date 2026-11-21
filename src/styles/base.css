@@ -314,6 +314,9 @@ img { display: block; max-width: 100%; }
   font-size: var(--fs-xs); font-weight: 900;
   backdrop-filter: blur(6px);
 }
+.tile__tags { position: absolute; left: 6px; top: 6px; display: flex; flex-direction: column; gap: 3px; align-items: flex-start; pointer-events: none; }
+.tile__tag { font-size: 10px; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; padding: 2px 6px; border-radius: 6px; background: rgba(7, 20, 17, 0.82); color: var(--text); }
+.tile__tag--finish { background: var(--new); color: var(--new-ink); }
 .tile__price {
   position: absolute; left: 6px; bottom: 6px;
   padding: 2px 7px; border-radius: 6px;

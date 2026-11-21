@@ -29,6 +29,7 @@ create table if not exists public.owned_cards (
   card_id text not null,
   bucket text not null default 'bulk',
   qty int not null default 1,
+  finish text,
   added_at bigint not null,
   updated_at bigint not null,
   deleted int default 0

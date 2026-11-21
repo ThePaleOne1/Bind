@@ -12,7 +12,9 @@ import { sharpnessOf, sharpnessOfVideo, BLUR_THRESHOLD } from '../recognition/fo
 import { warmOcr } from '../recognition/ocr'
 import { loadIndex, getCard } from '../api/tcgdex'
 import { searchIndex } from '../recognition/matcher'
-import { applyScan } from '../store/collection'
+import { applyScan, setFinishOne, cardValueAud } from '../store/collection'
+import { finishesOf, FINISH_LABEL, rarityTag } from '../data/finish'
+import type { Finish } from '../data/types'
 import { useSettings } from '../store/settings'
 import { sendCompanion } from '../sync/companion'
 import { buzz, chime } from '../utils/haptics'
@@ -66,6 +68,7 @@ export default function Scan() {
   const lastDebugTick = useRef(0)
   const lastCommit = useRef<{ id: string; at: number } | null>(null)
   const resultTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const resultRef = useRef(false)
   const noteTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [result, setResult] = useState<Result | null>(null)
   const [miss, setMiss] = useState<Recognition | null>(null)
@@ -167,7 +170,7 @@ export default function Scan() {
     const tick = (t: number) => {
       raf = requestAnimationFrame(tick)
       const a = analyzer.current
-      if (t - last < (a.phase === 'settling' ? 80 : 125)) return
+      if (t - last < (a.phase === 'settling' ? 80 : resultRef.current ? 250 : 125)) return
       last = t
       const v = videoRef.current
       if (!v || !cam.current || busy.current || !runningRef.current) return
@@ -238,9 +241,24 @@ export default function Scan() {
     sendCompanion({ type: 'scan', scan: ev })
     lastCommit.current = { id: card.id, at: Date.now() }
     setResult({ ev, card, rec })
+    resultRef.current = true
     if (resultTimer.current) clearTimeout(resultTimer.current)
-    resultTimer.current = setTimeout(() => setResult(null), 2200)
+    resultTimer.current = setTimeout(() => { setResult(null); resultRef.current = false }, 2200)
   }, [mode, frameBox, sound, haptics])
+
+  /** Tap the finish chip on the result: step through the finishes this card exists in. */
+  const cycleFinish = async () => {
+    const r = result
+    if (!r?.ev.ownedId) return
+    const opts = finishesOf(r.card)
+    if (opts.length < 2) return
+    const next: Finish = opts[(opts.indexOf(r.ev.finish ?? 'normal') + 1) % opts.length]
+    const ownedId = await setFinishOne(r.ev.ownedId, next)
+    const valueAud = await cardValueAud(r.card, next)
+    setResult({ ...r, ev: { ...r.ev, finish: next, ownedId, valueAud } })
+    if (resultTimer.current) clearTimeout(resultTimer.current)
+    resultTimer.current = setTimeout(() => setResult(null), 2600)
+  }
 
   const showNote = (text: string) => {
     setNote(text)
@@ -276,7 +294,7 @@ export default function Scan() {
       // Foil and glare change frame to frame: before giving up, read up to two more
       // frames, pooling their OCR text with what has been read so far.
       for (let attempt = 0; attempt < 2 && !rec.card && !isBlank(rec) && !isSoft(rec.sharpness); attempt++) {
-        await new Promise((r) => setTimeout(r, 350))
+        await new Promise((r) => setTimeout(r, 200))
         const again = await recognize(captureRoi(v, roi()), { debug, prior: rec })
         rec = isBlank(again) ? rec : again
       }
@@ -484,7 +502,7 @@ export default function Scan() {
               exit={{ scale: 0.85, y: -30, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 380, damping: 26 }}
             >
-              <CardImage src={result.card.image} alt={result.card.name} quality="high" eager />
+              <CardImage src={result.card.image} alt={result.card.name} eager />
             </motion.div>
             <motion.div className="scan__word" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 22, delay: 0.08 }}>
               <span className={`title ${result.ev.action === 'remove' ? 'title--danger' : result.ev.highValue ? 'title--value' : result.ev.artistStatus === 'unknown' ? 'title--new' : result.ev.artistStatus === 'not-collecting' ? 'title--grey' : ''}`} style={{ fontSize: 'clamp(22px, 6vw, 34px)' }}>
@@ -494,6 +512,17 @@ export default function Scan() {
             <motion.div initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.15 }} className="stack" style={{ alignItems: 'center', gap: 6 }}>
               <div className="scan__name">{result.card.name}</div>
               <div className="scan__sub">{result.card.illustrator ?? 'Unknown artist'} · {result.card.localId}/{result.card.setTotal || '?'}</div>
+              <div className="row" style={{ gap: 6, pointerEvents: 'auto' }}>
+                <button
+                  className={`chip ${result.ev.finish && result.ev.finish !== 'normal' ? 'chip--unknown' : 'chip--outline'}`}
+                  style={{ height: 30, fontSize: 'var(--fs-sm)', background: result.ev.finish && result.ev.finish !== 'normal' ? undefined : 'rgba(7,20,17,.75)' }}
+                  onClick={() => void cycleFinish()}
+                  aria-label="Finish"
+                >
+                  {FINISH_LABEL[result.ev.finish ?? 'normal']}{finishesOf(result.card).length > 1 ? ' ⇄' : ''}
+                </button>
+                {rarityTag(result.card.rarity) && <span className="chip chip--outline" style={{ height: 30, fontSize: 'var(--fs-sm)', background: 'rgba(7,20,17,.75)' }}>{rarityTag(result.card.rarity)}</span>}
+              </div>
               <div className={`scan__value ${result.ev.highValue ? 'scan__value--hot' : ''}`}>{fmtAud(result.ev.valueAud)}</div>
             </motion.div>
           </motion.div>

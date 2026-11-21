@@ -6,7 +6,8 @@ import { db } from '../data/db'
 import type { CardRecord } from '../data/types'
 import { artistKey } from '../data/types'
 import { getCard, imageUrl, tcgplayerUrl, cardmarketUrl } from '../api/tcgdex'
-import { cardValueAud, setBucket, setQty } from '../store/collection'
+import { cardValueAud, setBucket, setQty, setFinish } from '../store/collection'
+import { finishesOf, FINISH_LABEL, finishTag, rarityTag } from '../data/finish'
 import { fmtAud } from '../utils/price'
 import { useSettings } from '../store/settings'
 import { CardImage, Segmented, StatusChip, Stepper, Sheet, toast } from './ui'
@@ -62,13 +63,18 @@ export function CardDetail({ cardId, onClose }: { cardId: string; onClose?: () =
 
         <div className="detail__facts">
           <div className="fact"><div className="label">Value</div><div className="fact__v" style={hot ? { color: 'var(--value)' } : undefined}>{fmtAud(value)}</div></div>
-          <div className="fact"><div className="label">Rarity</div><div className="fact__v" style={{ fontSize: 'var(--fs-md)' }}>{card.rarity ?? '—'}</div></div>
+          <div className="fact"><div className="label">Rarity</div><div className="fact__v" style={{ fontSize: 'var(--fs-md)' }}>{card.rarity ?? '—'}{rarityTag(card.rarity) ? ` · ${rarityTag(card.rarity)}` : ''}</div></div>
           <div className="fact"><div className="label">TCGplayer</div><div className="fact__v">{card.priceUsd ? `US$${card.priceUsd.toFixed(2)}` : '—'}</div></div>
           <div className="fact"><div className="label">Cardmarket</div><div className="fact__v">{card.priceEur ? `€${card.priceEur.toFixed(2)}` : '—'}</div></div>
         </div>
 
         {o ? (
           <>
+            {finishesOf(card).length > 1 ? (
+              <Segmented value={o.finish ?? 'normal'} onChange={(f) => void setFinish(o.id, f)} options={finishesOf(card).map((f) => ({ value: f, label: FINISH_LABEL[f] }))} />
+            ) : (
+              finishTag(o.finish) && <div className="chip chip--unknown" style={{ alignSelf: 'flex-start' }}>{FINISH_LABEL[o.finish ?? 'normal']}</div>
+            )}
             <div className="row row--between">
               <Segmented value={o.bucket} onChange={(b) => setBucket(o.id, b)} options={[{ value: 'collection', label: 'Collection' }, { value: 'bulk', label: 'Bulk' }]} />
               <Stepper value={o.qty} onChange={(q) => setQty(o.id, q)} min={0} />

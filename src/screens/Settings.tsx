@@ -49,6 +49,7 @@ function VersionSection() {
 
 export default function Settings() {
   const s = useSettings()
+  const syncWarn = useLiveQuery(async () => (await db.meta.get('syncWarn'))?.value as string | undefined, [])
   const auth = useAuth()
   const [idx, setIdx] = useState<{ count: number; at: number } | null>(null)
   const [busy, setBusy] = useState(false)
@@ -142,7 +143,7 @@ export default function Settings() {
           {auth.session && (
             <>
               <div className="setting">
-                <div><div className="setting__label">{auth.session.user.email}</div><div className="setting__sub">{auth.error ? auth.error : auth.lastSync ? `Synced ${new Date(auth.lastSync).toLocaleTimeString()}` : 'Not synced yet'}</div></div>
+                <div><div className="setting__label">{auth.session.user.email}</div><div className="setting__sub">{auth.error ? auth.error : syncWarn ? syncWarn : auth.lastSync ? `Synced ${new Date(auth.lastSync).toLocaleTimeString()}` : 'Not synced yet'}</div></div>
                 <div className="row">
                   <button className="iconbtn" onClick={() => syncNow()} disabled={auth.syncing}><RefreshCw size={18} className={auth.syncing ? 'spin' : ''} /></button>
                   <button className="iconbtn iconbtn--ghost" onClick={() => signOut()}><LogOut size={18} /></button>

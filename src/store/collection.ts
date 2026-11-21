@@ -1,7 +1,8 @@
 import { db, uuid } from '../data/db'
-import { artistKey, type Artist, type ArtistStatus, type Bucket, type CardRecord, type OwnedCard, type ScanEvent, type ScanMode } from '../data/types'
+import { artistKey, type Artist, type ArtistStatus, type Bucket, type CardRecord, type OwnedCard, type ScanEvent, type ScanMode, type Finish } from '../data/types'
 import { getRates, toAud } from '../utils/price'
 import { useSettings } from './settings'
+import { defaultFinish, priceFor } from '../data/finish'
 
 export async function classifyArtist(card: CardRecord): Promise<{ artist: Artist | null; status: ArtistStatus }> {
   if (!card.illustrator) return { artist: null, status: 'unknown' }
@@ -14,31 +15,39 @@ export async function classifyArtist(card: CardRecord): Promise<{ artist: Artist
   return { artist, status: artist.status }
 }
 
-export async function cardValueAud(card: CardRecord) {
+export async function cardValueAud(card: CardRecord, finish?: Finish | null) {
   const rates = await getRates()
-  return toAud(card.priceUsd, card.priceEur, rates)
+  const p = priceFor(card, finish ?? undefined)
+  return toAud(p.usd, p.eur, rates)
 }
 
 /** Apply a scan (add or remove) to the owned table and log the event. */
-export async function applyScan(card: CardRecord, mode: ScanMode): Promise<ScanEvent> {
+export async function applyScan(card: CardRecord, mode: ScanMode, finishIn?: Finish | null): Promise<ScanEvent> {
   const { artist, status } = await classifyArtist(card)
-  const value = await cardValueAud(card)
+  const finish: Finish = finishIn ?? defaultFinish(card)
+  const value = await cardValueAud(card, finish)
   const highValue = value != null && value >= useSettings.getState().highValueAud
   const now = Date.now()
+  let ownedId: string | null = null
 
   await db.transaction('rw', db.owned, async () => {
     const existing = (await db.owned.where('cardId').equals(card.id).toArray()).filter((o) => !o.deleted)
+    const sameFinish = existing.filter((o) => (o.finish ?? 'normal') === finish)
     if (mode === 'add') {
-      if (existing[0]) {
-        await db.owned.update(existing[0].id, { qty: existing[0].qty + 1, updatedAt: now, dirty: 1 })
+      if (sameFinish[0]) {
+        ownedId = sameFinish[0].id
+        await db.owned.update(ownedId, { qty: sameFinish[0].qty + 1, updatedAt: now, dirty: 1 })
       } else {
         const bucket: Bucket = status === 'collecting' ? 'collection' : 'bulk'
-        const o: OwnedCard = { id: uuid(), cardId: card.id, bucket, qty: 1, addedAt: now, updatedAt: now, dirty: 1 }
+        const o: OwnedCard = { id: uuid(), cardId: card.id, bucket, qty: 1, finish, addedAt: now, updatedAt: now, dirty: 1 }
+        ownedId = o.id
         await db.owned.put(o)
       }
     } else if (existing[0]) {
-      // remove from bulk first, then collection
-      const target = existing.find((o) => o.bucket === 'bulk') ?? existing[0]
+      // remove the matching finish if we have it, bulk before collection
+      const pool = sameFinish.length ? sameFinish : existing
+      const target = pool.find((o) => o.bucket === 'bulk') ?? pool[0]
+      ownedId = target.id
       if (target.qty > 1) await db.owned.update(target.id, { qty: target.qty - 1, updatedAt: now, dirty: 1 })
       else await db.owned.update(target.id, { deleted: 1, updatedAt: now, dirty: 1 })
     }
@@ -56,9 +65,56 @@ export async function applyScan(card: CardRecord, mode: ScanMode): Promise<ScanE
     artistStatus: status,
     highValue,
     tcgplayerId: card.tcgplayerId ?? null,
+    finish,
+    ownedId,
   }
   ev.id = (await db.scans.add(ev)) as number
   return ev
+}
+
+/**
+ * Re-label ONE copy (the one just scanned) as a different finish: split it off the row
+ * when the row holds several, merging into a row of that finish if there is one.
+ * Returns the id of the row that copy now lives in.
+ */
+export async function setFinishOne(ownedId: string, finish: Finish): Promise<string | null> {
+  const now = Date.now()
+  let target: string | null = null
+  await db.transaction('rw', db.owned, async () => {
+    const o = await db.owned.get(ownedId)
+    if (!o || o.deleted) return
+    if ((o.finish ?? 'normal') === finish) { target = o.id; return }
+    const twin = (await db.owned.where('cardId').equals(o.cardId).toArray()).find((x) => x.id !== o.id && !x.deleted && (x.finish ?? 'normal') === finish && x.bucket === o.bucket)
+    if (o.qty > 1) {
+      await db.owned.update(o.id, { qty: o.qty - 1, updatedAt: now, dirty: 1 })
+      if (twin) { await db.owned.update(twin.id, { qty: twin.qty + 1, updatedAt: now, dirty: 1 }); target = twin.id }
+      else { const n: OwnedCard = { id: uuid(), cardId: o.cardId, bucket: o.bucket, qty: 1, finish, addedAt: now, updatedAt: now, dirty: 1 }; await db.owned.put(n); target = n.id }
+    } else if (twin) {
+      await db.owned.update(twin.id, { qty: twin.qty + 1, updatedAt: now, dirty: 1 })
+      await db.owned.update(o.id, { deleted: 1, updatedAt: now, dirty: 1 })
+      target = twin.id
+    } else {
+      await db.owned.update(o.id, { finish, updatedAt: now, dirty: 1 })
+      target = o.id
+    }
+  })
+  return target
+}
+
+/** Change the finish of a whole owned row; merges into an existing row of that finish for the same card. */
+export async function setFinish(ownedId: string, finish: Finish) {
+  const now = Date.now()
+  await db.transaction('rw', db.owned, async () => {
+    const o = await db.owned.get(ownedId)
+    if (!o || o.deleted) return
+    const twin = (await db.owned.where('cardId').equals(o.cardId).toArray()).find((x) => x.id !== o.id && !x.deleted && (x.finish ?? 'normal') === finish && x.bucket === o.bucket)
+    if (twin) {
+      await db.owned.update(twin.id, { qty: twin.qty + o.qty, updatedAt: now, dirty: 1 })
+      await db.owned.update(o.id, { deleted: 1, updatedAt: now, dirty: 1 })
+    } else {
+      await db.owned.update(o.id, { finish, updatedAt: now, dirty: 1 })
+    }
+  })
 }
 
 export async function setBucket(ownedId: string, bucket: Bucket) {

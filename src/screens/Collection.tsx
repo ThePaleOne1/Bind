@@ -8,7 +8,7 @@ import { artistKey } from '../data/types'
 import { getCard } from '../api/tcgdex'
 import { getRates, toAud, fmtAud, type Rates } from '../utils/price'
 import { useSettings } from '../store/settings'
-import { CardImage, Segmented, StatusChip, Title, TitleBar } from '../components/ui'
+import { TileTags, CardImage, Segmented, StatusChip, Title, TitleBar } from '../components/ui'
 import { CardDetailSheet } from '../components/CardDetail'
 
 type Sort = 'artist' | 'recent' | 'value' | 'set'
@@ -76,6 +76,7 @@ export default function Collection() {
   const Tile = ({ x }: { x: { o: OwnedCard; c: CardRecord; v: number | null } }) => (
     <button className="tile" onClick={() => setOpen(x.c.id)}>
       <CardImage src={x.c.image} alt={x.c.name} />
+      <TileTags finish={x.o.finish} rarity={x.c.rarity} />
       {x.o.qty > 1 && <span className="tile__qty">×{x.o.qty}</span>}
       {x.v != null && <span className={`tile__price ${x.v >= threshold ? 'tile__price--hot' : ''}`}>{fmtAud(x.v)}</span>}
     </button>

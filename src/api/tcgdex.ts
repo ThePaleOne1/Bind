@@ -1,5 +1,5 @@
 import { db, getMeta, setMeta } from '../data/db'
-import type { CardRecord, IndexEntry, SetInfo } from '../data/types'
+import type {CardRecord, IndexEntry, SetInfo, Finish } from '../data/types'
 
 const API = 'https://api.tcgdex.net/v2/en'
 const INDEX_TTL = 7 * 86_400_000
@@ -50,26 +50,45 @@ export async function indexStatus() {
   return stored ? { count: stored.value.entries.length, at: stored.at } : null
 }
 
+/** TCGplayer price keys and TCGdex variant types → finish. */
+const finishOf = (key: string): Finish | null => {
+  const k = key.toLowerCase()
+  if (k.includes('1st') || k.includes('first')) return 'first-edition'
+  if (k.includes('reverse')) return 'reverse'
+  if (k.includes('holo')) return 'holo'
+  if (k === 'normal' || k === 'unlimited') return 'normal'
+  return null
+}
+
 function parsePrices(detail: any) {
   let usd: number | null = null
   let eur: number | null = null
   let tcgplayerId: number | null = null
   let cardmarketId: number | null = null
+  const variantPrices: NonNullable<CardRecord['variantPrices']> = {}
+  const bump = (f: Finish | null, usdV: number | null, eurV: number | null) => {
+    if (!f) return
+    const cur = variantPrices[f] ?? { usd: null, eur: null }
+    if (usdV != null) cur.usd = Math.max(cur.usd ?? 0, usdV)
+    if (eurV != null) cur.eur = Math.max(cur.eur ?? 0, eurV)
+    variantPrices[f] = cur
+  }
   const variants: any[] = detail.variants_detailed ?? []
   for (const v of variants) {
+    const vType: string = typeof v.type === 'string' ? v.type : ''
     const tp = v.pricing?.tcgplayer
     if (tp) {
       for (const [k, val] of Object.entries<any>(tp)) {
         if (k === 'unit' || k === 'updated' || !val || typeof val !== 'object') continue
         const m = val.marketPrice ?? val.midPrice
-        if (typeof m === 'number' && m > 0 && m < 50_000) usd = Math.max(usd ?? 0, m)
+        if (typeof m === 'number' && m > 0 && m < 50_000) { usd = Math.max(usd ?? 0, m); bump(finishOf(k) ?? finishOf(vType), m, null) }
         if (val.productId) tcgplayerId ??= val.productId
       }
     }
     const cm = v.pricing?.cardmarket
     if (cm) {
       const m = cm.trend ?? cm.avg7 ?? cm.avg
-      if (typeof m === 'number' && m > 0) eur = Math.max(eur ?? 0, m)
+      if (typeof m === 'number' && m > 0) { eur = Math.max(eur ?? 0, m); bump(finishOf(vType), null, m) }
       if (cm.idProduct) cardmarketId ??= cm.idProduct
     }
     if (!tcgplayerId && v.thirdParty?.tcgplayer) tcgplayerId = v.thirdParty.tcgplayer
@@ -83,12 +102,13 @@ function parsePrices(detail: any) {
     }
   }
   if (lp?.cardmarket && eur == null && typeof lp.cardmarket.trend === 'number') eur = lp.cardmarket.trend
-  return { usd, eur, tcgplayerId, cardmarketId }
+  return { usd, eur, tcgplayerId, cardmarketId, variantPrices: Object.keys(variantPrices).length ? variantPrices : null }
 }
 
 export async function getCard(id: string, opts: { refresh?: boolean } = {}): Promise<CardRecord> {
   const cached = await db.cards.get(id)
-  const fresh = cached && cached.pricesUpdatedAt && Date.now() - cached.pricesUpdatedAt < PRICE_TTL
+  // records cached before finishes were stored have no `variants` key: fetch them again
+  const fresh = cached && cached.pricesUpdatedAt && Date.now() - cached.pricesUpdatedAt < PRICE_TTL && cached.variants !== undefined
   if (cached && fresh && !opts.refresh) return cached
   try {
     const r = await fetch(`${API}/cards/${encodeURIComponent(id)}`)
@@ -106,6 +126,8 @@ export async function getCard(id: string, opts: { refresh?: boolean } = {}): Pro
       illustrator: d.illustrator ?? null,
       rarity: d.rarity ?? null,
       category: d.category ?? null,
+      variants: d.variants ? { normal: !!d.variants.normal, reverse: !!d.variants.reverse, holo: !!d.variants.holo, firstEdition: !!d.variants.firstEdition } : null,
+      variantPrices: p.variantPrices,
       priceUsd: p.usd,
       priceEur: p.eur,
       tcgplayerId: p.tcgplayerId,

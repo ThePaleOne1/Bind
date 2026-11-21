@@ -22,6 +22,9 @@ export interface BinderPage {
   dirty?: number
 }
 
+/** Print finish of a physical copy. The collector number is the same for all of them. */
+export type Finish = 'normal' | 'reverse' | 'holo' | 'first-edition'
+
 export interface CardRecord {
   id: string
   name: string
@@ -33,6 +36,10 @@ export interface CardRecord {
   illustrator?: string | null
   rarity?: string | null
   category?: string | null
+  /** Finishes this card was printed in, from the card database. */
+  variants?: { normal: boolean; reverse: boolean; holo: boolean; firstEdition: boolean } | null
+  /** Market price per finish, where the database prices them separately. */
+  variantPrices?: Partial<Record<Finish, { usd: number | null; eur: number | null }>> | null
   priceUsd?: number | null
   priceEur?: number | null
   tcgplayerId?: number | null
@@ -46,6 +53,7 @@ export interface OwnedCard {
   cardId: string
   bucket: Bucket
   qty: number
+  finish?: Finish | null
   addedAt: number
   updatedAt: number
   deleted?: number   // soft delete for sync
@@ -65,6 +73,9 @@ export interface ScanEvent {
   artistStatus: ArtistStatus
   highValue: boolean
   tcgplayerId?: number | null
+  finish?: Finish | null
+  /** The owned row this scan touched (so the result overlay can flip its finish). */
+  ownedId?: string | null
 }
 
 export interface IndexEntry {

@@ -110,7 +110,12 @@ export async function syncNow() {
       await db.binderPages.bulkPut(dirtyPages.map((p) => ({ ...p, dirty: 0 })))
     }
     if (dirtyOwned.length) {
-      const { error } = await sb.from('owned_cards').upsert(dirtyOwned.map((o) => toRow(o, uid)), { onConflict: 'id' })
+      let { error } = await sb.from('owned_cards').upsert(dirtyOwned.map((o) => toRow(o, uid)), { onConflict: 'id' })
+      if (error && /finish/i.test(error.message)) {
+        // The finish column has not been added on the server yet: sync everything else and say so.
+        ;({ error } = await sb.from('owned_cards').upsert(dirtyOwned.map(({ finish, ...o }) => toRow(o, uid)), { onConflict: 'id' }))
+        await setMeta('syncWarn', 'Card finishes are not syncing: run supabase/migrations/2026-11-21-finish.sql in the Supabase SQL editor.')
+      } else if (!error) await setMeta('syncWarn', '')
       if (error) throw error
       await db.owned.bulkPut(dirtyOwned.map((o) => ({ ...o, dirty: 0 })))
     }

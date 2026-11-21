@@ -1,7 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useState, type ReactNode } from 'react'
 import { create } from 'zustand'
-import type { ArtistStatus } from '../data/types'
+import type { ArtistStatus, Finish } from '../data/types'
+import { finishTag, rarityTag } from '../data/finish'
 
 /* ---------- Title block ---------- */
 export function Title({
@@ -74,6 +75,18 @@ export function CardImage({ src, alt, className, style, quality = 'low', eager =
       {low && <img src={low} alt={alt ?? ''} {...imgProps} className={loaded ? 'loaded' : ''} onLoad={() => setLoaded(true)} />}
       {high && <img src={high} alt="" {...imgProps} className={`cardimg__hi ${hiLoaded ? 'loaded' : ''}`} onLoad={() => setHiLoaded(true)} aria-hidden />}
     </div>
+  )
+}
+
+/** Finish and rarity tags in a tile's corner. */
+export function TileTags({ finish, rarity }: { finish?: Finish | null; rarity?: string | null }) {
+  const f = finishTag(finish), r = rarityTag(rarity)
+  if (!f && !r) return null
+  return (
+    <span className="tile__tags">
+      {f && <span className="tile__tag tile__tag--finish">{f}</span>}
+      {r && <span className="tile__tag">{r}</span>}
+    </span>
   )
 }
 
