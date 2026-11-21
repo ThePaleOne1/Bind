@@ -1,4 +1,4 @@
-# Dex — Pokémon card collection, sorted by artist
+# Bind — Pokémon card collection, sorted by artist
 
 Installable web app (PWA) that scans cards with the phone camera, sorts the collection by illustrator, tracks the binder page for each artist, shows prices, and pushes live scan events to a desk companion on the PC.
 
@@ -15,14 +15,14 @@ Open http://localhost:5173. The camera only works over HTTPS or on localhost, so
 
 ## Deploy (phone receives updates automatically)
 
-1. Create an empty GitHub repository (public or private) called `dex`, or any name.
+1. Create an empty GitHub repository (public or private) called `bind`, or any name.
 2. Push this folder:
    ```bash
-   git remote add origin https://github.com/<you>/dex.git
+   git remote add origin https://github.com/<you>/bind.git
    git push -u origin main
    ```
 3. In the repo: **Settings → Pages → Source: GitHub Actions**.
-4. Every push to `main` builds and deploys to `https://<you>.github.io/dex/`. The installed app checks for a new version on launch and swaps it in.
+4. Every push to `main` builds and deploys to `https://<you>.github.io/bind/`. The installed app checks for a new version on launch and swaps it in.
 
 Optional: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as repository secrets (Settings → Secrets → Actions) so the cloud link is baked in. Otherwise paste them once in **Setup → Cloud** on each device.
 
@@ -30,7 +30,7 @@ Optional: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as repository sec
 
 - **Android (Chrome):** open the site → ⋮ → *Add to Home screen* / *Install app*.
 - **iPhone (Safari):** Share → *Add to Home Screen*. (Camera works in the installed app on iOS 16.4+.)
-- **Windows (Edge or Chrome):** open the site → address-bar *Install* icon (or ⋯ → *Apps → Install*). Pin it to the taskbar from the Start menu. It opens in its own window with the Dex icon.
+- **Windows (Edge or Chrome):** open the site → address-bar *Install* icon (or ⋯ → *Apps → Install*). Pin it to the taskbar from the Start menu. It opens in its own window with the Bind icon.
 
 ## Cloud sync + desk link (Supabase, free tier)
 

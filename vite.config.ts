@@ -40,8 +40,8 @@ export default defineConfig({
         ],
       },
       manifest: {
-        name: 'Dex — Card Collection',
-        short_name: 'Dex',
+        name: 'Bind — Card Collection',
+        short_name: 'Bind',
         description: 'Scan, sort and value your Pokémon card collection by artist.',
         theme_color: '#071411',
         background_color: '#071411',

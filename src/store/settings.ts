@@ -29,7 +29,7 @@ export const useSettings = create<Settings>()(
       scanMode: 'add',
       set: (p) => set(p),
     }),
-    { name: 'dex-settings', partialize: (s) => Object.fromEntries(Object.entries(s).filter(([k]) => k !== 'set')) as any },
+    { name: 'bind-settings', partialize: (s) => Object.fromEntries(Object.entries(s).filter(([k]) => k !== 'set')) as any },
   ),
 )
 

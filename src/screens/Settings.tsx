@@ -34,7 +34,7 @@ export default function Settings() {
     const blob = new Blob([await exportJson()], { type: 'application/json' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
-    a.download = `dex-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.download = `bind-backup-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
   }
   const doImport = async (f: File | undefined) => {
@@ -139,7 +139,7 @@ export default function Settings() {
           </div>
         </section>
 
-        <div className="muted" style={{ fontSize: 'var(--fs-xs)', textAlign: 'center' }}>Dex {__APP_VERSION__} · prices TCGplayer / Cardmarket via TCGdex</div>
+        <div className="muted" style={{ fontSize: 'var(--fs-xs)', textAlign: 'center' }}>Bind {__APP_VERSION__} · prices TCGplayer / Cardmarket via TCGdex</div>
       </div>
     </div>
   )

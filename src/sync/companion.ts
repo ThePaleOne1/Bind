@@ -17,7 +17,7 @@ export interface CompanionMessage {
 type Listener = (m: CompanionMessage) => void
 const listeners = new Set<Listener>()
 const deviceId = (() => {
-  const k = 'dex-device'
+  const k = 'bind-device'
   let v = localStorage.getItem(k)
   if (!v) { v = Math.random().toString(36).slice(2, 8); localStorage.setItem(k, v) }
   return v
@@ -29,7 +29,7 @@ let rtUid = ''
 
 function ensure() {
   if (!bc && 'BroadcastChannel' in window) {
-    bc = new BroadcastChannel('dex-companion')
+    bc = new BroadcastChannel('bind-companion')
     bc.onmessage = (e) => dispatch(e.data)
   }
   const sb = supabase()

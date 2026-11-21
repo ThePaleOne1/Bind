@@ -46,7 +46,7 @@ export default function Companion() {
       }
       if (ev.highValue) chime('alert')
       if (url) {
-        const w = window.open(url, 'dex-desk')
+        const w = window.open(url, 'bind-desk')
         if (!w) setBlocked(url)
       }
     })

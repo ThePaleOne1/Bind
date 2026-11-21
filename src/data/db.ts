@@ -12,7 +12,7 @@ export class DexDB extends Dexie {
   meta!: Table<Meta, string>
 
   constructor() {
-    super('dex-cards')
+    super('bind-cards')
     this.version(1).stores({
       artists: 'key, status, binderPage, dirty',
       binderPages: 'page, artistKey, dirty',

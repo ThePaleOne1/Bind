@@ -14,7 +14,7 @@ export function Nav() {
   const { pathname } = useLocation()
   return (
     <nav className="tabbar">
-      <div className="brand">DEX</div>
+      <div className="brand">BIND</div>
       {tabs.map(({ to, label, Icon, scan }) => {
         const active = pathname.startsWith(to)
         return (
