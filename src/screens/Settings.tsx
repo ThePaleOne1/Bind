@@ -8,7 +8,44 @@ import { exportJson, importJson } from '../store/collection'
 import { signIn, signOut, supabase, syncNow, useAuth } from '../sync/supabase'
 import { Stepper, Switch, Title, TitleBar, toast } from '../components/ui'
 import { fmtAud } from '../utils/price'
+import { BUILD, applyUpdate, checkForUpdate, forceRefresh, isNewer, usePwa } from '../pwa'
 
+function VersionSection() {
+  const pwa = usePwa()
+  const available = pwa.updateReady || isNewer(pwa.live)
+  useEffect(() => { void checkForUpdate() }, [])
+  const check = async () => {
+    const r = await checkForUpdate()
+    toast(r === 'available' ? 'Update available' : r === 'current' ? 'Up to date' : 'Offline')
+  }
+  const built = new Date(BUILD.time)
+  return (
+    <section>
+      <Title small tone={available ? 'value' : 'grey'}>Version</Title>
+      <div className="setting">
+        <div>
+          <div className="setting__label">Bind {BUILD.version} <span className="mono muted" style={{ fontWeight: 600 }}>{BUILD.id}</span></div>
+          <div className="setting__sub">
+            {built.toLocaleDateString([], { day: 'numeric', month: 'short' })} {built.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {pwa.live && isNewer(pwa.live) && <> · live <span className="mono">{pwa.live.id}</span> ({pwa.live.version})</>}
+            {pwa.offline && ' · offline'}
+          </div>
+        </div>
+        <div className="row">
+          {available ? (
+            <button className="btn btn--sm" style={{ background: 'var(--value)', color: 'var(--value-ink)' }} onClick={applyUpdate}><Download size={14} /> Update</button>
+          ) : (
+            <button className="iconbtn" onClick={check} disabled={pwa.checking} aria-label="Check for updates"><RefreshCw size={18} className={pwa.checking ? 'spin' : ''} /></button>
+          )}
+        </div>
+      </div>
+      <div className="setting">
+        <div><div className="setting__label">Force refresh</div><div className="setting__sub">Clears the app cache and reloads</div></div>
+        <button className="btn btn--sm btn--ghost" onClick={forceRefresh}>Refresh</button>
+      </div>
+    </section>
+  )
+}
 
 export default function Settings() {
   const s = useSettings()
@@ -58,6 +95,7 @@ export default function Settings() {
       <TitleBar><Title icon={<Cog size={20} strokeWidth={3} />}>Setup</Title></TitleBar>
 
       <div className="stack" style={{ gap: 28, maxWidth: 720 }}>
+        <VersionSection />
         <section>
           <Title small tone="grey">Scanning</Title>
           <div className="setting">
@@ -139,7 +177,7 @@ export default function Settings() {
           </div>
         </section>
 
-        <div className="muted" style={{ fontSize: 'var(--fs-xs)', textAlign: 'center' }}>Bind {__APP_VERSION__} · prices TCGplayer / Cardmarket via TCGdex</div>
+        <div className="muted" style={{ fontSize: 'var(--fs-xs)', textAlign: 'center' }}>Prices TCGplayer / Cardmarket via TCGdex</div>
       </div>
     </div>
   )

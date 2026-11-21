@@ -5,11 +5,28 @@ import { VitePWA } from 'vite-plugin-pwa'
 // GitHub Pages serves from /<repo>/ — the deploy workflow sets VITE_BASE.
 const base = process.env.VITE_BASE ?? '/'
 
+// Build stamp: short commit hash in CI, "local" on a dev machine. Also written to
+// dist/version.json so the running app can ask the server which build is live.
+const buildId = (process.env.GITHUB_SHA ?? 'local').slice(0, 7)
+const buildTime = new Date().toISOString()
+const version = process.env.npm_package_version ?? '0.0.0'
+const versionJson = () => ({
+  name: 'version-json',
+  generateBundle() {
+    ;(this as any).emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ version, id: buildId, time: buildTime }) })
+  },
+})
+
 export default defineConfig({
-  define: { __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? '0.1.0') },
+  define: {
+    __APP_VERSION__: JSON.stringify(version),
+    __BUILD_ID__: JSON.stringify(buildId),
+    __BUILD_TIME__: JSON.stringify(buildTime),
+  },
   base,
   plugins: [
     react(),
+    versionJson(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png', 'favicon.svg'],
