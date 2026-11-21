@@ -1,6 +1,9 @@
 import { createWorker, PSM, type Worker } from 'tesseract.js'
 
 let workers: Promise<Worker>[] | null = null
+let jobs = 0                 // recognitions since the workers were (re)created
+const RECYCLE_AFTER = 40     // Tesseract's wasm heap only ever grows: start fresh now and then, while idle
+let recycling = false
 
 const OUTPUT = { text: true, blocks: false, layoutBlocks: false, hocr: false, tsv: false, box: false, unlv: false, osd: false, pdf: false, imageColor: false, imageGrey: false, imageBinary: false, debug: false } as const
 
@@ -28,6 +31,27 @@ function pool(): Promise<Worker>[] {
 }
 
 export function warmOcr() { void pool() }
+
+/** Number of band reads since the workers were created (debug overlay). */
+export function ocrJobs() { return jobs }
+
+/**
+ * Between cards: if the workers have done a lot of work, replace them. Tesseract's
+ * wasm memory never shrinks, and a worker that has grown for twenty minutes is one
+ * of the ways the phone gets slower the longer a session runs.
+ */
+export async function recycleOcrIfNeeded(): Promise<boolean> {
+  if (jobs < RECYCLE_AFTER || recycling || !workers) return false
+  recycling = true
+  const old = workers
+  workers = null
+  jobs = 0
+  try {
+    await Promise.all(pool())                                   // new ones ready first
+    for (const p of old) p.then((w) => w.terminate()).catch(() => {})
+    return true
+  } finally { recycling = false }
+}
 
 /**
  * Box blur via summed-area table. Used to estimate the local background so
@@ -65,13 +89,15 @@ function boxBlur(src: Float32Array, w: number, h: number, r: number): Float32Arr
  *  5. if the band is mostly dark (full-art cards with light text), invert so
  *     Tesseract sees dark text on light.
  */
-function band(src: HTMLCanvasElement, fx: number, fy: number, fw: number, fh: number, targetH: number): HTMLCanvasElement {
+const bandCanvases = new Map<string, HTMLCanvasElement>()
+function band(src: HTMLCanvasElement, fx: number, fy: number, fw: number, fh: number, targetH: number, slot = 'x'): HTMLCanvasElement {
   const sx = Math.round(fx * src.width), sy = Math.round(fy * src.height)
   const sw = Math.round(fw * src.width), sh = Math.round(fh * src.height)
   const scale = Math.min(5, Math.max(0.5, targetH / Math.max(1, sh)))
-  const c = document.createElement('canvas')
-  const w = (c.width = Math.max(1, Math.round(sw * scale)))
-  const h = (c.height = Math.max(1, Math.round(sh * scale)))
+  let c = bandCanvases.get(slot)
+  if (!c) { c = document.createElement('canvas'); bandCanvases.set(slot, c) }
+  const w = Math.max(1, Math.round(sw * scale)), h = Math.max(1, Math.round(sh * scale))
+  if (c.width !== w || c.height !== h) { c.width = w; c.height = h }
   const ctx = c.getContext('2d', { willReadFrequently: true })!
   ctx.imageSmoothingQuality = 'high'
   ctx.drawImage(src, sx, sy, sw, sh, 0, 0, w, h)
@@ -139,9 +165,10 @@ const clean = (t: string) => t.replace(/\s+/g, ' ').trim()
 /** Name band and number corner, in parallel. Enough for most modern cards. */
 export async function readPrimary(card: HTMLCanvasElement): Promise<{ top: string; corner: string }> {
   const [w1, w2] = await Promise.all(pool())
+  jobs += 2
   const [r1, r2] = await Promise.all([
-    w1.recognize(band(card, ...REGIONS.top), {}, OUTPUT),
-    w2.recognize(band(card, ...REGIONS.corner), {}, OUTPUT),
+    w1.recognize(band(card, ...REGIONS.top, 'top'), {}, OUTPUT),
+    w2.recognize(band(card, ...REGIONS.corner, 'corner'), {}, OUTPUT),
   ])
   return { top: clean(r1.data.text), corner: clean(r2.data.text) }
 }
@@ -149,11 +176,12 @@ export async function readPrimary(card: HTMLCanvasElement): Promise<{ top: strin
 /** Wide bottom band: illustrator credit and the number on older layouts. */
 export async function readBottom(card: HTMLCanvasElement): Promise<string> {
   const [w1] = await Promise.all(pool())
-  const r = await w1.recognize(band(card, ...REGIONS.bottom), {}, OUTPUT)
+  jobs += 1
+  const r = await w1.recognize(band(card, ...REGIONS.bottom, 'bottom'), {}, OUTPUT)
   return clean(r.data.text)
 }
 
 /** For the debug overlay: the preprocessed bands as data URLs. */
 export function debugBands(card: HTMLCanvasElement) {
-  return { top: band(card, ...REGIONS.top).toDataURL(), bottom: band(card, ...REGIONS.bottom).toDataURL(), corner: band(card, ...REGIONS.corner).toDataURL() }
+  return { top: band(card, ...REGIONS.top, 'd').toDataURL(), bottom: band(card, ...REGIONS.bottom, 'd').toDataURL(), corner: band(card, ...REGIONS.corner, 'd').toDataURL() }
 }

@@ -68,7 +68,7 @@ export function CardImage({ src, alt, className, style, quality = 'low', eager =
   const low = src ? `${src}/low.webp` : null
   const high = src && quality === 'high' ? `${src}/high.webp` : null
   useEffect(() => { setLoaded(false); setHiLoaded(false) }, [src])
-  const imgProps = { loading: eager ? ('eager' as const) : ('lazy' as const), decoding: 'async' as const, draggable: false, ...(eager ? { fetchPriority: 'high' as const } : {}) }
+  const imgProps = { loading: eager ? ('eager' as const) : ('lazy' as const), decoding: 'async' as const, draggable: false, ...(eager ? ({ fetchpriority: 'high' } as Record<string, string>) : {}) }
   return (
     <div className={`cardimg ${className ?? ''}`} style={style} onClick={onClick}>
       {!loaded && <div className="cardimg__shimmer" />}

@@ -15,34 +15,34 @@
  *
  * A gentle placement with no motion burst is caught as well: a still frame that
  * differs a lot from the last scanned frame also moves IDLE → SETTLING.
+ *
+ * Each step() touches the camera frame once (see stage.ts); the sharpness of that
+ * same frame is available through sharpness() at no extra GPU cost.
  */
+import { grab, grabGrid, stagedSharpness, stagedContrast } from './stage'
+
 export type Phase = 'idle' | 'settling' | 'capture' | 'busy'
 
 export interface Roi { x: number; y: number; w: number; h: number } // fractions of the video frame
 
-const W = 48
-const H = 64
 const HOLD_MS = 350
 const MOTION_MAX = 0.025        // frame-to-frame change considered "still"
 const DISTURB = 0.035          // frame-to-frame change considered "something moved"
-const DISTURB_FRAMES = 2
-const CHANGE_SLOW = 0.12        // still frame differing this much from the last scan → new card placed gently
+const DISTURB_FRAMES = 1        // one frame of real motion (3.5% of the card region changing) is plenty at 5 fps
+const CHANGE_SLOW = 0.09        // still frame differing this much from the last scan → new card placed gently
 
 export class FrameAnalyzer {
-  // Two canvases on purpose. Drawing a live camera frame into a canvas that is
-  // marked for pixel reads makes the browser copy the whole 1080x1920 frame out
-  // of the GPU and colour-convert it on the CPU, twelve times a second. Instead
-  // the GPU-backed canvas does the downscale, and only the 48x64 result is read.
-  private gpu = document.createElement('canvas')
-  private gctx = this.gpu.getContext('2d')!
-  private canvas = document.createElement('canvas')
-  private ctx = this.canvas.getContext('2d', { willReadFrequently: true })!
   private prev: Float32Array | null = null
+  private cur: Float32Array | null = null
   private reference: Float32Array | null = null  // the frame last scanned
   private captured: Float32Array | null = null
   private settleSince = 0
   private disturbFrames = 0
   private disturbedWhileBusy = false
+  private sharp: number | null = null
+  private staged = false          // the 480-wide stage holds this step's frame
+  private video: HTMLVideoElement | null = null
+  private roi: Roi | null = null
   phase: Phase = 'settling'   // scan whatever is in frame once the picture is stable
   motion = 0
   /** How much the frame just captured differs from the previous scan (0 = identical). */
@@ -50,10 +50,6 @@ export class FrameAnalyzer {
   scans = 0
 
   constructor() {
-    this.canvas.width = W
-    this.canvas.height = H
-    this.gpu.width = W
-    this.gpu.height = H
     this.settleSince = performance.now()
   }
 
@@ -102,14 +98,18 @@ export class FrameAnalyzer {
     }
   }
 
-  private gray(video: HTMLVideoElement, roi: Roi): Float32Array {
-    const vw = video.videoWidth, vh = video.videoHeight
-    this.gctx.drawImage(video, roi.x * vw, roi.y * vh, roi.w * vw, roi.h * vh, 0, 0, W, H)
-    this.ctx.drawImage(this.gpu, 0, 0)
-    const d = this.ctx.getImageData(0, 0, W, H).data
-    const g = new Float32Array(W * H)
-    for (let i = 0, j = 0; i < d.length; i += 4, j++) g[j] = (d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114) / 255
-    return g
+  /** Sharpness of the current frame. Free while settling (the stage is read anyway); otherwise one extra grab. */
+  sharpness(): number {
+    if (this.sharp != null) return this.sharp
+    if (!this.staged) { if (!this.video || !this.roi || !grab(this.video, this.roi)) return 0; this.staged = true }
+    this.sharp = stagedSharpness()
+    return this.sharp
+  }
+
+  /** Brightness spread of the current frame. */
+  contrast(): number {
+    if (!this.staged) { if (!this.video || !this.roi || !grab(this.video, this.roi)) return 0; this.staged = true }
+    return stagedContrast()
   }
 
   private diff(a: Float32Array, b: Float32Array) {
@@ -120,10 +120,16 @@ export class FrameAnalyzer {
 
   /** Returns true exactly once when a capture should be taken. */
   step(video: HTMLVideoElement, roi: Roi, now = performance.now()): boolean {
-    if (!video.videoWidth) return false
-    const g = this.gray(video, roi)
-    this.motion = this.prev ? this.diff(g, this.prev) : 0
-    this.prev = g
+    this.video = video; this.roi = roi
+    this.sharp = null; this.staged = false
+    // two grids, swapped each step: no allocation per frame
+    const g = this.prev && this.prev !== this.cur ? this.prev : new Float32Array(48 * 64)
+    if (!grabGrid(video, roi, g)) return false
+    // while a card settles its focus matters: read the 480-wide stage too (one more round-trip)
+    if (this.phase === 'settling') this.staged = grab(video, roi)
+    this.motion = this.cur ? this.diff(g, this.cur) : 0
+    this.prev = this.cur
+    this.cur = g
 
     switch (this.phase) {
       case 'idle': {
@@ -156,4 +162,35 @@ export class FrameAnalyzer {
     }
     return false
   }
+}
+
+/**
+ * Self-throttling tick scheduler. Each tick reports how long its work took; when
+ * the work costs more than its budget, or the page's own frames start arriving
+ * late (the main thread is busy), the interval stretches, up to 3x. When things
+ * are cheap again it creeps back to the base rate. The phone must never feel the
+ * loop: a scan starting half a second later is fine, a stuttering phone is not.
+ */
+export class Pacer {
+  cost = 0            // smoothed ms of work per tick
+  gap = 16            // smoothed ms between animation frames (16 = smooth 60 fps)
+  factor = 1          // current slowdown multiplier
+  private lastFrame = 0
+  /** `duty` is the share of wall time the loop may spend working (0.15 = 15%). */
+  constructor(private duty = 0.15) {}
+  /** Call once per animation frame, before deciding whether to work. */
+  frame(t: number) {
+    if (this.lastFrame) this.gap = this.gap * 0.9 + Math.min(200, t - this.lastFrame) * 0.1
+    this.lastFrame = t
+  }
+  /** Call with the ms a tick's work took and the base interval it ran at. */
+  worked(ms: number, baseMs: number) {
+    this.cost = this.cost * 0.8 + ms * 0.2
+    const byCost = this.cost / (this.duty * baseMs)          // 1 when exactly on budget
+    const byJank = this.gap > 33 ? 1.5 : 1                    // page under 30 fps: ease off
+    const want = Math.min(3, Math.max(1, byCost, byJank))
+    this.factor = want > this.factor ? want : this.factor * 0.9 + want * 0.1   // back off fast, relax slowly
+  }
+  /** Interval to use for a given base interval. */
+  interval(baseMs: number) { return baseMs * this.factor }
 }

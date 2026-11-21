@@ -418,20 +418,34 @@ img { display: block; max-width: 100%; }
   z-index: 3;
 }
 @media (min-width: 960px) { .scan__bottom { padding-bottom: 20px; } .scan__top { padding-top: 14px; } }
-.scan__result {
-  position: absolute; inset: 0; z-index: 4;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  pointer-events: none; gap: 14px; padding: 20px;
+/* The scanned card's details, pinned under the guide frame while that card sits in the jig */
+.scan__tag {
+  position: absolute; left: 14px; right: 14px; z-index: 3;
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px 8px 8px; border-radius: 16px;
+  background: rgba(7, 20, 17, 0.88); border: 1px solid var(--line-strong);
+  transition: opacity 0.2s;
 }
-.scan__resultcard { width: min(52vw, 260px); pointer-events: auto; }
-.scan__word { text-align: center; }
-.scan__name { font-size: var(--fs-xl); font-weight: 900; text-align: center; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6); }
-.scan__sub { font-size: var(--fs-md); font-weight: 700; color: var(--text-2); text-align: center; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6); }
-.scan__value {
-  font-size: var(--fs-2xl); font-weight: 950; font-variant-numeric: tabular-nums;
-  padding: 4px 14px; border-radius: 12px; background: rgba(7, 20, 17, 0.75);
+.scan__tag--stale { opacity: 0.5; }
+.scan__tagart { width: 54px; flex: none; border-radius: 6px; overflow: hidden; }
+.scan__tagart .cardimg { border-radius: 6px; }
+.scan__tagbody { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; text-align: left; }
+.scan__tagword { font-weight: 900; font-size: var(--fs-xs); letter-spacing: 0.1em; text-transform: uppercase; }
+.scan__tagname { font-size: var(--fs-lg); font-weight: 900; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.scan__tagsub { font-size: var(--fs-sm); font-weight: 700; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.scan__tagvalue { margin-left: auto; font-weight: 950; font-size: var(--fs-md); font-variant-numeric: tabular-nums; padding: 2px 8px; border-radius: 8px; background: rgba(233, 245, 240, 0.08); }
+.scan__tagvalue--hot { background: var(--value); color: var(--value-ink); }
+.scan__tagview { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--surface-2); color: var(--text); }
+.scan__tagview:active { transform: scale(0.94); }
+/* Badge on the frame: the card under the camera is the one just scanned */
+.scan__frame--found { border-width: 3px; }
+.scan__badge {
+  position: absolute; left: 12px; top: -14px;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 999px;
+  font-weight: 900; font-size: var(--fs-xs); letter-spacing: 0.08em; text-transform: uppercase;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
-.scan__value--hot { background: var(--value); color: var(--value-ink); box-shadow: 0 0 40px rgba(255, 77, 157, 0.6); }
 .scan canvas.fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
 .scan__flash { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .scan__mode {

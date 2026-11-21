@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Zap, ZapOff, Search, Plus, Minus, X, ChevronLeft, Sun, SlidersHorizontal, SwitchCamera, ZoomIn, Focus, Play, Square, Sparkles } from 'lucide-react'
+import { Zap, ZapOff, Search, Plus, Minus, X, ChevronLeft, Sun, SlidersHorizontal, SwitchCamera, ZoomIn, Focus, Play, Square, Sparkles, Check, Eye } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../data/db'
 import type { CardRecord, IndexEntry, ScanEvent } from '../data/types'
 import { startCamera, type CameraHandle } from '../recognition/camera'
-import { FrameAnalyzer, type Phase, type Roi } from '../recognition/frameAnalyzer'
-import { captureRoi, recognize, isBlank, setNameOf, type Recognition } from '../recognition/recognizer'
+import { FrameAnalyzer, Pacer, type Phase, type Roi } from '../recognition/frameAnalyzer'
+import { captureRoi, recognize, isBlank, setNameOf, contrastOf, MIN_CONTRAST, type Recognition } from '../recognition/recognizer'
 import { sharpnessOf, sharpnessOfVideo, BLUR_THRESHOLD } from '../recognition/focus'
-import { warmOcr } from '../recognition/ocr'
+import { warmOcr, ocrJobs, recycleOcrIfNeeded } from '../recognition/ocr'
 import { loadIndex, getCard } from '../api/tcgdex'
 import { searchIndex } from '../recognition/matcher'
 import { applyScan, setFinishOne, cardValueAud } from '../store/collection'
@@ -21,6 +21,7 @@ import { buzz, chime } from '../utils/haptics'
 import { fmtAud } from '../utils/price'
 import { Particles, PALETTES } from '../components/Particles'
 import { CardImage, prefetchCardImage, Sheet, STATUS_WORD, toast } from '../components/ui'
+import { CardDetailSheet } from '../components/CardDetail'
 
 type Result = { ev: ScanEvent; card: CardRecord; rec: Recognition }
 
@@ -36,6 +37,15 @@ function lensName(devices: { id: string; label: string }[], id: string | null): 
   return String(i + 1)
 }
 
+/** Colour and word for a scan outcome. */
+function outcome(ev: ScanEvent): { word: string; color: string } {
+  if (ev.action === 'remove') return { word: 'Removed', color: 'var(--danger)' }
+  if (ev.highValue) return { word: 'High value', color: 'var(--value)' }
+  if (ev.artistStatus === 'collecting') return { word: STATUS_WORD.collecting, color: 'var(--accent)' }
+  if (ev.artistStatus === 'unknown') return { word: STATUS_WORD.unknown, color: 'var(--new)' }
+  return { word: STATUS_WORD['not-collecting'], color: 'var(--text-2)' }
+}
+
 export default function Scan() {
   const nav = useNavigate()
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -43,6 +53,7 @@ export default function Scan() {
   const frameRef = useRef<HTMLDivElement>(null)
   const cam = useRef<CameraHandle | null>(null)
   const analyzer = useRef(new FrameAnalyzer())
+  const pacer = useRef(new Pacer(10))
   const particles = useRef<Particles | null>(null)
   const busy = useRef(false)
   const [phase, setPhase] = useState<Phase>('settling')
@@ -57,7 +68,7 @@ export default function Scan() {
   const [running, setRunning] = useState(false)            // scanning is armed (Start pressed)
   const [starting, setStarting] = useState(false)          // calibrating focus after Start
   const runningRef = useRef(false)
-  const [note, setNote] = useState<string | null>(null)     // brief hint under the frame: No card / Same card
+  const [note, setNote] = useState<string | null>(null)     // brief hint: No card / Same card / Can't read
   const [, setTick] = useState(0)                           // re-render for the debug overlay
   const liveSharp = useRef(0)
   const sharpHist = useRef<number[]>([])                   // recent sharpness samples while settling
@@ -67,12 +78,12 @@ export default function Scan() {
   const lastSharpAt = useRef(0)
   const lastDebugTick = useRef(0)
   const lastCommit = useRef<{ id: string; at: number } | null>(null)
-  const resultTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const resultRef = useRef(false)
+  const lastCapture = useRef<{ ms: number; ocrMs: number; tries: number } | null>(null)
   const pausedRef = useRef(false)                          // a sheet is waiting for an answer
   const [ask, setAsk] = useState<{ card: CardRecord; rec: Recognition; options: Finish[]; guess: Finish } | null>(null)
   const noteTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [result, setResult] = useState<Result | null>(null)
+  const [result, setResult] = useState<Result | null>(null)  // the card that is sitting in the jig right now
+  const [view, setView] = useState(false)                    // the result's full detail sheet
   const [miss, setMiss] = useState<Recognition | null>(null)
   const [search, setSearch] = useState(false)
   const [flash, setFlash] = useState<string | null>(null)
@@ -81,7 +92,7 @@ export default function Scan() {
   const mode = useSettings((s) => s.scanMode)
   const setSettings = useSettings((s) => s.set)
   const [lensRequest, setLensRequest] = useState(0)        // bump to reopen the camera on the chosen lens
-  const { sound, haptics, highValueAud } = useSettings()
+  const { sound, haptics } = useSettings()
   const todayCount = useLiveQuery(async () => {
     const start = new Date(); start.setHours(0, 0, 0, 0)
     return db.scans.where('at').above(start.getTime()).count()
@@ -164,7 +175,9 @@ export default function Scan() {
   /** Soft when under the fixed floor, or well below the best this lens has shown (autofocus mid-hunt, stack getting shorter). */
   const isSoft = (s: number) => s < BLUR_THRESHOLD || s < Math.max(cam.current?.focusPeak() ?? 0, scanPeak.current) * 0.5
 
-  // Hands-free analysis loop: ~8 fps while waiting, ~12 fps while a card is settling.
+  // Hands-free analysis loop. Base rate ~5 fps waiting, ~6 fps while a card settles; the
+  // frame is drawn and read back once per tick (stage.ts) and the Pacer stretches the
+  // interval whenever a tick costs more than ~10 ms or the page itself starts to jank.
   useEffect(() => {
     let raf = 0
     let last = 0
@@ -172,22 +185,30 @@ export default function Scan() {
     const tick = (t: number) => {
       raf = requestAnimationFrame(tick)
       const a = analyzer.current
-      if (t - last < (a.phase === 'settling' ? 80 : resultRef.current ? 250 : 125)) return
+      const pace = pacer.current
+      pace.frame(t)
+      const base = a.phase === 'settling' ? 160 : 200
+      if (t - last < pace.interval(base)) return
       last = t
       const v = videoRef.current
       if (!v || !cam.current || busy.current || !runningRef.current || pausedRef.current) return
+      const t0 = performance.now()
       const fire = a.step(v, roi(), t)
       setPhase(a.phase)
       const settling = a.phase === 'settling' || a.phase === 'capture'
       if (settling && !wasSettling) { settleStart.current = t; sharpHist.current = [] }
       wasSettling = settling
-      // While the picture is settling, watch the focus: kick the autofocus if it is soft.
-      if (settling && t - lastSharpAt.current > 150) {
-        lastSharpAt.current = t
-        const s = sharpnessOfVideo(v, roi())
+      // While the picture is settling, watch the focus (from the frame step() already read).
+      let empty = false
+      if (settling) {
+        const s = a.sharpness()
         liveSharp.current = s
+        lastSharpAt.current = t
         sharpHist.current = [...sharpHist.current.slice(-3), s]
-        const soft = isSoft(s)
+        // Nothing printed in the frame (the jig after the last card): there is nothing to
+        // focus on and nothing to wait for; the read will say "No card" straight away.
+        empty = a.contrast() < MIN_CONTRAST
+        const soft = !empty && isSoft(s)
         setBlurry(soft || cam.current.focusing())
         // A continuous autofocus usually lands by itself; only kick it when the picture is
         // still soft after 1.2 s of stillness, and never more than once every 2.5 s.
@@ -196,21 +217,25 @@ export default function Scan() {
           // After the lens has moved, look at the card afresh (settle again, then scan).
           void cam.current.refocus(focusOpts()).then((moved) => { if (moved) { analyzer.current.reset(); settleStart.current = performance.now(); sharpHist.current = [] } })
         }
-      } else if (!settling) setBlurry(cam.current.focusing())
-      if (debug && !settling && t - lastSharpAt.current > 500) { lastSharpAt.current = t; liveSharp.current = sharpnessOfVideo(v, roi()); setTick((n) => n + 1) }
-      else if (debug && settling && t - lastDebugTick.current > 400) { lastDebugTick.current = t; setTick((n) => n + 1) }
+      } else setBlurry(cam.current.focusing())
+      if (debug) {
+        if (!settling && t - lastSharpAt.current > 500) { lastSharpAt.current = t; liveSharp.current = a.sharpness(); setTick((n) => n + 1) }
+        else if (settling && t - lastDebugTick.current > 400) { lastDebugTick.current = t; setTick((n) => n + 1) }
+      }
+      pace.worked(performance.now() - t0, base)
       if (fire) {
-        if (cam.current.focusing()) { a.release(); return }   // mid-sweep frame: let the sweep finish, the next stillness will scan
-        // The hand has gone, but the autofocus may still be converging: wait until two
-        // consecutive sharpness samples agree (within 15%) before reading, up to 1.5 s.
-        // A slow autofocus creeps up 5–10% per sample, so two samples can "agree" while
-        // still rising: require a plateau over the last three (within 15%, ~450 ms).
+        const overdue = t - settleStart.current > 2500
+        // Mid-sweep frame: let the sweep finish and look again shortly (never drop the
+        // capture: dropping it on an empty jig re-settled forever).
+        if (cam.current.focusing() && !overdue) { a.postpone(t, 200); return }
+        // The hand has gone, but the autofocus may still be converging: require a plateau
+        // over the last three sharpness samples (within 15%) before reading, up to 2.5 s.
         const h = sharpHist.current
         const n = h.length
         const last3 = h.slice(-3)
         const stable = n >= 3 && Math.max(...last3) <= 1.15 * Math.max(Math.min(...last3), 1e-3)
-        const ready = stable && !isSoft(h[n - 1])   // agreeing samples at the bottom of a focus hunt are not "stable"
-        if (ready || t - settleStart.current > 2500) void captureRef.current()
+        const ready = empty || (stable && !isSoft(h[n - 1]))   // agreeing samples at the bottom of a focus hunt are not "stable"
+        if (ready || overdue) void captureRef.current()
         else a.postpone(t, 160)
       }
     }
@@ -233,14 +258,19 @@ export default function Scan() {
 
   const { askFinish, effects } = useSettings()
 
-  /** Work out the finish, asking when the foil read cannot tell and the card comes in several. */
+  /**
+   * Work out the finish. The foil read tells a standard print from a reverse holo
+   * (body texture); it cannot tell a holo rare from its reverse (both bodies are foil),
+   * so cards without a standard print still ask.
+   */
   const decideFinish = (card: CardRecord, rec: Recognition): { finish: Finish; ask: false } | { finish: Finish; ask: true; options: Finish[] } => {
     const options = finishesOf(card)
     if (options.length === 1) return { finish: options[0], ask: false }
     const foil = rec.foil
-    const both = options.includes('normal') && options.includes('reverse')
-    if (both && foil?.confident) return { finish: foil.guess, ask: false }
-    const guess: Finish = both && foil ? foil.guess : defaultFinish(card)
+    const plain = options.filter((f) => f !== 'reverse')
+    const standardOrReverse = options.includes('reverse') && plain.length === 1 && plain[0] === 'normal'
+    if (standardOrReverse && foil?.confident) return { finish: foil.guess, ask: false }
+    const guess: Finish = standardOrReverse && foil ? foil.guess : options.includes('reverse') && plain.length ? plain[0] : defaultFinish(card)
     return askFinish ? { finish: guess, ask: true, options } : { finish: guess, ask: false }
   }
 
@@ -263,10 +293,8 @@ export default function Scan() {
     else feedback('ok', ev.artistStatus === 'collecting' ? [25, 40, 25] : 25)
     sendCompanion({ type: 'scan', scan: ev })
     lastCommit.current = { id: card.id, at: Date.now() }
+    setNote(null)
     setResult({ ev, card, rec })
-    resultRef.current = true
-    if (resultTimer.current) clearTimeout(resultTimer.current)
-    resultTimer.current = setTimeout(() => { setResult(null); resultRef.current = false }, 2200)
   }, [mode, frameBox, sound, haptics, askFinish, effects])
 
   const answerFinish = async (finish: Finish) => {
@@ -288,25 +316,26 @@ export default function Scan() {
     const ownedId = await setFinishOne(r.ev.ownedId, next)
     const valueAud = await cardValueAud(r.card, next)
     setResult({ ...r, ev: { ...r.ev, finish: next, ownedId, valueAud } })
-    if (resultTimer.current) clearTimeout(resultTimer.current)
-    resultTimer.current = setTimeout(() => setResult(null), 2600)
   }
 
   const showNote = (text: string) => {
     setNote(text)
     if (noteTimer.current) clearTimeout(noteTimer.current)
-    noteTimer.current = setTimeout(() => setNote(null), 1400)
+    noteTimer.current = setTimeout(() => setNote(null), 1600)
   }
 
   const capture = useCallback(async () => {
     const v = videoRef.current
     if (!v || busy.current) return
     busy.current = true
+    const t0 = performance.now()
     let softMiss = false
+    let tries = 1
+    let rec: Recognition | null = null
     try {
       let frame = captureRoi(v, roi())
       let sharp = sharpnessOf(frame)
-      if (isSoft(sharp) && cam.current) {
+      if (isSoft(sharp) && cam.current && contrastOf(frame) >= MIN_CONTRAST) {
         // Soft frame: get the lens focused (autofocus pass or distance sweep), then give it
         // up to a second to land before looking again. Reading a soft frame is slow and useless.
         lastRefocus.current = performance.now()
@@ -315,20 +344,22 @@ export default function Scan() {
         const until = performance.now() + 1000
         do {
           await new Promise((r) => setTimeout(r, 150))
-          const again = captureRoi(v, roi())
+          const again = captureRoi(v, roi(), frame)
           const s2 = sharpnessOf(again)
           if (s2 > sharp) { frame = again; sharp = s2 }
         } while (isSoft(sharp) && performance.now() < until)
         setBlurry(false)
       }
-      softMiss = false
-      let rec = await recognize(frame, { debug })
+      rec = await recognize(frame, { debug })
       // Foil and glare change frame to frame: before giving up, read up to two more
-      // frames, pooling their OCR text with what has been read so far.
-      for (let attempt = 0; attempt < 2 && !rec.card && !isBlank(rec) && !isSoft(rec.sharpness); attempt++) {
+      // frames, pooling their OCR text with what has been read so far. A frame with a
+      // card in it that read as nothing (foil over the number, patterned reverse) is
+      // retried too; only an empty frame or a soft one is not.
+      for (let attempt = 0; attempt < 2 && !rec.card && !rec.empty && !isSoft(rec.sharpness); attempt++) {
         await new Promise((r) => setTimeout(r, 200))
+        tries++
         const again = await recognize(captureRoi(v, roi()), { debug, prior: rec })
-        rec = isBlank(again) ? rec : again
+        rec = again.empty ? rec : again
       }
       const a = analyzer.current
       if (rec.card) {
@@ -342,9 +373,15 @@ export default function Scan() {
         }
       } else if (isSoft(rec.sharpness) && rec.sharpness > 0) {
         softMiss = true                                  // the lens was still moving: try this card again
+      } else if (rec.empty) {
+        setResult(null)                                  // the card is gone
+        showNote(a.scans <= 1 ? 'Ready' : 'No card')   // empty jig, table
       } else if (isBlank(rec)) {
-        showNote(a.scans <= 1 ? 'Ready' : 'No card')   // empty jig, table, hand
+        setResult(null)
+        feedback('fail', 60)
+        showNote("Can't read")                           // something is there, but no number or name came out
       } else {
+        setResult(null)
         feedback('fail', 60)
         pausedRef.current = true
         setMiss(rec)
@@ -352,9 +389,11 @@ export default function Scan() {
     } catch (e: any) {
       toast(e?.message ?? 'Scan failed')
     } finally {
+      lastCapture.current = { ms: performance.now() - t0, ocrMs: rec?.ocrMs ?? 0, tries }
       if (softMiss) analyzer.current.retry()
       else analyzer.current.release()
       busy.current = false
+      void recycleOcrIfNeeded()
     }
   }, [roi, commit, debug, focusOpts])
 
@@ -378,7 +417,7 @@ export default function Scan() {
   }
   const stop = () => {
     runningRef.current = false; setRunning(false)
-    setBlurry(false); setNote(null)
+    setBlurry(false); setNote(null); setResult(null)
   }
 
   // The analysis loop is a long-lived effect: always call the latest capture (mode, debug flag, …).
@@ -438,10 +477,20 @@ export default function Scan() {
     setTorch(on)
   }
 
+  const openView = () => { if (result) { pausedRef.current = true; setView(true) } }
+  const closeView = () => { setView(false); pausedRef.current = false }
+
   const lastRec = result?.rec ?? miss
-  const statusWord = ask ? 'Finish?' : miss ? 'Not sure' : result ? 'Scanned' : blurry ? 'Focus' : !running ? 'Paused' : phase === 'capture' || busy.current ? 'Reading' : phase === 'settling' ? 'Hold' : 'Ready'
+  // The scanned card is "present" while the analyzer sees the frame it scanned; it goes
+  // stale the moment something moves (card being pulled, the next one settling).
+  const stale = phase === 'settling' || phase === 'capture'
+  const found = result && !stale
+  const out = result ? outcome(result.ev) : null
+  const statusWord = ask ? 'Finish?' : miss ? 'Not sure' : blurry ? 'Focus' : !running ? 'Paused' : phase === 'capture' || busy.current ? 'Reading' : phase === 'settling' ? 'Hold' : found ? 'Scanned' : 'Ready'
   const dotClass = !running && !blurry ? '' : phase === 'settling' || blurry ? 'scan__dot--hold' : phase === 'capture' || busy.current ? 'scan__dot--busy' : 'scan__dot--on'
   const camSettings = cam.current?.settings() ?? {}
+  const heapMb = (performance as any).memory?.usedJSHeapSize ? ((performance as any).memory.usedJSHeapSize / 1048576).toFixed(0) : '-'
+  const tagTop = frameBox ? Math.min(frameBox.top + frameBox.height + 10, window.innerHeight - 118 - 100) : 0
 
   return (
     <div className="scan" onDoubleClick={() => setDebug((d) => !d)}>
@@ -461,10 +510,16 @@ export default function Scan() {
       {frameBox && (
         <div
           ref={frameRef}
-          className={`scan__frame ${phase === 'settling' ? 'scan__frame--hold' : ''} ${phase === 'capture' || busy.current ? 'scan__frame--busy' : ''} ${mode === 'remove' ? 'scan__frame--remove' : ''}`}
-          style={frameBox}
+          className={`scan__frame ${phase === 'settling' ? 'scan__frame--hold' : ''} ${phase === 'capture' || busy.current ? 'scan__frame--busy' : ''} ${mode === 'remove' ? 'scan__frame--remove' : ''} ${found ? 'scan__frame--found' : ''}`}
+          style={{ ...frameBox, ...(found && out ? { borderColor: out.color } : {}) }}
         >
           <i className="scan__corner tl" /><i className="scan__corner tr" /><i className="scan__corner bl" /><i className="scan__corner br" />
+          {/* Badge on the card itself: this is the card that was just scanned, not a new one */}
+          {found && out && (
+            <div className="scan__badge" style={{ background: out.color, color: out.color === 'var(--text-2)' ? 'var(--bg)' : out.color === 'var(--value)' ? 'var(--value-ink)' : out.color === 'var(--danger)' ? 'var(--danger-ink)' : out.color === 'var(--new)' ? 'var(--new-ink)' : 'var(--accent-ink)' }}>
+              <Check size={14} strokeWidth={3.5} /> {note ?? out.word}
+            </div>
+          )}
         </div>
       )}
       {frameBox && !result && note && (
@@ -473,6 +528,41 @@ export default function Scan() {
       {frameBox && !result && !note && running && phase === 'idle' && analyzer.current.scans > 0 && (
         <div className="scan__hint" style={{ top: frameBox.top + frameBox.height + 14 }}>Next card</div>
       )}
+
+      {/* The scanned card's details, pinned under the frame for as long as the card sits there */}
+      <AnimatePresence>
+        {frameBox && result && out && (
+          <motion.div
+            key={result.ev.id ?? result.card.id}
+            className={`scan__tag ${stale ? 'scan__tag--stale' : ''}`}
+            style={{ top: tagTop }}
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }}
+            transition={{ duration: 0.2 }}
+          >
+            <button className="scan__tagart" onClick={openView} aria-label="View card">
+              <CardImage src={result.card.image} alt={result.card.name} eager />
+            </button>
+            <div className="scan__tagbody">
+              <div className="scan__tagword" style={{ color: out.color }}>{stale ? 'Card moved' : out.word}</div>
+              <div className="scan__tagname">{result.card.name}</div>
+              <div className="scan__tagsub">{result.card.illustrator ?? 'Unknown artist'} · {result.card.localId}/{result.card.setTotal || '?'}</div>
+              <div className="row" style={{ gap: 6, marginTop: 4 }}>
+                <button
+                  className={`chip ${result.ev.finish && result.ev.finish !== 'normal' ? 'chip--unknown' : 'chip--outline'}`}
+                  style={{ height: 26, fontSize: 'var(--fs-xs)' }}
+                  onClick={() => void cycleFinish()}
+                  aria-label="Finish"
+                >
+                  {FINISH_LABEL[result.ev.finish ?? 'normal']}{finishesOf(result.card).length > 1 ? ' ⇄' : ''}
+                </button>
+                {rarityTag(result.card.rarity) && <span className="chip chip--outline" style={{ height: 26, fontSize: 'var(--fs-xs)' }}>{rarityTag(result.card.rarity)}</span>}
+                <span className={`scan__tagvalue ${result.ev.highValue ? 'scan__tagvalue--hot' : ''}`}>{fmtAud(result.ev.valueAud)}</span>
+              </div>
+            </div>
+            <button className="scan__tagview" onClick={openView} aria-label="View card"><Eye size={20} /></button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <canvas ref={fxRef} className="fx" />
 
@@ -527,46 +617,10 @@ export default function Scan() {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {result && (
-          <motion.div className="scan__result" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.25 } }}>
-            <motion.div
-              className="scan__resultcard"
-              initial={effects ? { scale: 0.4, rotate: -8, y: 60 } : { opacity: 0 }}
-              animate={effects ? { scale: 1, rotate: 0, y: 0 } : { opacity: 1 }}
-              exit={effects ? { scale: 0.85, y: -30, opacity: 0 } : { opacity: 0 }}
-              transition={effects ? { type: 'spring', stiffness: 380, damping: 26 } : { duration: 0.15 }}
-            >
-              <CardImage src={result.card.image} alt={result.card.name} eager />
-            </motion.div>
-            <motion.div className="scan__word" initial={effects ? { scale: 0.6, opacity: 0 } : { opacity: 0 }} animate={effects ? { scale: 1, opacity: 1 } : { opacity: 1 }} transition={effects ? { type: 'spring', stiffness: 400, damping: 22, delay: 0.08 } : { duration: 0.15 }}>
-              <span className={`title ${result.ev.action === 'remove' ? 'title--danger' : result.ev.highValue ? 'title--value' : result.ev.artistStatus === 'unknown' ? 'title--new' : result.ev.artistStatus === 'not-collecting' ? 'title--grey' : ''}`} style={{ fontSize: 'clamp(22px, 6vw, 34px)' }}>
-                {result.ev.action === 'remove' ? 'Removed' : result.ev.highValue ? 'High value' : STATUS_WORD[result.ev.artistStatus]}
-              </span>
-            </motion.div>
-            <motion.div initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.15 }} className="stack" style={{ alignItems: 'center', gap: 6 }}>
-              <div className="scan__name">{result.card.name}</div>
-              <div className="scan__sub">{result.card.illustrator ?? 'Unknown artist'} · {result.card.localId}/{result.card.setTotal || '?'}</div>
-              <div className="row" style={{ gap: 6, pointerEvents: 'auto' }}>
-                <button
-                  className={`chip ${result.ev.finish && result.ev.finish !== 'normal' ? 'chip--unknown' : 'chip--outline'}`}
-                  style={{ height: 30, fontSize: 'var(--fs-sm)', background: result.ev.finish && result.ev.finish !== 'normal' ? undefined : 'rgba(7,20,17,.75)' }}
-                  onClick={() => void cycleFinish()}
-                  aria-label="Finish"
-                >
-                  {FINISH_LABEL[result.ev.finish ?? 'normal']}{finishesOf(result.card).length > 1 ? ' ⇄' : ''}
-                </button>
-                {rarityTag(result.card.rarity) && <span className="chip chip--outline" style={{ height: 30, fontSize: 'var(--fs-sm)', background: 'rgba(7,20,17,.75)' }}>{rarityTag(result.card.rarity)}</span>}
-              </div>
-              <div className={`scan__value ${result.ev.highValue ? 'scan__value--hot' : ''}`}>{fmtAud(result.ev.valueAud)}</div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {debug && (
         <div className="scan__ocr" style={{ bottom: 110 }}>
           {`${videoRef.current?.videoWidth ?? 0}x${videoRef.current?.videoHeight ?? 0} focus=${camSettings.focusMode ?? '-'}${camSettings.focusDistance != null ? `@${camSettings.focusDistance}` : ''} zoom=${camSettings.zoom ?? '-'} modes=${cam.current?.focusModes.join(',') || '-'} cam="${camInfo?.label ?? ''}"\n`}
+          {`page ${(1000 / Math.max(1, pacer.current.gap)).toFixed(0)}fps tick=${pacer.current.cost.toFixed(1)}ms x${pacer.current.factor.toFixed(2)} heap=${heapMb}MB ocrJobs=${ocrJobs()} last=${lastCapture.current ? `${lastCapture.current.ms.toFixed(0)}ms (ocr ${lastCapture.current.ocrMs.toFixed(0)}ms, ${lastCapture.current.tries} read${lastCapture.current.tries > 1 ? 's' : ''})` : '-'}\n`}
           {`phase=${phase} motion=${analyzer.current.motion.toFixed(3)} change=${analyzer.current.change.toFixed(3)} sharp=${liveSharp.current.toFixed(3)} (min ${BLUR_THRESHOLD}, peak ${Math.max(cam.current?.focusPeak() ?? 0, scanPeak.current).toFixed(3)}) scans=${analyzer.current.scans}\n`}
           {lastRec ? `top="${lastRec.ocr?.top}"\nbottom="${lastRec.ocr?.bottom}"\ncorner="${lastRec.ocr?.corner}"\n${lastRec.ms?.toFixed(0)}ms conf=${lastRec.confidence?.toFixed(2)} sharp=${lastRec.sharpness?.toFixed(3)} foil=${lastRec.foil ? `${lastRec.foil.ratio.toFixed(2)} (body ${lastRec.foil.body.toFixed(4)} border ${lastRec.foil.border.toFixed(4)} → ${lastRec.foil.guess}${lastRec.foil.confident ? '' : '?'})` : '-'} num=${lastRec.parsed?.number ?? '-'}/${lastRec.parsed?.total ?? '-'} name=${lastRec.parsed?.nameGuess ?? ''} illus=${lastRec.parsed?.illustratorGuess ?? '-'}` : ''}
           {lastRec?.bands && (
@@ -615,6 +669,9 @@ export default function Scan() {
           </div>
         )}
       </Sheet>
+
+      {/* The scanned card in full, to check it is the right one */}
+      <CardDetailSheet cardId={view && result ? result.card.id : null} onClose={closeView} />
 
       {/* Not recognised → pick from candidates or search */}
       <Sheet open={!!miss} onClose={() => { setMiss(null); pausedRef.current = false }}>

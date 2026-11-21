@@ -7,14 +7,16 @@
  * relative to the border texture: the ratio is independent of exposure, noise
  * level and lens sharpness.
  *
- *   ratio ≲ 1.5  → standard        ratio ≳ 2.2  → reverse        between → unsure
+ *   ratio ≤ FOIL_STANDARD_MAX → standard    ratio ≥ FOIL_REVERSE_MIN → reverse    between → unsure
  */
 export interface FoilRead { ratio: number; body: number; border: number; guess: 'normal' | 'reverse'; confident: boolean }
 
-// Uncalibrated: until real-camera readings for known standard and reverse cards are
-// in, the read is never "confident" and the app asks, showing the ratio for calibration.
-export const FOIL_STANDARD_MAX = -1
-export const FOIL_REVERSE_MIN = Infinity
+// Calibrated on the jig (Samsung main lens, 45° to the ceiling light), 2026-11-21:
+//   standard prints read 0.18 – 0.51 (five cards), reverse holos 0.62 – 0.66 (five cards).
+// Holo rares (foil artwork, foil-framed body) read 0.53 – 0.70, i.e. like a reverse: the
+// body measure cannot tell a holo rare from its reverse, so those still ask.
+export const FOIL_STANDARD_MAX = 0.55
+export const FOIL_REVERSE_MIN = 0.59
 
 // Regions as fractions of the card [x, y, w, h]
 const BODY: [number, number, number, number][] = [

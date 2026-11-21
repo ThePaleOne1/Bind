@@ -13,8 +13,16 @@ export const FINISH_LABEL: Record<Finish, string> = {
 export const finishTag = (f: Finish | undefined | null): string | null =>
   !f || f === 'normal' ? null : f === 'reverse' ? 'Reverse' : f === 'holo' ? 'Holo' : '1st ed.'
 
-/** The finishes this card was printed in (from the card database), standard first. */
-export function finishesOf(card: Pick<CardRecord, 'variants'> | null | undefined): Finish[] {
+/**
+ * The finishes this card was printed in, standard first.
+ *
+ * The database's variant flags are generous (a holo rare is often flagged "normal"
+ * too); the market listings are not: a finish only gets a price when that print
+ * exists. So when the card has per-finish prices, those are the finishes.
+ */
+export function finishesOf(card: Pick<CardRecord, 'variants' | 'variantPrices'> | null | undefined): Finish[] {
+  const priced = card?.variantPrices ? (Object.keys(card.variantPrices) as Finish[]).filter((f) => FINISHES.includes(f)) : []
+  if (priced.length) return FINISHES.filter((f) => priced.includes(f))
   const v = card?.variants
   if (!v) return ['normal']
   const out: Finish[] = []
@@ -30,7 +38,7 @@ export function finishesOf(card: Pick<CardRecord, 'variants'> | null | undefined
  * (rares, full arts) is a holo; one that only exists as a reverse is a reverse;
  * anything with a standard print defaults to standard, and the user flips it.
  */
-export function defaultFinish(card: Pick<CardRecord, 'variants'> | null | undefined): Finish {
+export function defaultFinish(card: Pick<CardRecord, 'variants' | 'variantPrices'> | null | undefined): Finish {
   const f = finishesOf(card)
   return f.includes('normal') ? 'normal' : f[0]
 }

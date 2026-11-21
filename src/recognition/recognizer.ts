@@ -14,18 +14,38 @@ export interface Recognition {
   parsed: Parsed
   ocr: { top: string; bottom: string; corner: string }
   ms: number
+  /** Time spent inside the OCR workers (part of ms). */
+  ocrMs?: number
   sharpness: number
+  /** Nothing printed in the frame (empty jig, table): OCR was skipped. */
+  empty?: boolean
   foil?: FoilRead
   bands?: { top: string; bottom: string; corner: string } // preprocessed band images (debug)
 }
 
-/** Grab the guide region of the live video at full camera resolution. */
-export function captureRoi(video: HTMLVideoElement, roi: Roi): HTMLCanvasElement {
+/**
+ * Grab the guide region of the live video for reading.
+ *
+ * Two reusable software canvases (a fresh GPU canvas per grab is 14 MB at 4K and the
+ * phone reclaims them slowly). Software on purpose: the one drawImage(video) is the
+ * only GPU round-trip; every band crop after it is CPU → CPU. The card is capped at
+ * MAX_CAPTURE_H tall, which still leaves the name band ~170 px tall before OCR
+ * resampling; 4K would give 2200 px of card and nothing to show for it.
+ * `avoid` is a canvas still in use (the previous grab being compared against).
+ */
+const MAX_CAPTURE_H = 1800
+const slots: HTMLCanvasElement[] = []
+export function captureRoi(video: HTMLVideoElement, roi: Roi, avoid?: HTMLCanvasElement): HTMLCanvasElement {
   const vw = video.videoWidth, vh = video.videoHeight
-  const c = document.createElement('canvas')
-  c.width = Math.round(roi.w * vw)
-  c.height = Math.round(roi.h * vh)
-  c.getContext('2d')!.drawImage(video, roi.x * vw, roi.y * vh, c.width, c.height, 0, 0, c.width, c.height)
+  if (slots.length < 2) { slots.push(document.createElement('canvas')); slots.push(document.createElement('canvas')) }
+  const c = slots[0] === avoid ? slots[1] : slots[0]
+  const sw = Math.round(roi.w * vw), sh = Math.round(roi.h * vh)
+  const scale = Math.min(1, MAX_CAPTURE_H / Math.max(1, sh))
+  const w = Math.max(1, Math.round(sw * scale)), h = Math.max(1, Math.round(sh * scale))
+  if (c.width !== w || c.height !== h) { c.width = w; c.height = h }
+  const ctx = c.getContext('2d', { willReadFrequently: true })!
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(video, roi.x * vw, roi.y * vh, sw, sh, 0, 0, w, h)
   return c
 }
 
@@ -35,12 +55,12 @@ export async function setNameOf(setId: string): Promise<string> {
 }
 
 /** Standard deviation of brightness over the card region (0–1). A printed card is busy; a bare jig or table is flat. */
+const small = document.createElement('canvas')
+small.width = 48; small.height = 64
+const smallCtx = small.getContext('2d', { willReadFrequently: true })!
 export function contrastOf(card: HTMLCanvasElement): number {
-  const c = document.createElement('canvas')
-  c.width = 48; c.height = 64
-  const x = c.getContext('2d', { willReadFrequently: true })!
-  x.drawImage(card, 0, 0, 48, 64)
-  const d = x.getImageData(0, 0, 48, 64).data
+  smallCtx.drawImage(card, 0, 0, 48, 64)
+  const d = smallCtx.getImageData(0, 0, 48, 64).data
   let s = 0, s2 = 0
   const n = d.length / 4
   for (let i = 0; i < d.length; i += 4) { const v = (d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114) / 255; s += v; s2 += v * v }
@@ -64,12 +84,14 @@ export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean
   const t0 = performance.now()
   // Nothing printed in the frame (empty jig, table): skip the OCR, which is slow on noise.
   if (contrastOf(card) < MIN_CONTRAST) {
-    const out: Recognition = { ...EMPTY, ms: performance.now() - t0, sharpness: 0 }
+    const out: Recognition = { ...EMPTY, ms: performance.now() - t0, sharpness: 0, empty: true }
     if (opts.debug) out.bands = debugBands(card)
     return out
   }
   // Phase 1: name band + number corner (parallel). That settles most modern cards.
+  const t1 = performance.now()
   const [index, primary] = await Promise.all([loadIndex(), readPrimary(card)])
+  let ocrMs = performance.now() - t1
   const prior = opts.prior?.ocr
   const join = (a: string, b?: string) => (b ? `${a} ${b}` : a)
   const ocr = { top: join(primary.top, prior?.top), bottom: prior?.bottom ?? '', corner: join(primary.corner, prior?.corner) }
@@ -79,7 +101,9 @@ export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean
   // (number missing, weak match, or two cards within reach of each other).
   const settled = m.best && m.confidence >= 0.8 && !(m.alternatives[1] && m.alternatives[1].score >= m.best.score - 0.12)
   if (!settled) {
+    const t2 = performance.now()
     ocr.bottom = join(await readBottom(card), prior?.bottom)
+    ocrMs += performance.now() - t2
     parsed = parseOcr(ocr)
     m = matchCards(parsed, index)
   }
@@ -100,7 +124,7 @@ export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean
   if (best && confidence >= 0.5) {
     cardRec = await getCard(best.entry.id).catch(() => null)
   }
-  const out: Recognition = { card: cardRec, confidence, alternatives, parsed, ocr, ms: performance.now() - t0, sharpness: sharpnessOf(card), foil: readFoil(card) }
+  const out: Recognition = { card: cardRec, confidence, alternatives, parsed, ocr, ms: performance.now() - t0, ocrMs, sharpness: sharpnessOf(card), foil: readFoil(card) }
   if (opts.debug) out.bands = debugBands(card)
   return out
 }
@@ -128,9 +152,9 @@ export async function tieBreak(ocr: { corner: string; bottom: string }, close: C
   return { ranked, pick }
 }
 
-/** True when the OCR found essentially nothing: an empty jig, a hand, the table. */
+/** True when the OCR found essentially nothing (no number, no candidate), or the frame was empty. */
 export function isBlank(r: Recognition): boolean {
-  return !r.parsed.number && r.alternatives.length === 0
+  return !!r.empty || (!r.parsed.number && r.alternatives.length === 0)
 }
 
 /** Prefer the attempt that read a collector number; otherwise the more confident one. */
