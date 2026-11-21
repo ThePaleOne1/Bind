@@ -158,6 +158,7 @@ const REGIONS = {
   top: [0.03, 0.02, 0.94, 0.095, 220] as const,     // name + HP: stops above the artwork, which otherwise reads as junk lines
   bottom: [0.02, 0.85, 0.96, 0.15, 400] as const,   // illustrator credit, number (small print, any era)
   corner: [0, 0.9, 0.5, 0.1, 360] as const,         // bottom-left: number on BW → SV era
+  number: [0.03, 0.915, 0.42, 0.06, 110] as const,  // just the "032/191" line on SV-era cards, read as one line of digits
 }
 
 const clean = (t: string) => t.replace(/\s+/g, ' ').trim()
@@ -165,12 +166,23 @@ const clean = (t: string) => t.replace(/\s+/g, ' ').trim()
 /** Name band and number corner, in parallel. Enough for most modern cards. */
 export async function readPrimary(card: HTMLCanvasElement): Promise<{ top: string; corner: string }> {
   const [w1, w2] = await Promise.all(pool())
-  jobs += 2
-  const [r1, r2] = await Promise.all([
+  jobs += 3
+  // The corner block (set code boxes, number, rarity dot) confuses the segmenter on italic
+  // bold digits: "032/191" came back "5357797". A second, tight read of just the number
+  // line as a single line of digits is cheap and usually clean.
+  const cornerRead = async () => {
+    const r2 = await w2.recognize(band(card, ...REGIONS.corner, 'corner'), {}, OUTPUT)
+    await w2.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_LINE, tessedit_char_whitelist: '0123456789/ ' })
+    let line = ''
+    try { line = clean((await w2.recognize(band(card, ...REGIONS.number, 'number'), {}, OUTPUT)).data.text) } catch { /* ignore */ }
+    await w2.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_BLOCK, tessedit_char_whitelist: '0123456789/ABCDEFGHIJKLMNOPQRSTUVWXYZ ' })
+    return `${line} ${clean(r2.data.text)}`.trim()
+  }
+  const [r1, corner] = await Promise.all([
     w1.recognize(band(card, ...REGIONS.top, 'top'), {}, OUTPUT),
-    w2.recognize(band(card, ...REGIONS.corner, 'corner'), {}, OUTPUT),
+    cornerRead(),
   ])
-  return { top: clean(r1.data.text), corner: clean(r2.data.text) }
+  return { top: clean(r1.data.text), corner }
 }
 
 /** Wide bottom band: illustrator credit and the number on older layouts. */

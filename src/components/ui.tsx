@@ -68,11 +68,13 @@ export function CardImage({ src, alt, className, style, quality = 'low', eager =
   const low = src ? `${src}/low.webp` : null
   const high = src && quality === 'high' ? `${src}/high.webp` : null
   useEffect(() => { setLoaded(false); setHiLoaded(false) }, [src])
+  // Slow data: after a while show whatever has arrived instead of a shimmer forever.
+  useEffect(() => { if (loaded || !src) return; const t = setTimeout(() => setLoaded(true), 6000); return () => clearTimeout(t) }, [loaded, src])
   const imgProps = { loading: eager ? ('eager' as const) : ('lazy' as const), decoding: 'async' as const, draggable: false, ...(eager ? ({ fetchpriority: 'high' } as Record<string, string>) : {}) }
   return (
     <div className={`cardimg ${className ?? ''}`} style={style} onClick={onClick}>
       {!loaded && <div className="cardimg__shimmer" />}
-      {low && <img src={low} alt={alt ?? ''} {...imgProps} className={loaded ? 'loaded' : ''} onLoad={() => setLoaded(true)} />}
+      {low && <img src={low} alt={alt ?? ''} {...imgProps} className={loaded ? 'loaded' : ''} onLoad={() => setLoaded(true)} onError={() => setLoaded(true)} />}
       {high && <img src={high} alt="" {...imgProps} className={`cardimg__hi ${hiLoaded ? 'loaded' : ''}`} onLoad={() => setHiLoaded(true)} aria-hidden />}
     </div>
   )

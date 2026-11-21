@@ -15,8 +15,12 @@ export interface FoilRead { ratio: number; body: number; border: number; guess: 
 //   standard prints read 0.18 – 0.51 (five cards), reverse holos 0.62 – 0.66 (five cards).
 // Holo rares (foil artwork, foil-framed body) read 0.53 – 0.70, i.e. like a reverse: the
 // body measure cannot tell a holo rare from its reverse, so those still ask.
-export const FOIL_STANDARD_MAX = 0.55
-export const FOIL_REVERSE_MIN = 0.59
+// 2026-11-22: on full-resolution stills the ranges overlap (standard 0.28–1.10, reverse
+// 0.30–8.4): the border baseline collapses to the JPEG noise floor and the card frame
+// itself is textured. Until the detector is redesigned from the still crops the report
+// now carries, only the extremes decide and everything else asks.
+export const FOIL_STANDARD_MAX = 0.25
+export const FOIL_REVERSE_MIN = 3.0
 
 // Regions as fractions of the card [x, y, w, h]
 const BODY: [number, number, number, number][] = [

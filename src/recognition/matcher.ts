@@ -68,7 +68,7 @@ function findNumbers(text: string): NumberRead[] {
   }
   // "SPoJ0327191": number, slash read as a digit (7, 1 or 4), total, often glued to the set
   // code's letters. Only the 3+1+3 split makes sense.
-  for (const m of s.matchAll(/(?<!\d)(\d{3})[714](\d{3})(?!\d)/g)) {
+  for (const m of s.matchAll(/(?<!\d)(\d{3})[714](\d{3})\d?(?!\d)/g)) {
     const total = parseInt(m[2], 10)
     if (parseInt(m[1], 10) <= total * 1.5 && !/^(?:19|20)\d\d$/.test(m[2])) push(normNumber(m[1]), total, true)
   }
@@ -149,7 +149,10 @@ export interface MatchResult {
 export function matchCards(
   parsedIn: Parsed,
   index: { entries: IndexEntry[]; sets: Record<string, SetInfo> },
+  opts: { prefer?: Set<string> } = {},
 ): MatchResult {
+  // Cards come in set batches: a candidate from a recently scanned set gets a small nudge.
+  const nudge = (set: string) => (opts.prefer?.has(set) ? 0.04 : 0)
   let parsed = parsedIn
   const { entries } = index
   let scored: Candidate[] = []
@@ -163,8 +166,10 @@ export function matchCards(
       if (read.total != null) {
         if (e.total === read.total) s += 0.35
         else if (Math.abs(e.total - read.total) <= 2) s += 0.1
+        else if (String(read.total).length >= 2 && String(e.total).startsWith(String(read.total))) s += 0.25   // last digit lost: "116/19"
         else s -= 0.2
       }
+      s += nudge(e.set)
       if (variants.length) {
         const sim = bestSim(variants, e.name)
         // A clearly different name is evidence against, but only when enough of it was read.
@@ -205,7 +210,7 @@ export function matchCards(
       // The set total is usually read right even when the number is not: a name match
       // in a set with that total is near-certain.
       const totalHit = parsed.total != null && e.total === parsed.total
-      scored.push({ entry: e, score: sim * 0.6 + (totalHit ? 0.3 : 0) })
+      scored.push({ entry: e, score: sim * 0.6 + (totalHit ? 0.3 : 0) + nudge(e.set) })
     }
   }
 
@@ -224,7 +229,8 @@ export function matchCards(
  * each candidate's number is scored against the digit runs with cheap costs for
  * exactly those confusions.
  */
-const CONFUSABLE: Record<string, string> = { '1': '7/|', '7': '1/', '9': '5', '5': '9', '0': '8', '8': '03', '3': '8', '6': '8', '2': '7' }
+// Italic bold digits (the collector number) add 0↔5 and 2↔5 to the usual mix.
+const CONFUSABLE: Record<string, string> = { '1': '7/|', '7': '1/', '9': '5', '5': '902', '0': '85', '8': '03', '3': '8', '6': '8', '2': '75' }
 const confusable = (a: string, b: string) => a === b ? 0 : (CONFUSABLE[a]?.includes(b) || CONFUSABLE[b]?.includes(a)) ? 0.3 : 1
 
 /** All digit runs in a piece of OCR (spaces inside a run removed), longest first. */

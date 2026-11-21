@@ -86,11 +86,12 @@ export default function Scan() {
   const [note, setNote] = useState<string | null>(null)     // brief hint: No card / Same card / Can't read
   const [, setTick] = useState(0)                           // re-render for the debug overlay
   const liveSharp = useRef(0)
-  const sharpHist = useRef<number[]>([])                   // recent sharpness samples while settling
   const settleStart = useRef(0)
+  const recentSets = useRef<string[]>([])                  // sets of the last few commits: cards come in batches
+  const lastFrame = useRef<HTMLCanvasElement | null>(null) // the card crop last read (for the report)
+  const [same, setSame] = useState(false)                  // the last read found the card already on the tag
   const scanPeak = useRef(0)                               // recent best preview sharpness of a confident scan (decays)
   const lastRefocus = useRef(0)
-  const lastSharpAt = useRef(0)
   const lastDebugTick = useRef(0)
   const lastCommit = useRef<{ id: string; at: number } | null>(null)
   const lastResult = useRef<Result | null>(null)
@@ -201,12 +202,6 @@ export default function Scan() {
     // "good" is the same bar the scan gate uses: the floor, or within reach of recent cards
     good: Math.max(BLUR_THRESHOLD, Math.max(cam.current?.focusPeak() ?? 0, scanPeak.current) * 0.4),
   }), [scanRoi])
-  /**
-   * Soft when under the fixed floor, or far below recent cards (autofocus mid-hunt, stack
-   * getting shorter). Cards differ a lot in how much detail they have, so "far" is 30%:
-   * a dark low-contrast card is not a focus problem.
-   */
-  const isSoft = (s: number) => s < BLUR_THRESHOLD || s < Math.max(cam.current?.focusPeak() ?? 0, scanPeak.current) * 0.3
 
   // Hands-free analysis loop. Base rate ~5 fps waiting, ~6 fps while a card settles; the
   // preview is drawn once per tick (stage.ts) and the Pacer stretches the interval whenever
@@ -229,52 +224,18 @@ export default function Scan() {
       const fire = a.step(v, scanRoi(), t)
       setPhase(a.phase)
       const settling = a.phase === 'settling' || a.phase === 'capture'
-      if (settling && !wasSettling) { settleStart.current = t; sharpHist.current = []; logEvent('settle') }
+      if (settling && !wasSettling) { settleStart.current = t; logEvent('settle') }
       wasSettling = settling
-      let empty = false
-      if (settling) {
-        const s = a.sharpness()
-        liveSharp.current = s
-        lastSharpAt.current = t
-        sharpHist.current = [...sharpHist.current.slice(-3), s]
-        // Nothing printed in the frame (the jig after the last card): there is nothing to
-        // focus on and nothing to wait for; the read will say "No card" straight away.
-        empty = a.contrast() < MIN_CONTRAST
-        const soft = !empty && isSoft(s)
-        setBlurry(soft || cam.current.focusing())
-        // A continuous autofocus usually lands by itself; only kick it when the picture is
-        // still soft after 1.2 s of stillness, and never more than once every 2.5 s.
-        if (soft && t - settleStart.current > 1200 && t - lastRefocus.current > 2500 && !cam.current.focusing()) {
-          lastRefocus.current = t
-          const tr = performance.now()
-          // After the lens has moved, look at the card afresh (settle again, then scan).
-          void cam.current.refocus(focusOpts()).then((moved) => {
-            logEvent('refocus', `loop sharp=${s.toFixed(2)} moved=${moved}`, performance.now() - tr)
-            if (moved) { analyzer.current.reset(); settleStart.current = performance.now(); sharpHist.current = [] }
-          })
-        }
-      } else setBlurry(cam.current.focusing())
-      if (debug) {
-        if (!settling && t - lastSharpAt.current > 500) { lastSharpAt.current = t; liveSharp.current = a.sharpness(); setTick((n) => n + 1) }
-        else if (settling && t - lastDebugTick.current > 400) { lastDebugTick.current = t; setTick((n) => n + 1) }
-      }
+      setBlurry(cam.current.focusing())
+      if (debug && t - lastDebugTick.current > 500) { lastDebugTick.current = t; liveSharp.current = a.sharpness(); setTick((n) => n + 1) }
       pace.worked(performance.now() - t0, base)
       samplePerf(1000 / Math.max(1, pace.gap), pace.cost, pace.factor)
       if (fire) {
-        const overdue = t - settleStart.current > 2500
         // Mid-sweep frame: let the sweep finish and look again shortly (never drop the
-        // capture: dropping it on an empty jig re-settled forever).
-        if (cam.current.focusing() && !overdue) { a.postpone(t, 200); return }
-        // The hand has gone, but the autofocus may still be converging: require a plateau
-        // over the last three sharpness samples (within 15%) before reading, up to 2.5 s.
-        // A plateau above the floor is as good as this card gets, whatever earlier cards did.
-        const h = sharpHist.current
-        const n = h.length
-        const last3 = h.slice(-3)
-        const stable = n >= 3 && Math.max(...last3) <= 1.15 * Math.max(Math.min(...last3), 1e-3)
-        const ready = empty || (stable && h[n - 1] >= BLUR_THRESHOLD)
-        if (ready || overdue) void captureRef.current()
-        else a.postpone(t, 160)
+        // capture: dropping it on an empty jig re-settled forever). Whether the picture is
+        // sharp is judged on the full-resolution still: at 720p the preview cannot tell.
+        if (cam.current.focusing() && t - settleStart.current < 2500) { a.postpone(t, 200); return }
+        void captureRef.current()
       }
     }
     raf = requestAnimationFrame(tick)
@@ -319,7 +280,10 @@ export default function Scan() {
       if (d.ask) { pausedRef.current = true; setAsk({ card, rec, options: d.options, guess: d.finish }); return }
       finish = d.finish
     }
+    logEvent('finish', `${finishesOf(card).join('/')} → ${finish}${finishIn ? ' (answered)' : ''} foil=${rec.foil?.ratio.toFixed(2) ?? '-'} rarity=${card.rarity ?? '-'} prices=${Object.keys(card.variantPrices ?? {}).join(',') || '-'} flags=${JSON.stringify(card.variants)}`)
     const ev = await applyScan(card, mode, finish)
+    recentSets.current = [card.setId, ...recentSets.current.filter((x) => x !== card.setId)].slice(0, 5)
+    setSame(false)
     const palette = mode === 'remove' ? PALETTES.remove : ev.highValue ? PALETTES.value : PALETTES[ev.artistStatus]
     if (effects) {
       burstAt(palette, ev.highValue ? 1.5 : 1)
@@ -430,28 +394,27 @@ export default function Scan() {
     let still = false
     let rec: Recognition | null = null
     let outcomeWord = ''
-    const previewSharp = liveSharp.current
+    const prefer = new Set(recentSets.current)
     try {
-      // Cheap preview check first: is the lens settled on something? Then one full-resolution still.
-      let ps = sharpnessOfVideo(v, scanRoi())
-      if (isSoft(ps) && cam.current && analyzer.current.contrast() >= MIN_CONTRAST) {
-        lastRefocus.current = performance.now()
-        setBlurry(true)
-        const tr = performance.now()
-        await cam.current.refocus(focusOpts())
-        const until = performance.now() + 1000
-        do {
-          await new Promise((r) => setTimeout(r, 150))
-          ps = sharpnessOfVideo(v, scanRoi())
-        } while (isSoft(ps) && performance.now() < until)
-        logEvent('refocus', `capture sharp ${previewSharp.toFixed(2)} → ${ps.toFixed(2)}`, performance.now() - tr)
-        setBlurry(false)
-      }
       const wide = wideRoi()
       const grab = await grabWide(wide)
       still = grab.still
-      const frame = locate(grab.canvas, wide)
-      rec = await recognize(frame, { debug })
+      let frame = locate(grab.canvas, wide)
+      lastFrame.current = frame
+      rec = await recognize(frame, { debug, prefer })
+      // A soft still (lens still hunting, stack height changed): one focus pass and one retake.
+      if (!rec.empty && rec.sharpness > 0 && rec.sharpness < BLUR_THRESHOLD && cam.current) {
+        setBlurry(true)
+        const tr = performance.now(); lastRefocus.current = tr
+        await cam.current.refocus(focusOpts())
+        logEvent('refocus', `still soft ${rec.sharpness.toFixed(2)}`, performance.now() - tr)
+        setBlurry(false)
+        tries++
+        const g = await grabWide(wide, grab.canvas)
+        const retaken = locate(g.canvas, wide, frame)
+        const again = await recognize(retaken, { debug, prefer })
+        if (again.sharpness > rec.sharpness) { rec = again; frame = retaken; lastFrame.current = frame }
+      }
       // Foil and glare change frame to frame: before giving up, read up to two more
       // frames, pooling their OCR text with what has been read so far. A frame with a
       // card in it that read as nothing (foil over the number, patterned reverse) is
@@ -460,12 +423,12 @@ export default function Scan() {
         await new Promise((r) => setTimeout(r, 200))
         tries++
         const g = await grabWide(wide)
-        const again = await recognize(locate(g.canvas, wide), { debug, prior: rec })
+        const again = await recognize(locate(g.canvas, wide), { debug, prior: rec, prefer })
         rec = again.empty ? rec : again
       }
       const a = analyzer.current
       if (rec.card) {
-        prefetchCardImage(rec.card.image, 'low'); prefetchCardImage(rec.card.image, 'high')
+        prefetchCardImage(rec.card.image, 'low')
         const last = lastCommit.current
         // The same card as the last scan is taken to be the same copy still sitting there
         // (a hand passed over, the light changed, it sat for a while). "New card" on the
@@ -474,9 +437,9 @@ export default function Scan() {
           outcomeWord = 'same'
           showNote('Same card')
           setResult((r) => r ?? lastResult.current)
+          setSame(true)
         } else {
           outcomeWord = 'commit'
-          if (rec.confidence >= 0.8) scanPeak.current = Math.max(scanPeak.current * 0.9, ps)
           await commit(rec.card, rec)
         }
       } else if (rec.sharpness > 0 && rec.sharpness < BLUR_THRESHOLD) {
@@ -484,11 +447,11 @@ export default function Scan() {
         softMiss = true                                  // the lens was still moving: try this card again
       } else if (rec.empty) {
         outcomeWord = 'no card'
-        setResult(null)                                  // the card is gone
+        setResult(null); setSame(false)                  // the card is gone
         showNote(a.scans <= 1 ? 'Ready' : 'No card')   // empty jig, table
       } else if (isBlank(rec)) {
         outcomeWord = "can't read"
-        setResult(null)
+        setResult(null); setSame(false)
         feedback('fail', 60)
         showNote("Can't read")                           // something is there, but no number or name came out
       } else {
@@ -534,7 +497,7 @@ export default function Scan() {
   }
   const stop = () => {
     runningRef.current = false; setRunning(false)
-    setBlurry(false); setNote(null); setResult(null)
+    setBlurry(false); setNote(null); setResult(null); setSame(false)
     logEvent('stop')
   }
 
@@ -626,6 +589,14 @@ export default function Scan() {
       c.getContext('2d')!.drawImage(v, w.x * v.videoWidth, w.y * v.videoHeight, w.w * v.videoWidth, w.h * v.videoHeight, 0, 0, c.width, c.height)
       frame = c.toDataURL('image/jpeg', 0.6)
     }
+    let cardCrop: string | null = null
+    const lf = lastFrame.current
+    if (lf && lf.width) {
+      const sc = Math.min(1, 800 / lf.height)
+      const c = document.createElement('canvas'); c.width = Math.round(lf.width * sc); c.height = Math.round(lf.height * sc)
+      c.getContext('2d')!.drawImage(lf, 0, 0, c.width, c.height)
+      cardCrop = c.toDataURL('image/jpeg', 0.7)
+    }
     const bands = rec?.bands ? { top: await shrink(rec.bands.top), bottom: await shrink(rec.bands.bottom), corner: await shrink(rec.bands.corner) } : null
     const id = Math.random().toString(36).slice(2, 8)
     const text = {
@@ -642,7 +613,7 @@ export default function Scan() {
         alternatives: (rec.alternatives ?? []).slice(0, 6).map((a) => `${a.entry.name} ${a.entry.n}/${a.entry.total} (${a.entry.set}) ${a.score.toFixed(2)}`),
       } : null,
     }
-    return { id, text, images: { frame, bands } }
+    return { id, text, images: { frame, cardCrop, bands } }
   }
   const sendReport = async () => {
     try {
@@ -721,6 +692,13 @@ export default function Scan() {
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }}
             transition={{ duration: 0.2 }}
           >
+            {same && (
+              <div className="scan__same">
+                <span><Check size={16} strokeWidth={3} /> Same card, still here</span>
+                <button className="scan__tagnew" onClick={() => void addAnother()} aria-label="Add another copy of this card"><Plus size={14} strokeWidth={3} /> New card</button>
+              </div>
+            )}
+            <div className="scan__tagmain">
             <button className="scan__tagart" onClick={openView} aria-label="View card">
               <CardImage src={result.card.image} alt={result.card.name} eager />
             </button>
@@ -738,11 +716,11 @@ export default function Scan() {
                   {FINISH_LABEL[result.ev.finish ?? 'normal']}{finishesOf(result.card).length > 1 ? ' ⇄' : ''}
                 </button>
                 {rarityTag(result.card.rarity) && <span className="chip chip--outline" style={{ height: 26, fontSize: 'var(--fs-xs)' }}>{rarityTag(result.card.rarity)}</span>}
-                <button className="scan__tagnew" onClick={() => void addAnother()} aria-label="Add another copy of this card"><Plus size={14} strokeWidth={3} /> New card</button>
                 <span className={`scan__tagvalue ${result.ev.highValue ? 'scan__tagvalue--hot' : ''}`}>{fmtAud(result.ev.valueAud)}</span>
               </div>
             </div>
             <button className="scan__tagview" onClick={openView} aria-label="View card"><Eye size={20} /></button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -801,7 +779,7 @@ export default function Scan() {
       </AnimatePresence>
 
       {debug && (
-        <div className="scan__ocr" style={{ bottom: 110 }}>
+        <div className="scan__ocr" style={{ top: 'calc(var(--safe-t) + 64px)', maxHeight: '46vh', overflow: 'hidden' }}>
           <div className="row" style={{ gap: 6, marginBottom: 6 }}>
             <button className="btn btn--sm btn--accent" onClick={() => void sendReport()}><Send size={14} /> Send to Desk</button>
             <button className="btn btn--sm" onClick={() => void shareReport()}><Share2 size={14} /> Share</button>
@@ -893,6 +871,7 @@ sharp=${miss.sharpness.toFixed(3)}`}</div>
               <div className="empty">No match</div>
             )}
             <button className="btn btn--accent btn--block" onClick={() => { setMiss(null); pausedRef.current = false; setSearch(true) }}><Search size={18} /> Search</button>
+            <button className="btn btn--block" onClick={() => void sendReport()}><Send size={18} /> Send report to Desk</button>
           </div>
         )}
       </Sheet>

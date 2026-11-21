@@ -75,6 +75,7 @@ function parsePrices(detail: any) {
     variantPrices[f] = cur
   }
   const variants: any[] = detail.variants_detailed ?? []
+  const tcgFinishes = new Set<Finish>()
   for (const v of variants) {
     const vType: string = typeof v.type === 'string' ? v.type : ''
     const tp = v.pricing?.tcgplayer
@@ -82,7 +83,12 @@ function parsePrices(detail: any) {
       for (const [k, val] of Object.entries<any>(tp)) {
         if (k === 'unit' || k === 'updated' || !val || typeof val !== 'object') continue
         const m = val.marketPrice ?? val.midPrice
-        if (typeof m === 'number' && m > 0 && m < 50_000) { usd = Math.max(usd ?? 0, m); bump(finishOf(k) ?? finishOf(vType), m, null) }
+        if (typeof m === 'number' && m > 0 && m < 50_000) {
+          usd = Math.max(usd ?? 0, m)
+          const f = finishOf(k) ?? finishOf(vType)
+          if (f) tcgFinishes.add(f)
+          bump(f, m, null)
+        }
         if (val.productId) tcgplayerId ??= val.productId
       }
     }
@@ -103,6 +109,10 @@ function parsePrices(detail: any) {
     }
   }
   if (lp?.cardmarket && eur == null && typeof lp.cardmarket.trend === 'number') eur = lp.cardmarket.trend
+  // Cardmarket prices every variant type the database lists, including a "normal" print a
+  // holo rare never had; TCGplayer only lists prints that exist. When TCGplayer has spoken,
+  // only its finishes count (keeping any euro prices for them).
+  if (tcgFinishes.size) for (const k of Object.keys(variantPrices) as Finish[]) if (!tcgFinishes.has(k)) delete variantPrices[k]
   return { usd, eur, tcgplayerId, cardmarketId, variantPrices: Object.keys(variantPrices).length ? variantPrices : null }
 }
 

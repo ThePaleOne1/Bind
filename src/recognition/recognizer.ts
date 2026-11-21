@@ -96,7 +96,7 @@ const EMPTY: Omit<Recognition, 'ms' | 'sharpness'> = {
  * card) the OCR text of both frames is pooled: foil makes digits come out differently
  * each frame, so two noisy reads give the number and illustrator matching more to go on.
  */
-export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean; prior?: Recognition } = {}): Promise<Recognition> {
+export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean; prior?: Recognition; prefer?: Set<string> } = {}): Promise<Recognition> {
   const t0 = performance.now()
   // Nothing printed in the frame (empty jig, table): skip the OCR, which is slow on noise.
   if (contrastOf(card) < MIN_CONTRAST) {
@@ -112,7 +112,7 @@ export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean
   const join = (a: string, b?: string) => (b ? `${a} ${b}` : a)
   const ocr = { top: join(primary.top, prior?.top), bottom: prior?.bottom ?? '', corner: join(primary.corner, prior?.corner) }
   let parsed = parseOcr(ocr)
-  let m = matchCards(parsed, index)
+  let m = matchCards(parsed, index, { prefer: opts.prefer })
   // Phase 2: the wide bottom band, only when the corner did not settle it
   // (number missing, weak match, or two cards within reach of each other).
   const settled = m.best && m.confidence >= 0.8 && !(m.alternatives[1] && m.alternatives[1].score >= m.best.score - 0.12)
@@ -121,7 +121,7 @@ export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean
     ocr.bottom = join(await readBottom(card), prior?.bottom)
     ocrMs += performance.now() - t2
     parsed = parseOcr(ocr)
-    m = matchCards(parsed, index)
+    m = matchCards(parsed, index, { prefer: opts.prefer })
   }
   let best = m.best
   let confidence = m.confidence
@@ -129,9 +129,9 @@ export async function recognize(card: HTMLCanvasElement, opts: { debug?: boolean
   // Several cards within reach of each other (same name, number unreadable): rank them
   // by the noisy digit runs and the illustrator credit, and commit when one stands out.
   let alternatives = m.alternatives
-  const close = m.alternatives.filter((a) => best && a.score >= best.score - 0.12).slice(0, 6)   // each needs the card's details (a network fetch when not cached)
+  const close = m.alternatives.filter((a) => best && a.score >= best.score - 0.12).slice(0, 40)
   if (best && close.length > 1 && confidence < 0.8) {
-    const { ranked, pick } = await tieBreak(ocr, close)
+    const { ranked, pick } = await tieBreak(ocr, close, opts.prefer)
     alternatives = [...ranked.map((r) => r.c), ...m.alternatives.filter((a) => !close.includes(a))]
     if (pick) { best = pick.c; confidence = Math.max(confidence, pick.s >= 0.7 ? 0.9 : 0.8) }
   }
@@ -153,15 +153,18 @@ export interface Ranked { c: Candidate; num: number; ill: number; s: number }
  * the card's illustrator shows up in the bottom text. Picks the top one only when it
  * clearly beats the runner-up.
  */
-export async function tieBreak(ocr: { corner: string; bottom: string }, close: Candidate[]): Promise<{ ranked: Ranked[]; pick: Ranked | null }> {
+export async function tieBreak(ocr: { corner: string; bottom: string }, close: Candidate[], prefer?: Set<string>): Promise<{ ranked: Ranked[]; pick: Ranked | null }> {
   const runs = digitRuns(`${ocr.corner} ${ocr.bottom}`)
-  const details = await Promise.all(close.map((c) => getCard(c.entry.id, { quick: true }).catch(() => null)))
   const text = `${ocr.bottom} ${ocr.corner}`
-  const ranked: Ranked[] = close.map((c, i) => {
-    const num = numberSimilarity(runs, c.entry.n, c.entry.total)
-    const illRaw = illustratorEvidence(text, details[i]?.illustrator)
+  // Number fit first (no network), then the illustrator credit for the few that fit best:
+  // each of those needs the card's details, a fetch on slow data when not cached.
+  const byNum = close.map((c) => ({ c, num: numberSimilarity(runs, c.entry.n, c.entry.total) + (prefer?.has(c.entry.set) ? 0.08 : 0) })).sort((a, b) => b.num - a.num)
+  const top = byNum.slice(0, 4)
+  const details = await Promise.all(top.map((t) => getCard(t.c.entry.id, { quick: true }).catch(() => null)))
+  const ranked: Ranked[] = byNum.map((t, i) => {
+    const illRaw = i < top.length ? illustratorEvidence(text, details[i]?.illustrator) : 0
     const ill = illRaw >= 0.5 ? illRaw : 0
-    return { c, num, ill, s: 0.65 * num + 0.35 * ill }
+    return { c: t.c, num: t.num, ill, s: 0.65 * t.num + 0.35 * ill }
   }).sort((a, b) => b.s - a.s)
   const [t, u] = ranked
   const pick = t && t.s >= 0.45 && (!u || t.s - u.s >= 0.1) ? t : null
