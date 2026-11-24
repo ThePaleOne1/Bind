@@ -72,12 +72,12 @@ export function CardDetail({ cardId, onClose }: { cardId: string; onClose?: () =
         {o ? (
           <>
             {finishesOf(card).length > 1 ? (
-              <Segmented value={o.finish ?? 'normal'} onChange={(f) => void setFinish(o.id, f)} options={finishesOf(card).map((f) => ({ value: f, label: FINISH_LABEL[f] }))} />
+              <Segmented id={`finish-${o.id}`} value={o.finish ?? 'normal'} onChange={(f) => void setFinish(o.id, f)} options={finishesOf(card).map((f) => ({ value: f, label: FINISH_LABEL[f] }))} />
             ) : (
               finishTag(o.finish) && <div className="chip chip--unknown" style={{ alignSelf: 'flex-start' }}>{FINISH_LABEL[o.finish ?? 'normal']}</div>
             )}
             <div className="row row--between">
-              <Segmented value={o.bucket} onChange={(b) => setBucket(o.id, b)} options={[{ value: 'collection', label: 'Collection' }, { value: 'bulk', label: 'Bulk' }]} />
+              <Segmented id={`bucket-${o.id}`} value={o.bucket} onChange={(b) => setBucket(o.id, b)} options={[{ value: 'collection', label: 'Collection' }, { value: 'bulk', label: 'Bulk' }]} />
               <Stepper value={o.qty} onChange={(q) => setQty(o.id, q)} min={0} />
             </div>
             <button className="btn btn--ghost" onClick={async () => { await setQty(o.id, 0); toast('Removed'); onClose?.() }}>

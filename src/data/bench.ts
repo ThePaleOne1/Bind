@@ -11,6 +11,7 @@ export interface BenchCard {
   expected: string[]    // card ids that count as a hit (Japanese sets can share a print)
   finish: Finish        // the true finish of the user's copy
   note?: string
+  lang?: 'ja'
 }
 
 export const BENCH_CARDS: BenchCard[] = [

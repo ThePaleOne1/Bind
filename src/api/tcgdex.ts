@@ -103,6 +103,47 @@ function fillSetCodes(idx: { sets: Record<string, SetInfo> }): Promise<void> {
   return fillingCodes
 }
 
+const timeout = (ms: number) => (typeof AbortSignal.timeout === 'function' ? { signal: AbortSignal.timeout(ms) } : undefined)
+
+/**
+ * Every print of a Pokédex number in one catalogue, by card id (the API's exact filter).
+ * This is how a Japanese card is found from its English name, or from the "No.021" that
+ * old Japanese cards print instead of a collector number.
+ */
+export async function idsByDex(lang: 'en' | 'ja', dex: number): Promise<string[]> {
+  const key = `dexIds:${lang}:${dex}`
+  const stored = await getMeta<string[]>(key)
+  if (stored && Date.now() - stored.at < INDEX_TTL) return stored.value
+  const r = await fetch(`${lang === 'ja' ? API_JA : API}/cards?dexId=eq:${dex}`, timeout(8000))
+  if (!r.ok) throw new Error(`dex ${dex}: ${r.status}`)
+  const list: any[] = await r.json()
+  const ids = list.map((c) => (lang === 'ja' ? `ja:${c.id}` : String(c.id)))
+  await setMeta(key, ids)
+  return ids
+}
+
+/** Pokédex number behind an English card name ("Spearow", "Mega Scrafty ex"), via the English catalogue; null when none. */
+export async function dexOfName(name: string): Promise<number | null> {
+  const base = name.trim().replace(/^(mega|radiant|shiny|dark|light|alolan|galarian|hisuian|paldean)\s+/i, '').replace(/\s+(ex|gx|v|vmax|vstar|break|lv\.?\s?x)$/i, '').trim()
+  if (!base) return null
+  const key = `dexOf:${base.toLowerCase()}`
+  const stored = await getMeta<number | null>(key)
+  if (stored && stored.value != null) return stored.value
+  const cased = base.replace(/(^|[\s'-])([a-z])/g, (_m, p: string, ch: string) => p + ch.toUpperCase())
+  let dex: number | null = null
+  for (const q of Array.from(new Set([cased, base]))) {
+    const r = await fetch(`${API}/cards?name=eq:${encodeURIComponent(q)}`, timeout(8000))
+    const list: any[] = r.ok ? await r.json() : []
+    for (const c of list.slice(0, 3)) { // the first prints can lack a dexId; try a few
+      const d = await (await fetch(`${API}/cards/${encodeURIComponent(String(c.id))}`, timeout(8000))).json()
+      if (Array.isArray(d.dexId) && d.dexId.length) { dex = Number(d.dexId[0]); break }
+    }
+    if (dex != null) break
+  }
+  if (dex != null) await setMeta(key, dex)
+  return dex
+}
+
 /** The code shown for a set: the printed abbreviation when known (SSP), else the set id (SV08, M2a). */
 export const printedCode = (setId: string) => indexCache?.sets[setId]?.code ?? setCode(setId)
 

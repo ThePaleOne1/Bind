@@ -12,8 +12,8 @@ import { grabWide, locateCard } from '../recognition/pipeline'
 import type { FoilRead } from '../recognition/foil'
 import { sharpnessOfVideo, BLUR_THRESHOLD } from '../recognition/focus'
 import { warmOcr, ocrJobs, recycleOcrIfNeeded } from '../recognition/ocr'
-import { loadIndex, getCard, printedCode } from '../api/tcgdex'
-import { searchIndex } from '../recognition/matcher'
+import { loadIndex, getCard, printedCode, idsByDex, dexOfName } from '../api/tcgdex'
+import { searchIndex, splitDex } from '../recognition/matcher'
 import { applyScan, setFinishOne, cardValueAud } from '../store/collection'
 import { finishesOf, FINISH_LABEL, rarityTag, defaultFinish } from '../data/finish'
 import type { Finish } from '../data/types'
@@ -898,18 +898,33 @@ export function SearchSheet({ open, onClose, onPick }: { open: boolean; onClose:
   const [number, setNumber] = useState('')
   const [lang, setLang] = useState<'en' | 'ja'>('en')
   const [results, setResults] = useState<IndexEntry[]>([])
+  const [lookup, setLookup] = useState<string | null>(null)
   useEffect(() => {
-    if (!open) { setName(''); setNumber(''); setResults([]); return }
+    if (!open) { setName(''); setNumber(''); setResults([]); setLookup(null); return }
     setLang(japanese ? 'ja' : 'en')
   }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     let alive = true
     const t = setTimeout(async () => {
-      if (name.trim().length < 2 && number.trim().length < 2) { setResults([]); return }
+      const { dex, rest } = splitDex(number)
+      // An English name in the Japanese catalogue cannot match the stored (Japanese) names:
+      // it goes through the Pokédex number instead, as does a printed "No.021".
+      const latin = lang === 'ja' && /^[A-Za-z][A-Za-z' .-]+$/.test(name.trim())
+      if (name.trim().length < 2 && rest.trim().length < 2 && dex == null) { setResults([]); setLookup(null); return }
       const idx = await loadIndex()
-      const r = searchIndex({ name, number, lang }, idx, lang === 'ja' ? 24 : 40).map((c) => c.entry)
+      let ids: Set<string> | undefined
+      if (dex != null || latin) {
+        if (alive) setLookup('Looking up the Pokédex number…')
+        try {
+          const n = dex ?? await dexOfName(name)
+          if (n == null) { if (alive) { setResults([]); setLookup('No Pokémon by that name in the catalogue. Trainers and energies: use the number and set code.') } return }
+          ids = new Set(await idsByDex(lang, n))
+          if (alive) setLookup(`Pokédex No. ${n}: ${ids.size} print${ids.size === 1 ? '' : 's'}`)
+        } catch { if (alive) { setResults([]); setLookup('The lookup needs the network and it did not answer.') } return }
+      } else if (alive) setLookup(null)
+      const r = searchIndex({ name: latin ? '' : name, number: rest, lang, ids }, idx, lang === 'ja' ? 30 : 40).map((c) => c.entry)
       if (alive) setResults(r)
-    }, 220)
+    }, 350)
     return () => { alive = false; clearTimeout(t) }
   }, [name, number, lang])
   return (
@@ -921,12 +936,12 @@ export function SearchSheet({ open, onClose, onPick }: { open: boolean; onClose:
         </div>
         <div className="search">
           <Search className="search__icon" size={18} />
-          <input className="input" autoFocus={lang === 'en'} placeholder={lang === 'ja' ? 'Name (in Japanese)' : 'Name'} value={name} onChange={(e) => setName(e.target.value)} />
+          <input className="input" autoFocus placeholder={lang === 'ja' ? 'Pokémon name (English is fine)' : 'Name'} value={name} onChange={(e) => setName(e.target.value)} />
         </div>
-        <input className="input mono" autoFocus={lang === 'ja'} autoCapitalize="characters" autoCorrect="off" spellCheck={false} placeholder={lang === 'ja' ? 'Number and set code: 110/193 M2a' : 'Number, set code: 079/191, MEE 003, SSP 79'} value={number} onChange={(e) => setNumber(e.target.value)} />
-        {lang === 'ja' && <p style={{ margin: 0, color: 'var(--muted)', fontSize: 'var(--fs-sm)', lineHeight: 1.3 }}>Japanese cards are listed under their Japanese names: find them by the number and the set code printed beside it.</p>}
+        <input className="input mono" autoCapitalize="characters" autoCorrect="off" spellCheck={false} placeholder={lang === 'ja' ? 'Number, set code: 110/193 M2a · old cards: No.021' : 'Number, set code: 079/191, MEE 003, SSP 79'} value={number} onChange={(e) => setNumber(e.target.value)} />
+        {(lookup || lang === 'ja') && <p style={{ margin: 0, color: 'var(--muted)', fontSize: 'var(--fs-sm)', lineHeight: 1.3 }}>{lookup ?? 'An English Pokémon name is looked up by Pokédex number. Trainers and energies: the number and the set code printed beside it.'}</p>}
         <div className="grid">
-          {results.map((e) => <ResultTile key={e.id} entry={e} onPick={() => onPick(e.id)} />)}
+          {results.map((e) => <ResultTile key={e.id} entry={e} fallback={lang === 'ja' && /^[A-Za-z]/.test(name.trim()) ? name.trim() : undefined} onPick={() => onPick(e.id)} />)}
         </div>
       </div>
     </Sheet>
@@ -934,8 +949,8 @@ export function SearchSheet({ open, onClose, onPick }: { open: boolean; onClose:
 }
 
 /** Search result; a Japanese print swaps in its English name once the card record is at hand. */
-function ResultTile({ entry, onPick }: { entry: IndexEntry; onPick: () => void }) {
-  const [name, setName] = useState(entry.name)
+function ResultTile({ entry, fallback, onPick }: { entry: IndexEntry; fallback?: string; onPick: () => void }) {
+  const [name, setName] = useState(fallback && entry.lang === 'ja' ? fallback : entry.name)
   useEffect(() => {
     if (entry.lang !== 'ja') return
     let alive = true

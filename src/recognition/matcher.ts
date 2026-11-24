@@ -359,6 +359,18 @@ export interface SearchQuery {
   number?: string
   /** Keep one catalogue: English prints, or Japanese ones (whose names are in Japanese). */
   lang?: 'en' | 'ja'
+  /** Only these card ids (every print of one Pokédex number, looked up beforehand). */
+  ids?: Set<string>
+}
+
+/**
+ * "No.021" / "#21" in a number field: the Pokédex number that old Japanese cards print
+ * instead of a collector number. Returns it and the field without it.
+ */
+export function splitDex(s: string): { dex: number | null; rest: string } {
+  const m = s.match(/(?:^|\s)(?:no\.?\s*|#)(\d{1,4})(?=\s|$)/i)
+  if (!m || m.index == null) return { dex: null, rest: s }
+  return { dex: parseInt(m[1], 10), rest: (s.slice(0, m.index) + ' ' + s.slice(m.index + m[0].length)).trim() }
 }
 
 /** "sv08" / "SV8" / "SSP" / "ja:M2a" → a key both the typed and the stored forms reduce to. */
@@ -391,11 +403,12 @@ export function searchIndex(q: SearchQuery, index: { entries: IndexEntry[]; sets
   const lone = !frac && text.match(/\b([A-Za-z]{0,5}\d{1,3})\b/)
   const number = frac ? normNumber(frac[1]) : lone ? normNumber(lone[1]) : null
   const total = frac ? parseInt(frac[2], 10) : null
-  if (!name && !number && !sets) return []
+  if (!name && !number && !sets && !q.ids) return []
   const out: Candidate[] = []
   for (const e of index.entries) {
     if (!inLang(e.lang)) continue
     if (sets && !sets.has(e.set)) continue
+    if (q.ids && !q.ids.has(e.id)) continue
     let s = 0
     if (number) {
       if (e.n !== number) continue

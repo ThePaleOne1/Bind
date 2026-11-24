@@ -28,15 +28,16 @@ export function TitleBar({ children, actions }: { children: ReactNode; actions?:
 
 /* ---------- Segmented control ---------- */
 export function Segmented<T extends string>({
-  value, onChange, options,
-}: { value: T; onChange: (v: T) => void; options: { value: T; label: string; count?: number; icon?: ReactNode }[] }) {
+  value, onChange, options, id = 'seg',
+}: { value: T; onChange: (v: T) => void; options: { value: T; label: string; count?: number; icon?: ReactNode }[]; id?: string }) {
+  // The thumb is a shared-layout element: two controls on one screen need different ids or one loses its thumb.
   return (
     <div className="seg" role="tablist">
       {options.map((o) => {
         const on = o.value === value
         return (
           <button key={o.value} role="tab" aria-selected={on} className={`seg__btn ${on ? 'seg__btn--on' : ''}`} onClick={() => onChange(o.value)}>
-            {on && <motion.span layoutId="seg-thumb" className="seg__thumb" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
+            {on && <motion.span layoutId={`${id}-thumb`} className="seg__thumb" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
             <span style={{ position: 'relative', zIndex: 1, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               {o.icon}{o.label}{o.count != null && <span className="seg__count">{o.count}</span>}
             </span>

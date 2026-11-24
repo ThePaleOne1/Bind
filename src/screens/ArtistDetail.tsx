@@ -49,7 +49,7 @@ export default function ArtistDetail() {
       </TitleBar>
 
       <div className="stack" style={{ gap: 18 }}>
-        <Segmented
+        <Segmented id="artist-status"
           value={artist.status}
           onChange={change}
           options={[{ value: 'collecting', label: 'Collect' }, { value: 'unknown', label: 'New' }, { value: 'not-collecting', label: 'Skip' }]}
@@ -124,7 +124,7 @@ export default function ArtistDetail() {
           <label className="label">Reason</label>
           <input className="input" defaultValue={artist.reason ?? ''} onBlur={(e) => updateArtist(k, { reason: e.target.value || null })} placeholder="Too many cards" />
           <label className="label">Favourite</label>
-          <Segmented
+          <Segmented id="artist-favourite"
             value={String(artist.favourite ?? 0)}
             onChange={(v) => updateArtist(k, { favourite: v === '0' ? null : Number(v) })}
             options={[{ value: '1', label: '1' }, { value: '2', label: '2' }, { value: '3', label: '3' }, { value: '4', label: '4' }, { value: '0', label: '—' }]}

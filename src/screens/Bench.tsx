@@ -74,7 +74,9 @@ export default function Bench() {
   // Deck editor
   const [editing, setEditing] = useState(false)
   const [adding, setAdding] = useState(false)
-  const [pending, setPending] = useState<{ id: string; name: string; number: string; options: Finish[]; finish: Finish } | null>(null)
+  const [pending, setPending] = useState<{ id: string; name: string; number: string; options: Finish[]; finish: Finish; lang?: 'ja' } | null>(null)
+  // A card the catalogue lacks: the bench still records what the scanner makes of it.
+  const [unlisted, setUnlisted] = useState<{ name: string; number: string; finish: Finish; ja: boolean } | null>(null)
 
   const layout = () => {
     const v = videoRef.current
@@ -124,7 +126,7 @@ export default function Bench() {
     const attempts: Attempt[] = []
     const run: CardRun = { index: idx, card, attempts, startedAt: Date.now() }
     setRuns((l) => [...l.filter((r) => r.index !== idx), run])
-    const ja = card.expected.some((id) => id.startsWith('ja:'))
+    const ja = card.lang === 'ja' || card.expected.some((id) => id.startsWith('ja:'))
     try {
       for (let i = 0; i < BENCH_ATTEMPTS; i++) {
         const t0 = performance.now()
@@ -143,7 +145,8 @@ export default function Bench() {
           ocr: rec.ocr,
           number: rec.parsed.number, total: rec.parsed.total, nameGuess: rec.parsed.nameGuess, setCodes: rec.parsed.setCodes,
           best: rec.card ? { id: rec.card.id, name: rec.card.name, conf: rec.confidence } : best ? { id: best.entry.id, name: best.entry.name, conf: rec.confidence } : null,
-          hit: !!rec.card && card.expected.includes(rec.card.id),
+          // An unlisted card (nothing expected) is handled right when the scanner commits to nothing.
+          hit: card.expected.length ? !!rec.card && card.expected.includes(rec.card.id) : !rec.card,
           alternatives: rec.alternatives.slice(0, 5).map((c) => `${c.entry.id} ${c.score.toFixed(2)}`),
           foil: rec.foil, sharp: rec.sharpness, cropIndex,
         }
@@ -215,13 +218,18 @@ export default function Bench() {
     try {
       const c = await getCard(id, { quick: true })
       const options = finishesOf(c)
-      setPending({ id, name: `${c.name}${c.lang === 'ja' ? ' (JP)' : ''}`, number: `${c.localId}/${c.setTotal || '?'} · ${printedCode(c.setId).toUpperCase()}`, options, finish: options[0] })
+      setPending({ id, name: `${c.name}${c.lang === 'ja' ? ' (JP)' : ''}`, number: `${c.localId}/${c.setTotal || '?'} · ${printedCode(c.setId).toUpperCase()}`, options, finish: options[0], ...(c.lang === 'ja' ? { lang: 'ja' as const } : {}) })
     } catch { toast('Could not load that card') }
   }
   const addPending = () => {
     if (!pending) return
-    setSettings({ benchCards: [...deck, { name: pending.name, number: pending.number, expected: [pending.id], finish: pending.finish }] })
+    setSettings({ benchCards: [...deck, { name: pending.name, number: pending.number, expected: [pending.id], finish: pending.finish, ...(pending.lang ? { lang: pending.lang } : {}) }] })
     setPending(null)
+  }
+  const addUnlisted = () => {
+    if (!unlisted || !unlisted.name.trim()) return
+    setSettings({ benchCards: [...deck, { name: `${unlisted.name.trim()}${unlisted.ja ? ' (JP)' : ''}`, number: unlisted.number.trim() || '—', expected: [], finish: unlisted.finish, note: 'not in the catalogue', ...(unlisted.ja ? { lang: 'ja' as const } : {}) }] })
+    setUnlisted(null)
   }
   const resetDeck = () => { setSettings({ benchCards: null }); setRuns([]); setIdx(0) }
 
@@ -268,8 +276,8 @@ export default function Bench() {
         ) : <div className="empty">The deck is empty</div>}
         {!focused && (
           <div className="stack" style={{ gap: 8 }}>
-            <Segmented value={lighting} onChange={setLighting} options={[{ value: 'overhead', label: 'Overhead' }, { value: 'daylight', label: 'Daylight' }, { value: 'lamp', label: 'Lamp' }, { value: 'dim', label: 'Dim' }]} />
-            <Segmented value={rig} onChange={setRig} options={[{ value: 'jig', label: 'In the jig' }, { value: 'handheld', label: 'Handheld' }]} />
+            <Segmented id="lighting" value={lighting} onChange={setLighting} options={[{ value: 'overhead', label: 'Overhead' }, { value: 'daylight', label: 'Daylight' }, { value: 'lamp', label: 'Lamp' }, { value: 'dim', label: 'Dim' }]} />
+            <Segmented id="rig" value={rig} onChange={setRig} options={[{ value: 'jig', label: 'In the jig' }, { value: 'handheld', label: 'Handheld' }]} />
             <input className="input" placeholder="Anything else about this session (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
         )}
@@ -305,12 +313,13 @@ export default function Bench() {
             <span className="title title--sm">Test deck</span>
             <div className="row" style={{ gap: 6 }}>
               {benchCards && <button className="btn btn--sm btn--ghost" onClick={resetDeck}>Reset</button>}
+              <button className="btn btn--sm btn--ghost" onClick={() => { setEditing(false); setUnlisted({ name: '', number: '', finish: 'normal', ja: false }) }}>Unlisted</button>
               <button className="btn btn--sm btn--accent" onClick={() => { setEditing(false); setAdding(true) }}><Plus size={14} /> Add card</button>
             </div>
           </div>
           <div className="stack" style={{ gap: 6 }}>
             {deck.map((c, i) => (
-              <div key={`${c.expected[0]}-${i}`} className="row row--between card-panel" style={{ padding: '8px 10px' }}>
+              <div key={`${c.expected[0] ?? c.name}-${i}`} className="row row--between card-panel" style={{ padding: '8px 10px' }}>
                 <div style={{ minWidth: 0 }}>
                   <div className="list__title">{i + 1}. {c.name}</div>
                   <div className="list__sub">{c.number} · {c.finish === 'normal' ? 'standard' : c.finish === 'reverse' ? 'reverse holo' : c.finish}{c.note ? ` · ${c.note}` : ''}</div>
@@ -327,8 +336,21 @@ export default function Bench() {
           <div className="stack">
             <span className="title title--sm">Which finish is your copy?</span>
             <div><div className="list__title">{pending.name}</div><div className="list__sub">{pending.number}</div></div>
-            <Segmented value={pending.finish} onChange={(f) => setPending({ ...pending, finish: f })} options={pending.options.map((f) => ({ value: f, label: FINISH_LABEL[f] }))} />
+            <Segmented id="pending-finish" value={pending.finish} onChange={(f) => setPending({ ...pending, finish: f })} options={pending.options.map((f) => ({ value: f, label: FINISH_LABEL[f] }))} />
             <button className="btn btn--accent btn--block" onClick={addPending}><Plus size={18} /> Add to the deck</button>
+          </div>
+        )}
+      </Sheet>
+      <Sheet open={!!unlisted} onClose={() => setUnlisted(null)}>
+        {unlisted && (
+          <div className="stack">
+            <span className="title title--sm">A card the catalogue lacks</span>
+            <p style={{ margin: 0, color: 'var(--muted)', fontSize: 'var(--fs-sm)', lineHeight: 1.3 }}>The scanner cannot match it; the bench records what it reads, and counts a read as right when nothing is committed.</p>
+            <input className="input" autoFocus placeholder="Name as printed" value={unlisted.name} onChange={(e) => setUnlisted({ ...unlisted, name: e.target.value })} />
+            <input className="input mono" placeholder="Number and set code as printed" value={unlisted.number} onChange={(e) => setUnlisted({ ...unlisted, number: e.target.value })} />
+            <Segmented id="unlisted-lang" value={unlisted.ja ? 'ja' : 'en'} onChange={(v) => setUnlisted({ ...unlisted, ja: v === 'ja' })} options={[{ value: 'en', label: 'English' }, { value: 'ja', label: 'Japanese' }]} />
+            <Segmented id="unlisted-finish" value={unlisted.finish} onChange={(f) => setUnlisted({ ...unlisted, finish: f })} options={(['normal', 'reverse', 'holo'] as Finish[]).map((f) => ({ value: f, label: FINISH_LABEL[f] }))} />
+            <button className="btn btn--accent btn--block" onClick={addUnlisted} disabled={!unlisted.name.trim()}><Plus size={18} /> Add to the deck</button>
           </div>
         )}
       </Sheet>
