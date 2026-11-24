@@ -7,12 +7,14 @@ import { useSettings } from '../store/settings'
 import { exportJson, importJson } from '../store/collection'
 import { signIn, signOut, supabase, syncNow, useAuth } from '../sync/supabase'
 import { Stepper, Switch, Title, TitleBar, toast } from '../components/ui'
+import { useNavigate } from 'react-router-dom'
 import { fmtAud } from '../utils/price'
 import { BUILD, applyUpdate, checkForUpdate, forceRefresh, isNewer, usePwa } from '../pwa'
 import { sendCompanion, companionConnected } from '../sync/companion'
 import { baseReport } from '../utils/perfLog'
 
 function VersionSection() {
+  const nav = useNavigate()
   const pwa = usePwa()
   const available = pwa.updateReady || isNewer(pwa.live)
   useEffect(() => { void checkForUpdate() }, [])
@@ -44,6 +46,10 @@ function VersionSection() {
       <div className="setting">
         <div><div className="setting__label">Force refresh</div><div className="setting__sub">Clears the app cache and reloads</div></div>
         <button className="btn btn--sm btn--ghost" onClick={forceRefresh}>Refresh</button>
+      </div>
+      <div className="setting">
+        <div><div className="setting__label">Scanner test bench</div><div className="setting__sub">Reads each test card five times and sends every read with its picture to the Desk; nothing is added to the collection</div></div>
+        <button className="btn btn--sm btn--accent" onClick={() => nav('/bench')}>Open</button>
       </div>
       <div className="setting">
         <div><div className="setting__label">Send report to Desk</div><div className="setting__sub">Frame rate log and scan timings from this session (the camera screen's debug view sends more)</div></div>

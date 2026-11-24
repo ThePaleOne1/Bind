@@ -429,6 +429,9 @@ img { display: block; max-width: 100%; }
 .scan__tag--stale { opacity: 0.5; }
 .cardimg--none { display: grid; place-items: center; background: var(--surface-2); color: var(--text-2); font-weight: 800; font-size: var(--fs-xs); text-align: center; padding: 8px; }
 .scan__tagmain { display: flex; align-items: center; gap: 10px; }
+/* Test bench: which card to put in, and the last reads */
+.bench__card { position: absolute; left: 14px; right: 14px; top: calc(var(--safe-t) + 64px); z-index: 3; padding: 10px 8px; border-radius: 16px; background: rgba(7, 20, 17, 0.88); border: 1px solid var(--line-strong); display: flex; flex-direction: column; gap: 8px; }
+.bench__reads { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; }
 /* "Same card" notice: the card was read again and taken to be the same copy */
 .scan__same { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; border-radius: 10px; background: rgba(233, 245, 240, 0.08); font-weight: 800; font-size: var(--fs-sm); }
 .scan__same span { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); }

@@ -7,8 +7,8 @@ import { db } from '../data/db'
 import { setCode, type CardRecord, type IndexEntry, type ScanEvent } from '../data/types'
 import { startCamera, type CameraHandle } from '../recognition/camera'
 import { FrameAnalyzer, Pacer, type Phase, type Roi } from '../recognition/frameAnalyzer'
-import { captureRoi, grabRegion, cropCanvas, recognize, isBlank, setNameOf, MIN_CONTRAST, type Recognition } from '../recognition/recognizer'
-import { findCard } from '../recognition/bounds'
+import { recognize, isBlank, setNameOf, MIN_CONTRAST, type Recognition } from '../recognition/recognizer'
+import { grabWide, locateCard } from '../recognition/pipeline'
 import type { FoilRead } from '../recognition/foil'
 import { sharpnessOfVideo, BLUR_THRESHOLD } from '../recognition/focus'
 import { warmOcr, ocrJobs, recycleOcrIfNeeded } from '../recognition/ocr'
@@ -48,18 +48,6 @@ function outcome(ev: ScanEvent): { word: string; color: string; ink: string } {
   if (ev.artistStatus === 'collecting') return { word: STATUS_WORD.collecting, color: 'var(--accent)', ink: 'var(--accent-ink)' }
   if (ev.artistStatus === 'unknown') return { word: STATUS_WORD.unknown, color: 'var(--new)', ink: 'var(--new-ink)' }
   return { word: STATUS_WORD['not-collecting'], color: 'var(--text-2)', ink: 'var(--bg)' }
-}
-
-// A still from the sensor may arrive in sensor orientation; it is turned upright here
-// (software canvas: a 4K rotation is a CPU job and this one is reused).
-const uprightCanvas = document.createElement('canvas')
-function upright(bmp: ImageBitmap, portrait: boolean): { src: CanvasImageSource; w: number; h: number } {
-  const landscape = bmp.width > bmp.height
-  if (landscape !== portrait) return { src: bmp, w: bmp.width, h: bmp.height }
-  if (uprightCanvas.width !== bmp.height || uprightCanvas.height !== bmp.width) { uprightCanvas.width = bmp.height; uprightCanvas.height = bmp.width }
-  const ctx = uprightCanvas.getContext('2d', { willReadFrequently: true })!
-  ctx.save(); ctx.translate(bmp.height, 0); ctx.rotate(Math.PI / 2); ctx.drawImage(bmp, 0, 0); ctx.restore()
-  return { src: uprightCanvas, w: uprightCanvas.width, h: uprightCanvas.height }
 }
 
 export default function Scan() {
@@ -349,49 +337,19 @@ export default function Scan() {
     noteTimer.current = setTimeout(() => setNote(null), 1600)
   }
 
-  /**
-   * Full-resolution picture of the wide region: a still from the sensor when the lens
-   * can take one (the preview runs at 720p and is too small to read), else the preview.
-   */
-  const grabWide = async (wide: Roi, avoid?: HTMLCanvasElement): Promise<{ canvas: HTMLCanvasElement; still: boolean }> => {
-    const v = videoRef.current!
-    const h = cam.current
-    if (h && h.canStill()) {
-      const bmp = await h.still()
-      if (bmp) {
-        const vw = v.videoWidth, vh = v.videoHeight
-        const u = upright(bmp, vh > vw)
-        // Same horizontal field of view as the preview; a taller still is centred on it.
-        const s = u.w / vw
-        const y0 = (u.h - vh * s) / 2
-        const r = { x: wide.x * vw * s, y: y0 + wide.y * vh * s, w: wide.w * vw * s, h: wide.h * vh * s }
-        r.x = Math.max(0, r.x); r.y = Math.max(0, r.y); r.w = Math.min(u.w - r.x, r.w); r.h = Math.min(u.h - r.y, r.h)
-        const c = grabRegion(u.src, r, avoid)
-        bmp.close()
-        return { canvas: c, still: true }
-      }
-    }
-    return { canvas: captureRoi(v, wide, avoid), still: false }
-  }
+  /** Full-resolution picture of the wide region (a sensor still when the lens can). */
+  const grabWideHere = (wide: Roi, avoid?: HTMLCanvasElement) => grabWide(videoRef.current!, cam.current, wide, avoid)
 
   /** Find the card inside a wide grab, remember where it is (the frame follows), and crop it out. */
   const locate = (frame: HTMLCanvasElement, wide: Roi, avoid?: HTMLCanvasElement): HTMLCanvasElement => {
     const v = videoRef.current!
-    const vw = v.videoWidth, vh = v.videoHeight
     const g = roi()
-    const scale = frame.width / (wide.w * vw)
-    const toFrame = (r: Roi) => ({ x: (r.x - wide.x) * vw * scale, y: (r.y - wide.y) * vh * scale, w: r.w * vw * scale, h: r.h * vh * scale })
-    const guide = toFrame(g)
-    const found = findCard(frame, guide)
-    const r = found ?? (track.current ? toFrame(track.current) : guide)
-    if (found) {
-      const next: Roi = { x: wide.x + r.x / scale / vw, y: wide.y + r.y / scale / vh, w: r.w / scale / vw, h: r.h / scale / vh }
-      const cur = track.current ?? g
-      const moved = Math.abs(next.x - cur.x) > 0.01 || Math.abs(next.y - cur.y) > 0.01 || Math.abs(next.w - cur.w) > 0.01 || Math.abs(next.h - cur.h) > 0.01
-      if (moved) { track.current = next; analyzer.current.rebaseNext(); layoutFrame() }
-      logEvent('card', `found, ${(next.w / g.w * 100).toFixed(0)}% of guide width`)
+    const r = locateCard(frame, wide, g, track.current, v, avoid)
+    if (r.found) {
+      if (r.moved) { track.current = r.roi; analyzer.current.rebaseNext(); layoutFrame() }
+      logEvent('card', `found, ${(r.roi.w / g.w * 100).toFixed(0)}% of guide width`)
     } else logEvent('card', 'not found, using ' + (track.current ? 'last position' : 'guide'))
-    return cropCanvas(frame, r, avoid)
+    return r.canvas
   }
 
   const capture = useCallback(async () => {
@@ -407,7 +365,7 @@ export default function Scan() {
     const prefer = new Set(recentSets.current)
     try {
       const wide = wideRoi()
-      const grab = await grabWide(wide)
+      const grab = await grabWideHere(wide)
       still = grab.still
       let frame = locate(grab.canvas, wide)
       lastFrame.current = frame
@@ -421,7 +379,7 @@ export default function Scan() {
         logEvent('refocus', `still soft ${rec.sharpness.toFixed(2)}`, performance.now() - tr)
         setBlurry(false)
         tries++
-        const g = await grabWide(wide, grab.canvas)
+        const g = await grabWideHere(wide, grab.canvas)
         const retaken = locate(g.canvas, wide, frame)
         const again = await recognize(retaken, { debug, prefer, ja })
         if (again.sharpness > rec.sharpness) { rec = again; frame = retaken; lastFrame.current = frame }
@@ -433,7 +391,7 @@ export default function Scan() {
       for (let attempt = 0; attempt < 2 && !rec.card && !rec.empty && rec.sharpness >= BLUR_THRESHOLD; attempt++) {
         await new Promise((r) => setTimeout(r, 200))
         tries++
-        const g = await grabWide(wide)
+        const g = await grabWideHere(wide)
         const again = await recognize(locate(g.canvas, wide), { debug, prior: rec, prefer, ja })
         rec = again.empty ? rec : again
       }

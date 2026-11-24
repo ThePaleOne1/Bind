@@ -13,6 +13,7 @@ const Binder = lazy(() => import('./screens/Binder'))
 const ArtistDetail = lazy(() => import('./screens/ArtistDetail'))
 const Companion = lazy(() => import('./screens/Companion'))
 const Settings = lazy(() => import('./screens/Settings'))
+const Bench = lazy(() => import('./screens/Bench'))
 
 function Shell() {
   const { pathname } = useLocation()
@@ -32,6 +33,7 @@ function Shell() {
             <Route path="/artist/:key" element={<ArtistDetail />} />
             <Route path="/companion" element={<Companion />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/bench" element={<Bench />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
