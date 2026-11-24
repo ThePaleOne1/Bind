@@ -74,6 +74,9 @@ function findNumbers(text: string): NumberRead[] {
     const total = parseInt(m[2], 10)
     if (parseInt(m[1], 10) <= total * 1.5 && !/^(?:19|20)\d\d$/.test(m[2])) push(normNumber(m[1]), total, true)
   }
+  // No set size printed (basic energies: "MEE EN 003", "SVE 003"): three digits right after
+  // a set code. A guess, since any three digits beside capitals would fit.
+  for (const m of s.matchAll(/(?<![A-Za-z])(?!HP|LV)[A-Z]{2,4}\s?(?:EN\s)?(\d{3})(?![\d\/|])/g)) push(normNumber(m[1]), null, true)
   const promo = s.match(PROMO_RE)
   if (promo) push(normNumber(promo[1]), null)
   return out
@@ -114,6 +117,9 @@ export function parseOcr(t: OcrText): Parsed {
 
 /** Set id as the OCR would see the printed code: "ja:M2a" → "M2A". */
 export const codeOf = (set: string) => set.replace(/^ja:/, '').replace(/-/g, '').toUpperCase()
+
+/** The code printed on a set's cards as the OCR would see it: the known abbreviation (SSP) or the set id (M2A). */
+export const printedCodeOf = (set: string, sets?: Record<string, SetInfo>) => codeOf(sets?.[set]?.code ?? set)
 
 /** A read token stands for the code when equal, or one character off on a code of four or more. */
 export function codeHit(tokens: string[], code: string): boolean {
@@ -190,11 +196,16 @@ export function matchCards(
         // The name is Japanese and unreadable; the printed set code decides instead. Without
         // it the English card with the same number keeps winning, as it should.
         // "Expect Japanese" mode: a Japanese print needs no code to be in the running.
-        s += codeHit(parsed.setCodes, codeOf(e.set)) ? 0.3 : opts.ja && !read.weak && read.total != null ? 0.1 : -0.35
-      } else if (variants.length) {
-        const sim = bestSim(variants, e.name)
-        // A clearly different name is evidence against, but only when enough of it was read.
-        s += 0.3 * sim - (sim < 0.2 && parsed.nameGuess.length >= 4 ? 0.25 : 0)
+        s += codeHit(parsed.setCodes, printedCodeOf(e.set, index.sets)) ? 0.3 : opts.ja && !read.weak && read.total != null ? 0.1 : -0.35
+      } else {
+        // English prints carry a code too from Scarlet & Violet on (SSP, MEE): a match is a
+        // nudge; its absence says nothing, older cards have none and the code may not be known.
+        if (codeHit(parsed.setCodes, printedCodeOf(e.set, index.sets))) s += 0.2
+        if (variants.length) {
+          const sim = bestSim(variants, e.name)
+          // A clearly different name is evidence against, but only when enough of it was read.
+          s += 0.3 * sim - (sim < 0.2 && parsed.nameGuess.length >= 4 ? 0.25 : 0)
+        }
       }
       out.push({ entry: e, score: s })
     }
@@ -207,7 +218,10 @@ export function matchCards(
     // unless both halves came out zero-padded to three digits and the set size is exact:
     // that is the printed form and hard to hit by chance.
     const padded = parsed.numberWeak && parsed.total != null && /^\d{6}$/.test(parsed.number.padStart(3, '0') + String(parsed.total).padStart(3, '0')) && index.entries.some((e) => e.n === parsed.number && e.total === parsed.total)
-    if (parsed.numberWeak && scored.length && scored[0].score < (padded ? 0.78 : 0.92)) scored = []
+    // Three digits with no set size are only read right after a set code (energies: "MEE 003");
+    // when that code is the best candidate's own, the read is the printed form too.
+    const coded = parsed.numberWeak && parsed.total == null && scored.length > 0 && codeHit(parsed.setCodes, printedCodeOf(scored[0].entry.set, index.sets))
+    if (parsed.numberWeak && scored.length && scored[0].score < (padded ? 0.78 : coded ? 0.6 : 0.92)) scored = []
   }
   // The first reading found no card with that number and total: try the other readings.
   // A reading with a real slash needs number + total to match a card outright; a guessed
@@ -339,17 +353,49 @@ export function illustratorEvidence(text: string, illustrator: string | null | u
   return best
 }
 
-/** Search the local index by free text ("pikachu 25/102", "charizard 006") */
-export function searchIndex(q: string, index: { entries: IndexEntry[]; sets: Record<string, SetInfo> }, limit = 40) {
-  const text = q.trim()
-  if (!text) return []
+export interface SearchQuery {
+  name?: string
+  /** Number, with or without the set size, and/or the set code printed beside it: "25/102", "003", "MEE 003", "M2a 110/193". */
+  number?: string
+  /** Keep one catalogue: English prints, or Japanese ones (whose names are in Japanese). */
+  lang?: 'en' | 'ja'
+}
+
+/** "sv08" / "SV8" / "SSP" / "ja:M2a" → a key both the typed and the stored forms reduce to. */
+const codeKey = (s: string) => codeOf(s).replace(/^([A-Z]+)0+(\d)/, '$1$2')
+
+/**
+ * Search the local index. A set code in the number field narrows the search to that set
+ * (so "MEE 003" is the one Water Energy and not every print numbered 3); "EN"/"JP"
+ * markers printed beside the code are ignored. With a set and nothing else, the whole set
+ * is listed in number order.
+ */
+export function searchIndex(q: SearchQuery, index: { entries: IndexEntry[]; sets: Record<string, SetInfo> }, limit = 40) {
+  const name = norm(q.name ?? '')
+  const inLang = (lang: 'ja' | undefined) => (q.lang === 'ja' ? lang === 'ja' : q.lang === 'en' ? lang !== 'ja' : true)
+  const setsByCode = new Map<string, string[]>()
+  for (const s of Object.values(index.sets)) {
+    if (!inLang(s.lang)) continue
+    for (const k of [codeKey(s.id), s.code ? codeKey(s.code) : null]) if (k) setsByCode.set(k, [...(setsByCode.get(k) ?? []), s.id])
+  }
+  let sets: Set<string> | null = null
+  const rest: string[] = []
+  for (const tok of (q.number ?? '').trim().split(/\s+/)) {
+    if (!tok || /^(EN|JP|JA)$/i.test(tok)) continue
+    const hit = /^[A-Za-z][A-Za-z0-9.]{1,6}$/.test(tok) ? setsByCode.get(codeKey(tok)) : undefined
+    if (hit) { sets = new Set([...(sets ?? []), ...hit]); continue }
+    rest.push(tok)
+  }
+  const text = rest.join(' ')
   const frac = text.match(/([A-Za-z]{0,5}\d{1,3})\s*\/\s*(\d{1,3})/)
   const lone = !frac && text.match(/\b([A-Za-z]{0,5}\d{1,3})\b/)
   const number = frac ? normNumber(frac[1]) : lone ? normNumber(lone[1]) : null
   const total = frac ? parseInt(frac[2], 10) : null
-  const name = norm(text.replace(/([A-Za-z]{0,5}\d{1,3})\s*(\/\s*\d{1,3})?/g, ' ')).trim()
+  if (!name && !number && !sets) return []
   const out: Candidate[] = []
   for (const e of index.entries) {
+    if (!inLang(e.lang)) continue
+    if (sets && !sets.has(e.set)) continue
     let s = 0
     if (number) {
       if (e.n !== number) continue
@@ -364,6 +410,6 @@ export function searchIndex(q: string, index: { entries: IndexEntry[]; sets: Rec
     }
     out.push({ entry: e, score: s })
   }
-  out.sort((a, b) => b.score - a.score)
+  out.sort((a, b) => b.score - a.score) // stable: ties keep catalogue (number) order
   return out.slice(0, limit)
 }

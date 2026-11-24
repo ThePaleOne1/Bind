@@ -100,6 +100,8 @@ export interface SetInfo {
   total: number
   totalAll: number
   lang?: 'ja'
+  /** The code printed beside the number on this set's cards (SSP, MEE), once looked up; Japanese set ids are the code already. */
+  code?: string
 }
 
 /** "ja:M2a" → "M2a": the code printed on the card, without the catalogue prefix. */

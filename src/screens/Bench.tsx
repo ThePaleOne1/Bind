@@ -6,10 +6,10 @@ import type { Roi } from '../recognition/frameAnalyzer'
 import { recognize, type Recognition } from '../recognition/recognizer'
 import { guideRoi, widen, roiToScreen, grabWide, locateCard, thumb } from '../recognition/pipeline'
 import { warmOcr } from '../recognition/ocr'
-import { loadIndex, getCard } from '../api/tcgdex'
+import { loadIndex, getCard, printedCode } from '../api/tcgdex'
 import { BENCH_CARDS, BENCH_ATTEMPTS, type BenchCard } from '../data/bench'
 import { finishesOf, FINISH_LABEL } from '../data/finish'
-import { setCode, type Finish } from '../data/types'
+import type { Finish } from '../data/types'
 import { useSettings } from '../store/settings'
 import { sendCompanion, companionConnected } from '../sync/companion'
 import { baseReport, logEvent } from '../utils/perfLog'
@@ -215,7 +215,7 @@ export default function Bench() {
     try {
       const c = await getCard(id, { quick: true })
       const options = finishesOf(c)
-      setPending({ id, name: c.name, number: `${c.localId}/${c.setTotal || '?'} · ${setCode(c.setId).toUpperCase()}`, options, finish: options[0] })
+      setPending({ id, name: `${c.name}${c.lang === 'ja' ? ' (JP)' : ''}`, number: `${c.localId}/${c.setTotal || '?'} · ${printedCode(c.setId).toUpperCase()}`, options, finish: options[0] })
     } catch { toast('Could not load that card') }
   }
   const addPending = () => {

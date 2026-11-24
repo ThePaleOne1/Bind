@@ -1,6 +1,6 @@
 import { logEvent } from '../utils/perfLog'
 import { db, getMeta, setMeta } from '../data/db'
-import type {CardRecord, IndexEntry, SetInfo, Finish } from '../data/types'
+import { setCode, type CardRecord, type IndexEntry, type SetInfo, type Finish } from '../data/types'
 
 const API = 'https://api.tcgdex.net/v2/en'
 const API_JA = 'https://api.tcgdex.net/v2/ja'
@@ -28,6 +28,7 @@ export async function loadIndex(force = false) {
   const stored = await getMeta<{ entries: IndexEntry[]; sets: Record<string, SetInfo> }>(INDEX_KEY)
   if (stored && !force && Date.now() - stored.at < INDEX_TTL) {
     indexCache = stored.value
+    void fillSetCodes(indexCache)
     return indexCache
   }
   try {
@@ -61,12 +62,49 @@ export async function loadIndex(force = false) {
     } catch { /* the English catalogue alone is still useful */ }
     indexCache = { entries, sets }
     await setMeta(INDEX_KEY, indexCache)
+    void fillSetCodes(indexCache)
     return indexCache
   } catch (e) {
-    if (stored) { indexCache = stored.value; return indexCache }
+    if (stored) { indexCache = stored.value; void fillSetCodes(indexCache); return indexCache }
     throw e
   }
 }
+
+/**
+ * The code printed beside the number (SSP, MEE, POR) lives only in each set's own record,
+ * not in the list the index is built from. Cards print it from Scarlet & Violet on, so
+ * those sets are looked up once in the background and the codes kept; the search and the
+ * matcher read them from the index. Japanese set ids already are the printed code.
+ */
+const ABBR_KEY = 'setAbbr:v1'
+let fillingCodes: Promise<void> | null = null
+function fillSetCodes(idx: { sets: Record<string, SetInfo> }): Promise<void> {
+  if (fillingCodes) return fillingCodes
+  fillingCodes = (async () => {
+    const stored = await getMeta<Record<string, string>>(ABBR_KEY)
+    const known: Record<string, string> = stored?.value ?? {}
+    for (const [id, code] of Object.entries(known)) if (code && idx.sets[id]) idx.sets[id].code = code
+    const missing = Object.keys(idx.sets).filter((id) => /^(sv|me)/.test(id) && !(id in known))
+    if (!missing.length || !navigator.onLine) return
+    for (let i = 0; i < missing.length; i += 6) {
+      await Promise.all(missing.slice(i, i + 6).map(async (id) => {
+        try {
+          const r = await fetch(`${API}/sets/${encodeURIComponent(id)}`)
+          if (!r.ok) return
+          const d = await r.json()
+          const code = typeof d.abbreviation?.official === 'string' ? d.abbreviation.official : ''
+          known[id] = code
+          if (code) idx.sets[id].code = code
+        } catch { /* the next load tries again */ }
+      }))
+    }
+    await setMeta(ABBR_KEY, known)
+  })().finally(() => { fillingCodes = null })
+  return fillingCodes
+}
+
+/** The code shown for a set: the printed abbreviation when known (SSP), else the set id (SV08, M2a). */
+export const printedCode = (setId: string) => indexCache?.sets[setId]?.code ?? setCode(setId)
 
 export async function indexStatus() {
   const stored = await getMeta<{ entries: IndexEntry[] }>(INDEX_KEY)

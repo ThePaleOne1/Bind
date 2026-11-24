@@ -4,7 +4,7 @@ import { Zap, ZapOff, Search, Plus, Minus, X, ChevronLeft, Sun, SlidersHorizonta
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../data/db'
-import { setCode, type CardRecord, type IndexEntry, type ScanEvent } from '../data/types'
+import { type CardRecord, type IndexEntry, type ScanEvent } from '../data/types'
 import { startCamera, type CameraHandle } from '../recognition/camera'
 import { FrameAnalyzer, Pacer, type Phase, type Roi } from '../recognition/frameAnalyzer'
 import { recognize, isBlank, setNameOf, MIN_CONTRAST, type Recognition } from '../recognition/recognizer'
@@ -12,7 +12,7 @@ import { grabWide, locateCard } from '../recognition/pipeline'
 import type { FoilRead } from '../recognition/foil'
 import { sharpnessOfVideo, BLUR_THRESHOLD } from '../recognition/focus'
 import { warmOcr, ocrJobs, recycleOcrIfNeeded } from '../recognition/ocr'
-import { loadIndex, getCard } from '../api/tcgdex'
+import { loadIndex, getCard, printedCode } from '../api/tcgdex'
 import { searchIndex } from '../recognition/matcher'
 import { applyScan, setFinishOne, cardValueAud } from '../store/collection'
 import { finishesOf, FINISH_LABEL, rarityTag, defaultFinish } from '../data/finish'
@@ -24,7 +24,7 @@ import { fmtAud } from '../utils/price'
 import { samplePerf, logEvent, logScan, baseReport } from '../utils/perfLog'
 import { BUILD } from '../pwa'
 import { Particles, PALETTES } from '../components/Particles'
-import { CardImage, prefetchCardImage, Sheet, STATUS_WORD, toast } from '../components/ui'
+import { CardImage, prefetchCardImage, Sheet, Segmented, TileTags, STATUS_WORD, toast } from '../components/ui'
 import { CardDetailSheet } from '../components/CardDetail'
 
 type Result = { ev: ScanEvent; card: CardRecord; rec: Recognition }
@@ -887,39 +887,67 @@ function AltTile({ entry, onPick }: { entry: IndexEntry; onPick: () => void }) {
   )
 }
 
+/**
+ * Card lookup: name, number (with the set code printed beside it, so "MEE 003" or
+ * "M2a 110/193" is one card) and which catalogue. Japanese names are stored in Japanese,
+ * so those are found by number and code; the tiles show the English name once loaded.
+ */
 export function SearchSheet({ open, onClose, onPick }: { open: boolean; onClose: () => void; onPick: (id: string) => void }) {
-  const [q, setQ] = useState('')
+  const japanese = useSettings((s) => s.japanese)
+  const [name, setName] = useState('')
+  const [number, setNumber] = useState('')
+  const [lang, setLang] = useState<'en' | 'ja'>('en')
   const [results, setResults] = useState<IndexEntry[]>([])
   useEffect(() => {
-    if (!open) { setQ(''); setResults([]); return }
-  }, [open])
+    if (!open) { setName(''); setNumber(''); setResults([]); return }
+    setLang(japanese ? 'ja' : 'en')
+  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     let alive = true
     const t = setTimeout(async () => {
-      if (q.trim().length < 2) { setResults([]); return }
+      if (name.trim().length < 2 && number.trim().length < 2) { setResults([]); return }
       const idx = await loadIndex()
-      const r = searchIndex(q, idx, 30).map((c) => c.entry)
+      const r = searchIndex({ name, number, lang }, idx, lang === 'ja' ? 24 : 40).map((c) => c.entry)
       if (alive) setResults(r)
     }, 220)
     return () => { alive = false; clearTimeout(t) }
-  }, [q])
+  }, [name, number, lang])
   return (
     <Sheet open={open} onClose={onClose}>
       <div className="stack">
+        <div className="row row--between">
+          <span className="title title--sm">Find a card</span>
+          <Segmented value={lang} onChange={setLang} options={[{ value: 'en', label: 'English' }, { value: 'ja', label: 'Japanese' }]} />
+        </div>
         <div className="search">
           <Search className="search__icon" size={18} />
-          <input className="input" autoFocus placeholder="Name or 025/198" value={q} onChange={(e) => setQ(e.target.value)} />
+          <input className="input" autoFocus={lang === 'en'} placeholder={lang === 'ja' ? 'Name (in Japanese)' : 'Name'} value={name} onChange={(e) => setName(e.target.value)} />
         </div>
+        <input className="input mono" autoFocus={lang === 'ja'} autoCapitalize="characters" autoCorrect="off" spellCheck={false} placeholder={lang === 'ja' ? 'Number and set code: 110/193 M2a' : 'Number, set code: 079/191, MEE 003, SSP 79'} value={number} onChange={(e) => setNumber(e.target.value)} />
+        {lang === 'ja' && <p style={{ margin: 0, color: 'var(--muted)', fontSize: 'var(--fs-sm)', lineHeight: 1.3 }}>Japanese cards are listed under their Japanese names: find them by the number and the set code printed beside it.</p>}
         <div className="grid">
-          {results.map((e) => (
-            <button key={e.id} className="tile" onClick={() => onPick(e.id)}>
-              <CardImage src={e.img} alt={e.name} />
-              <div className="list__title" style={{ fontSize: 'var(--fs-sm)', marginTop: 6 }}>{e.name}</div>
-              <div className="list__sub">{setCode(e.set).toUpperCase()} · {e.n}/{e.total}</div>
-            </button>
-          ))}
+          {results.map((e) => <ResultTile key={e.id} entry={e} onPick={() => onPick(e.id)} />)}
         </div>
       </div>
     </Sheet>
+  )
+}
+
+/** Search result; a Japanese print swaps in its English name once the card record is at hand. */
+function ResultTile({ entry, onPick }: { entry: IndexEntry; onPick: () => void }) {
+  const [name, setName] = useState(entry.name)
+  useEffect(() => {
+    if (entry.lang !== 'ja') return
+    let alive = true
+    getCard(entry.id, { quick: true }).then((c) => { if (alive && c.name) setName(c.name) }).catch(() => {})
+    return () => { alive = false }
+  }, [entry.id, entry.lang])
+  return (
+    <button className="tile" onClick={onPick}>
+      <CardImage src={entry.img} alt={name} />
+      <TileTags lang={entry.lang ?? null} />
+      <div className="list__title" style={{ fontSize: 'var(--fs-sm)', marginTop: 6 }}>{name}</div>
+      <div className="list__sub">{printedCode(entry.set).toUpperCase()} · {entry.n}/{entry.total}</div>
+    </button>
   )
 }
