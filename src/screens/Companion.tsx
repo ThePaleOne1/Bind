@@ -56,7 +56,7 @@ export default function Companion() {
       p.timer = setTimeout(() => saveReport(id), r?.cropCount ? 6000 : 2500)
     } else if (m.type === 'report-crop') {
       p.crops = p.crops ?? {}
-      p.crops[r.i] = { i: r.i, jpeg: r.jpeg, card: r.card, attempt: r.attempt }
+      p.crops[r.i] = { i: r.i, jpeg: r.jpeg, card: r.card, attempt: r.attempt, kind: r.kind ?? 'card' }
       const have = Object.keys(p.crops).length, want = p.text?.cropCount
       setReports((l) => l.map((x) => (x.id === id ? { ...x, crops: `${have}${want ? `/${want}` : ''} crops` } : x)))
       if (p.timer) clearTimeout(p.timer)

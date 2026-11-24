@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, Play, Send, Share2, Camera, Check, X, Zap, Z
 import { useNavigate } from 'react-router-dom'
 import { startCamera, type CameraHandle } from '../recognition/camera'
 import type { Roi } from '../recognition/frameAnalyzer'
-import { recognize, type Recognition } from '../recognition/recognizer'
+import { recognize, cropCanvas, type Recognition } from '../recognition/recognizer'
 import { guideRoi, widen, roiToScreen, grabWide, locateCard, thumb } from '../recognition/pipeline'
 import { warmOcr } from '../recognition/ocr'
 import { loadIndex, getCard, printedCode } from '../api/tcgdex'
@@ -36,6 +36,7 @@ interface Attempt {
   foil: Recognition['foil']
   sharp: number
   cropIndex: number          // index into the crops list
+  cornerIndex?: number       // the number corner at full resolution, for OCR work on the desk
 }
 interface CardRun { index: number; card: BenchCard; attempts: Attempt[]; startedAt: number }
 
@@ -48,7 +49,7 @@ interface Draft {
   id: string
   deckNames: string[]
   runs: CardRun[]
-  crops: { card: number; i: number; jpeg: string }[]
+  crops: { card: number; i: number; jpeg: string; kind?: 'card' | 'corner' }[]
   idx: number
   conditions: { lighting: 'overhead' | 'daylight' | 'lamp' | 'dim'; rig: 'jig' | 'handheld'; note: string; endNote: string }
 }
@@ -75,7 +76,7 @@ export default function Bench() {
   const [busy, setBusy] = useState(false)
   const [progress, setProgress] = useState(0)
   const [runs, setRuns] = useState<CardRun[]>([])
-  const crops = useRef<{ card: number; i: number; jpeg: string }[]>([])
+  const crops = useRef<{ card: number; i: number; jpeg: string; kind?: 'card' | 'corner' }[]>([])
   const [sending, setSending] = useState(false)
   const [sentNote, setSentNote] = useState<string | null>(null)
   const sessionId = useRef(Math.random().toString(36).slice(2, 8))
@@ -169,7 +170,12 @@ export default function Bench() {
         if (loc.moved) { track.current = loc.roi; layout() }
         const rec = await recognize(loc.canvas, { ja })
         const cropIndex = crops.current.length
-        crops.current.push({ card: idx, i, jpeg: thumb(loc.canvas, 480, 0.5) })
+        crops.current.push({ card: idx, i, jpeg: thumb(loc.canvas, 480, 0.5), kind: 'card' })
+        // The number corner as the OCR sees it (full resolution): foil and old layouts are
+        // worked out on the desk from these, not from the small card crop.
+        const cornerIndex = crops.current.length
+        const cc = cropCanvas(loc.canvas, { x: 0, y: loc.canvas.height * 0.87, w: loc.canvas.width * 0.6, h: loc.canvas.height * 0.13 }, loc.canvas)
+        crops.current.push({ card: idx, i, jpeg: thumb(cc, 150, 0.8), kind: 'corner' })
         const best = rec.alternatives[0] ?? null
         const a: Attempt = {
           i, ms: performance.now() - t0, still: grab.still, found: loc.found,
@@ -180,7 +186,7 @@ export default function Bench() {
           // An unlisted card (nothing expected) is handled right when the scanner commits to nothing.
           hit: card.expected.length ? !!rec.card && card.expected.includes(rec.card.id) : !rec.card,
           alternatives: rec.alternatives.slice(0, 5).map((c) => `${c.entry.id} ${c.score.toFixed(2)}`),
-          foil: rec.foil, sharp: rec.sharpness, cropIndex,
+          foil: rec.foil, sharp: rec.sharpness, cropIndex, cornerIndex,
         }
         attempts.push(a)
         setProgress(i + 1)
@@ -239,7 +245,7 @@ export default function Bench() {
       // The live link drops bursts: one crop every 200 ms, with progress on screen
       for (let k = 0; k < images.length; k++) {
         const c = images[k]
-        if (await sendCompanion({ type: 'report-crop', report: { id: sessionId.current, i: k, card: c.card, attempt: c.i, jpeg: c.jpeg } })) sent++
+        if (await sendCompanion({ type: 'report-crop', report: { id: sessionId.current, i: k, card: c.card, attempt: c.i, kind: c.kind ?? 'card', jpeg: c.jpeg } })) sent++
         setSentNote(`Sending crops ${k + 1}/${images.length}`)
         await new Promise((r) => setTimeout(r, 200))
       }
