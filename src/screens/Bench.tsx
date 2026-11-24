@@ -11,6 +11,7 @@ import { BENCH_CARDS, BENCH_ATTEMPTS, type BenchCard } from '../data/bench'
 import { finishesOf, FINISH_LABEL } from '../data/finish'
 import type { Finish } from '../data/types'
 import { useSettings } from '../store/settings'
+import { getMeta, setMeta, db } from '../data/db'
 import { sendCompanion, companionConnected } from '../sync/companion'
 import { baseReport, logEvent } from '../utils/perfLog'
 import { BUILD } from '../pwa'
@@ -37,6 +38,20 @@ interface Attempt {
   cropIndex: number          // index into the crops list
 }
 interface CardRun { index: number; card: BenchCard; attempts: Attempt[]; startedAt: number }
+
+/**
+ * An unsent run is kept in storage after every card, so an app update, a reload or a
+ * failed Send cannot lose a session's reads. Cleared once the Desk has it.
+ */
+const DRAFT_KEY = 'bench:draft'
+interface Draft {
+  id: string
+  deckNames: string[]
+  runs: CardRun[]
+  crops: { card: number; i: number; jpeg: string }[]
+  idx: number
+  conditions: { lighting: 'overhead' | 'daylight' | 'lamp' | 'dim'; rig: 'jig' | 'handheld'; note: string; endNote: string }
+}
 
 /**
  * Scanner test bench. Walks the test deck one card at a time: put the card in, press
@@ -84,11 +99,28 @@ export default function Bench() {
     setFrameBox(roiToScreen(v, track.current ?? guideRoi(v)))
   }
 
+  const saveDraft = (runsNow: CardRun[], idxNow: number) => {
+    const d: Draft = { id: sessionId.current, deckNames: deck.map((c) => c.name), runs: runsNow, crops: crops.current, idx: idxNow, conditions: { lighting, rig, note, endNote } }
+    setMeta(DRAFT_KEY, d).catch(() => {})
+  }
+  const clearDraft = () => { db.meta.delete(DRAFT_KEY).catch(() => {}) }
+
   useEffect(() => {
     let alive = true
     const v = videoRef.current!
     warmOcr()
     loadIndex().then(() => alive && setReady(true)).catch(() => alive && setReady(false))
+    // Pick an unsent run back up (same deck, something read)
+    getMeta<Draft>(DRAFT_KEY).then((m) => {
+      const d = m?.value
+      if (!alive || !d || !d.runs.some((r) => r.attempts.length)) return
+      if (d.deckNames.join('|') !== deck.map((c) => c.name).join('|')) { clearDraft(); return }
+      sessionId.current = d.id
+      crops.current = d.crops
+      setRuns(d.runs); setIdx(Math.min(d.idx, deck.length - 1))
+      setLighting(d.conditions.lighting); setRig(d.conditions.rig); setNote(d.conditions.note); setEndNote(d.conditions.endNote)
+      toast(`Picked up the unsent run: ${d.runs.filter((r) => r.attempts.length).length} cards read`)
+    }).catch(() => {})
     startCamera(v, { deviceId: cameraId || null, hiRes: preview4k }).then((h) => {
       if (!alive) { h.stop(); return }
       cam.current = h
@@ -157,7 +189,9 @@ export default function Bench() {
         await new Promise((r) => setTimeout(r, 350))
       }
       // On to the next card: all that is left to do is swap the card and press Scan again
-      if (idx < deck.length - 1) setIdx(idx + 1)
+      const next = idx < deck.length - 1 ? idx + 1 : idx
+      setIdx(next)
+      saveDraft([...runs.filter((r) => r.index !== idx), { ...run, attempts }], next)
     } catch (e: any) {
       toast(e?.message ?? 'Bench read failed')
     } finally {
@@ -189,7 +223,7 @@ export default function Bench() {
         const n = navigator as any
         if (n.share && (!n.canShare || n.canShare({ files: [file] }))) { try { await n.share({ files: [file], title: 'Bind bench' }) } catch { /* cancelled */ } }
         else { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click() }
-        toast('Desk not linked: shared the file instead')
+        toast('Desk not linked: shared the file instead. The run is kept here until the Desk has it.')
         return
       }
       const ok = await sendCompanion({ type: 'report', report: text })
@@ -202,7 +236,8 @@ export default function Bench() {
         await new Promise((r) => setTimeout(r, 200))
       }
       setSentNote(null)
-      toast(ok ? `Sent to Desk: ${runs.length} cards, ${sent}/${images.length} crops` : 'Could not reach the Desk')
+      if (ok) clearDraft()
+      toast(ok ? `Sent to Desk: ${runs.length} cards, ${sent}/${images.length} crops` : 'Could not reach the Desk: the run is kept here')
     } finally { setSending(false) }
   }
 
@@ -231,7 +266,8 @@ export default function Bench() {
     setSettings({ benchCards: [...deck, { name: `${unlisted.name.trim()}${unlisted.ja ? ' (JP)' : ''}`, number: unlisted.number.trim() || '—', expected: [], finish: unlisted.finish, note: 'not in the catalogue', ...(unlisted.ja ? { lang: 'ja' as const } : {}) }] })
     setUnlisted(null)
   }
-  const resetDeck = () => { setSettings({ benchCards: null }); setRuns([]); setIdx(0) }
+  const resetDeck = () => { setSettings({ benchCards: null }); setRuns([]); setIdx(0); clearDraft() }
+  const discardRun = () => { setRuns([]); crops.current = []; setIdx(0); sessionId.current = Math.random().toString(36).slice(2, 8); clearDraft(); toast('Run discarded') }
 
   const toggleTorch = async () => { if (cam.current) setTorch(await cam.current.torch(!torch)) }
   const hits = current ? current.attempts.filter((a) => a.hit).length : 0
@@ -312,6 +348,7 @@ export default function Bench() {
           <div className="row row--between">
             <span className="title title--sm">Test deck</span>
             <div className="row" style={{ gap: 6 }}>
+              {runs.length > 0 && <button className="btn btn--sm btn--ghost" onClick={() => { setEditing(false); discardRun() }}>Discard run</button>}
               {benchCards && <button className="btn btn--sm btn--ghost" onClick={resetDeck}>Reset</button>}
               <button className="btn btn--sm btn--ghost" onClick={() => { setEditing(false); setUnlisted({ name: '', number: '', finish: 'normal', ja: false }) }}>Unlisted</button>
               <button className="btn btn--sm btn--accent" onClick={() => { setEditing(false); setAdding(true) }}><Plus size={14} /> Add card</button>

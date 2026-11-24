@@ -64,4 +64,4 @@ export async function sendCompanion(partial: Omit<CompanionMessage, 'from' | 'at
   try { return (await rt.send({ type: 'broadcast', event: 'msg', payload: m })) === 'ok' } catch { return false }
 }
 
-export const companionConnected = () => !!rt
+export const companionConnected = () => { ensure(); return !!rt }
