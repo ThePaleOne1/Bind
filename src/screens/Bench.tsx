@@ -221,9 +221,17 @@ export default function Bench() {
       if (!companionConnected()) {
         const file = new File([JSON.stringify({ ...text, cropImages: images })], `bind-bench-${sessionId.current}.json`, { type: 'application/json' })
         const n = navigator as any
-        if (n.share && (!n.canShare || n.canShare({ files: [file] }))) { try { await n.share({ files: [file], title: 'Bind bench' }) } catch { /* cancelled */ } }
-        else { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click() }
-        toast('Desk not linked: shared the file instead. The run is kept here until the Desk has it.')
+        let how = ''
+        if (n.share && (!n.canShare || n.canShare({ files: [file] }))) {
+          try { await n.share({ files: [file], title: 'Bind bench' }); how = 'shared' } catch (e: any) { how = e?.name === 'AbortError' ? 'share cancelled' : '' }
+        }
+        if (!how) {
+          // No file sharing here: a plain download, which lands in the phone's Downloads folder.
+          const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name
+          document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove() }, 10_000)
+          how = `saved to Downloads as ${file.name}`
+        }
+        toast(`Desk not linked: ${how}. The run is kept here until the Desk has it.`)
         return
       }
       const ok = await sendCompanion({ type: 'report', report: text })
