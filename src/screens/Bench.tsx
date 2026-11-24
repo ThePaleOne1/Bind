@@ -64,6 +64,7 @@ export default function Bench() {
   const [lighting, setLighting] = useState<'overhead' | 'daylight' | 'lamp' | 'dim'>('overhead')
   const [rig, setRig] = useState<'jig' | 'handheld'>('jig')
   const [note, setNote] = useState('')
+  const [endNote, setEndNote] = useState('')   // anything noticed while scanning, written before sending
   const { preview4k, cameraId } = useSettings()
 
   const layout = () => {
@@ -153,7 +154,7 @@ export default function Bench() {
   const report = () => ({
     ...baseReport(BUILD), id: sessionId.current, source: 'bench',
     camera: camLabel, settings: { preview4k },
-    conditions: { lighting, rig, note },
+    conditions: { lighting, rig, note, endNote },
     attemptsPerCard: BENCH_ATTEMPTS,
     cards: runs.sort((a, b) => a.index - b.index).map((r) => ({
       index: r.index, name: r.card.name, number: r.card.number, expected: r.card.expected, finish: r.card.finish, note: r.card.note,
@@ -234,6 +235,9 @@ export default function Bench() {
             ))}
             {!busy && <span className="muted" style={{ fontSize: 'var(--fs-xs)', fontWeight: 700 }}>{hits}/{current.attempts.length} right{current.attempts.length === BENCH_ATTEMPTS && idx < BENCH_CARDS.length - 1 ? ' · put the next card in' : ''}</span>}
           </div>
+        )}
+        {focused && done > 0 && !busy && (
+          <input className="input" placeholder="Anything you noticed while scanning (sent with the report)" value={endNote} onChange={(e) => setEndNote(e.target.value)} />
         )}
       </div>
 
