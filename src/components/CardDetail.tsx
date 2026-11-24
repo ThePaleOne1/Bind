@@ -46,7 +46,8 @@ export function CardDetail({ cardId, onClose }: { cardId: string; onClose?: () =
       <CardImage src={card.image} quality="high" alt={card.name} onClick={() => window.open(imageUrl(card.image, 'high')!, '_blank')} />
       <div className="stack" style={{ gap: 14 }}>
         <div>
-          <div className="big">{card.name}</div>
+          <div className="big">{card.name}{card.lang === 'ja' && <span className="chip chip--unknown" style={{ marginLeft: 8, verticalAlign: 'middle', height: 24, fontSize: 'var(--fs-xs)' }}>JP</span>}</div>
+          {card.nameJa && <div className="muted" style={{ fontWeight: 700 }}>{card.nameJa}</div>}
           <div className="muted" style={{ fontWeight: 700 }}>{card.setName} · {card.localId}/{card.setTotal || '?'}</div>
         </div>
 

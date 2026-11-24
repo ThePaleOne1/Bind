@@ -2,7 +2,11 @@ import { logEvent } from '../utils/perfLog'
 import { createWorker, PSM, type Worker } from 'tesseract.js'
 
 let workers: Promise<Worker>[] | null = null
-const CORNER_CHARS = '0123456789/ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz '
+// The corner block: digits, slash and set-code capitals only. With lower case allowed a
+// foil-noisy "032/191" came back "DED eyo" (digits as letters) and the number was lost.
+const CORNER_CHARS = '0123456789/ABCDEFGHIJKLMNOPQRSTUVWXYZ '
+// The set-code strip: Japanese codes are lower case ("sv3a"), so lower case is allowed there.
+const CODE_CHARS = '0123456789/ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz '
 let jobs = 0                 // recognitions since the workers were (re)created
 const RECYCLE_AFTER = 40     // Tesseract's wasm heap only ever grows: start fresh now and then, while idle
 let recycling = false
@@ -206,8 +210,14 @@ export async function readPrimary(card: HTMLCanvasElement): Promise<{ top: strin
     await w2.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_BLOCK, tessedit_char_whitelist: '0123456789/ ' })
     let line = '', codes = ''
     try {
-      const nb = band(card, ...REGIONS.number, 'number', true)
-      const r3 = await w2.recognize(nb, {}, { ...OUTPUT, blocks: true })
+      // Plain band first; box-line removal second, only when no number came out of the
+      // plain one (on patterned reverse holos the removal can eat the digits themselves).
+      let nb = band(card, ...REGIONS.number, 'number', false)
+      let r3 = await w2.recognize(nb, {}, { ...OUTPUT, blocks: true })
+      if (!/\d{1,3}\s*\/\s*\d{1,3}/.test(r3.data.text)) {
+        nb = band(card, ...REGIONS.number, 'number', true)
+        r3 = await w2.recognize(nb, {}, { ...OUTPUT, blocks: true })
+      }
       line = clean(r3.data.text)
       // The set code sits on the same line, left of the number ("[G] [sv3a] 038/062",
       // "[H] [SSP EN] 032/191"). The number's own box from this pass says where the line
@@ -222,7 +232,7 @@ export async function readPrimary(card: HTMLCanvasElement): Promise<{ top: strin
         const ch = (y1 - y0) * 1.7, cy = Math.max(0, y0 - (ch - (y1 - y0)) / 2)
         const cw = sx - fx - 0.004
         if (cw > 0.04) {
-          await w2.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_LINE, tessedit_char_whitelist: CORNER_CHARS })
+          await w2.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_LINE, tessedit_char_whitelist: CODE_CHARS })
           codes = clean((await w2.recognize(band(card, fx, cy, cw, ch, 120, 'code', true), {}, OUTPUT)).data.text)
         }
       }

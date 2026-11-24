@@ -78,7 +78,7 @@ export default function ArtistDetail() {
             {ownedCards.map(({ o, c }) => (
               <button key={o.id} className="tile" onClick={() => setOpen(c.id)}>
                 <CardImage src={c.image} alt={c.name} />
-                <TileTags finish={o.finish} rarity={c.rarity} />
+                <TileTags finish={o.finish} rarity={c.rarity} lang={c.lang} />
                 {o.qty > 1 && <span className="tile__qty">×{o.qty}</span>}
                 {o.bucket === 'bulk' && <span className="tile__price" style={{ color: 'var(--muted)' }}>bulk</span>}
               </button>

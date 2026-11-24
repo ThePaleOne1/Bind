@@ -143,6 +143,35 @@ function parsePrices(detail: any) {
  * (prices refresh in the background), and a fetch that is needed gets 5 s before the
  * scan goes on without it. Slow mobile data must never hold a scan for half a minute.
  */
+/**
+ * English name for a Japanese card: the Pokédex number maps to the English catalogue
+ * ("メガズルズキンex" → "Mega Scrafty ex"). Trainers and energies keep their printed name.
+ */
+const dexNames = new Map<number, string>()
+async function englishName(d: any): Promise<string | null> {
+  const dex: number | undefined = Array.isArray(d.dexId) ? d.dexId[0] : undefined
+  if (!dex) return null
+  let base = dexNames.get(dex)
+  if (!base) {
+    const stored = await getMeta<string>(`dexName:${dex}`)
+    if (stored) base = stored.value
+    else {
+      try {
+        const r = await fetch(`${API}/cards?dexId=${dex}`)
+        const list: any[] = r.ok ? await r.json() : []
+        const plain = list.map((c) => String(c.name)).find((n) => /^[A-Za-z' .-]+$/.test(n)) ?? list[0]?.name
+        if (plain) { base = plain; await setMeta(`dexName:${dex}`, plain) }
+      } catch { /* offline: keep the Japanese name */ }
+    }
+    if (base) dexNames.set(dex, base)
+  }
+  if (!base) return null
+  const ja: string = d.name ?? ''
+  const mega = /^メガ/.test(ja) ? 'Mega ' : ''
+  const suffix = d.suffix ? ` ${String(d.suffix).toLowerCase() === 'ex' ? 'ex' : d.suffix}` : ''
+  return `${mega}${base}${suffix}`
+}
+
 export async function getCard(id: string, opts: { refresh?: boolean; quick?: boolean } = {}): Promise<CardRecord> {
   const cached = await db.cards.get(id)
   // records cached before finishes were stored have no `variants` key: fetch them again
@@ -164,9 +193,11 @@ export async function getCard(id: string, opts: { refresh?: boolean; quick?: boo
     logEvent('net', `card ${id}`, performance.now() - t0)
     const p = parsePrices(d)
     const ja = isJa(id)
+    const en = ja ? await englishName(d) : null
     const rec: CardRecord = {
       id,
-      name: d.name,
+      name: en ?? d.name,
+      ...(ja && en ? { nameJa: d.name } : {}),
       localId: d.localId,
       setId: (ja ? 'ja:' : '') + (d.set?.id ?? apiId(id).slice(0, apiId(id).lastIndexOf('-'))),
       ...(ja ? { lang: 'ja' as const } : {}),

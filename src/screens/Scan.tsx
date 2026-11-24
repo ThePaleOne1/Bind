@@ -595,7 +595,7 @@ export default function Scan() {
       const f = finishByRec.current.get(c.rec)
       return { i: c.i, at: new Date(c.at).toISOString(), card: c.card, outcome: c.outcome, foil: c.foil, sharp: c.sharp, finish: f?.finish, answered: f?.answered, options: f?.options }
     })
-    return { id, text: { ...text, crops: cropMeta }, images: { frame, cardCrop, bands }, cropImages: crops.current.map((c) => ({ i: c.i, jpeg: c.jpeg })) }
+    return { id, text: { ...text, crops: cropMeta, cropCount: crops.current.length }, images: { frame, cardCrop, bands }, cropImages: crops.current.map((c) => ({ i: c.i, jpeg: c.jpeg })) }
   }
   const sendReport = async () => {
     try {
@@ -604,7 +604,8 @@ export default function Scan() {
       const ok1 = await sendCompanion({ type: 'report', report: r.text })
       const ok2 = await sendCompanion({ type: 'report-images', report: { id: r.id, ...r.images } })
       let sent = 0
-      for (const c of r.cropImages) { if (await sendCompanion({ type: 'report-crop', report: { id: r.id, i: c.i, jpeg: c.jpeg } })) sent++ }
+      // The live link drops bursts: one crop every 200 ms
+      for (const c of r.cropImages) { if (await sendCompanion({ type: 'report-crop', report: { id: r.id, i: c.i, jpeg: c.jpeg } })) sent++; await new Promise((res) => setTimeout(res, 200)) }
       toast(ok1 ? (ok2 ? `Report sent to Desk (${sent} card crops)` : 'Report sent (images too big for the link)') : 'Could not reach the Desk')
     } catch (e: any) { toast(e?.message ?? 'Report failed') }
   }
@@ -700,6 +701,7 @@ export default function Scan() {
                   {FINISH_LABEL[result.ev.finish ?? 'normal']}{finishesOf(result.card).length > 1 ? ' ⇄' : ''}
                 </button>
                 {rarityTag(result.card.rarity) && <span className="chip chip--outline" style={{ height: 26, fontSize: 'var(--fs-xs)' }}>{rarityTag(result.card.rarity)}</span>}
+                {result.card.lang === 'ja' && <span className="chip chip--unknown" style={{ height: 26, fontSize: 'var(--fs-xs)' }} title={result.card.nameJa ?? ''}>JP</span>}
                 <span className={`scan__tagvalue ${result.ev.highValue ? 'scan__tagvalue--hot' : ''}`}>{fmtAud(result.ev.valueAud)}</span>
               </div>
             </div>

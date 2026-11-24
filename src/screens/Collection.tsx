@@ -76,7 +76,7 @@ export default function Collection() {
   const Tile = ({ x }: { x: { o: OwnedCard; c: CardRecord; v: number | null } }) => (
     <button className="tile" onClick={() => setOpen(x.c.id)}>
       <CardImage src={x.c.image} alt={x.c.name} />
-      <TileTags finish={x.o.finish} rarity={x.c.rarity} />
+      <TileTags finish={x.o.finish} rarity={x.c.rarity} lang={x.c.lang} />
       {x.o.qty > 1 && <span className="tile__qty">×{x.o.qty}</span>}
       {x.v != null && <span className={`tile__price ${x.v >= threshold ? 'tile__price--hot' : ''}`}>{fmtAud(x.v)}</span>}
     </button>

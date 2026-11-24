@@ -88,11 +88,12 @@ export function CardImage({ src, alt, className, style, quality = 'low', eager =
 }
 
 /** Finish and rarity tags in a tile's corner. */
-export function TileTags({ finish, rarity }: { finish?: Finish | null; rarity?: string | null }) {
+export function TileTags({ finish, rarity, lang }: { finish?: Finish | null; rarity?: string | null; lang?: 'ja' | null }) {
   const f = finishTag(finish), r = rarityTag(rarity)
-  if (!f && !r) return null
+  if (!f && !r && !lang) return null
   return (
     <span className="tile__tags">
+      {lang === 'ja' && <span className="tile__tag tile__tag--jp">JP</span>}
       {f && <span className="tile__tag tile__tag--finish">{f}</span>}
       {r && <span className="tile__tag">{r}</span>}
     </span>

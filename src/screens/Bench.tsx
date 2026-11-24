@@ -1,18 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, Play, Send, Share2, Camera, Check, X, Zap, ZapOff } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Play, Send, Share2, Camera, Check, X, Zap, ZapOff, ListChecks, Plus, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { startCamera, type CameraHandle } from '../recognition/camera'
 import type { Roi } from '../recognition/frameAnalyzer'
 import { recognize, type Recognition } from '../recognition/recognizer'
 import { guideRoi, widen, roiToScreen, grabWide, locateCard, thumb } from '../recognition/pipeline'
 import { warmOcr } from '../recognition/ocr'
-import { loadIndex } from '../api/tcgdex'
+import { loadIndex, getCard } from '../api/tcgdex'
 import { BENCH_CARDS, BENCH_ATTEMPTS, type BenchCard } from '../data/bench'
+import { finishesOf, FINISH_LABEL } from '../data/finish'
+import { setCode, type Finish } from '../data/types'
 import { useSettings } from '../store/settings'
 import { sendCompanion, companionConnected } from '../sync/companion'
 import { baseReport, logEvent } from '../utils/perfLog'
 import { BUILD } from '../pwa'
-import { Segmented, toast } from '../components/ui'
+import { Segmented, Sheet, toast } from '../components/ui'
+import { SearchSheet } from './Scan'
 
 /** One read of one card on the bench: everything the recogniser produced, nothing committed. */
 interface Attempt {
@@ -37,9 +40,9 @@ interface CardRun { index: number; card: BenchCard; attempts: Attempt[]; started
 
 /**
  * Scanner test bench. Walks the test deck one card at a time: put the card in, press
- * Scan, and it reads the card BENCH_ATTEMPTS times, recording every read and crop.
- * Nothing is added to the collection. One Send at the end delivers the whole session
- * to the Desk as a report with every crop.
+ * Scan, and it reads the card BENCH_ATTEMPTS times, recording every read and crop,
+ * then moves to the next card. Nothing is added to the collection. One Send at the
+ * end delivers the whole session to the Desk as a report with every crop.
  */
 export default function Bench() {
   const nav = useNavigate()
@@ -59,13 +62,19 @@ export default function Bench() {
   const [runs, setRuns] = useState<CardRun[]>([])
   const crops = useRef<{ card: number; i: number; jpeg: string }[]>([])
   const [sending, setSending] = useState(false)
+  const [sentNote, setSentNote] = useState<string | null>(null)
   const sessionId = useRef(Math.random().toString(36).slice(2, 8))
   // Session conditions, so reads from different rooms and setups can be told apart
   const [lighting, setLighting] = useState<'overhead' | 'daylight' | 'lamp' | 'dim'>('overhead')
   const [rig, setRig] = useState<'jig' | 'handheld'>('jig')
   const [note, setNote] = useState('')
   const [endNote, setEndNote] = useState('')   // anything noticed while scanning, written before sending
-  const { preview4k, cameraId } = useSettings()
+  const { preview4k, cameraId, benchCards, set: setSettings } = useSettings()
+  const deck: BenchCard[] = benchCards ?? BENCH_CARDS
+  // Deck editor
+  const [editing, setEditing] = useState(false)
+  const [adding, setAdding] = useState(false)
+  const [pending, setPending] = useState<{ id: string; name: string; number: string; options: Finish[]; finish: Finish } | null>(null)
 
   const layout = () => {
     const v = videoRef.current
@@ -104,13 +113,13 @@ export default function Bench() {
     setStarting(false); setFocused(true)
   }
 
-  const card = BENCH_CARDS[idx]
+  const card = deck[Math.min(idx, deck.length - 1)]
   const current = runs.find((r) => r.index === idx)
 
-  /** Read the card in the jig BENCH_ATTEMPTS times and record everything. */
+  /** Read the card in the jig BENCH_ATTEMPTS times and record everything, then move on. */
   const scan = async () => {
     const v = videoRef.current
-    if (!v || !v.videoWidth || busy) return
+    if (!v || !v.videoWidth || busy || !card) return
     setBusy(true); setProgress(0)
     const attempts: Attempt[] = []
     const run: CardRun = { index: idx, card, attempts, startedAt: Date.now() }
@@ -126,7 +135,7 @@ export default function Bench() {
         if (loc.moved) { track.current = loc.roi; layout() }
         const rec = await recognize(loc.canvas, { ja })
         const cropIndex = crops.current.length
-        crops.current.push({ card: idx, i, jpeg: thumb(loc.canvas, 560, 0.55) })
+        crops.current.push({ card: idx, i, jpeg: thumb(loc.canvas, 480, 0.5) })
         const best = rec.alternatives[0] ?? null
         const a: Attempt = {
           i, ms: performance.now() - t0, still: grab.still, found: loc.found,
@@ -144,6 +153,8 @@ export default function Bench() {
         logEvent('bench', `${card.name} #${i + 1} ${a.hit ? 'hit' : a.best ? 'miss ' + a.best.id : 'nothing'} ${Math.round(a.ms)}ms`)
         await new Promise((r) => setTimeout(r, 350))
       }
+      // On to the next card: all that is left to do is swap the card and press Scan again
+      if (idx < deck.length - 1) setIdx(idx + 1)
     } catch (e: any) {
       toast(e?.message ?? 'Bench read failed')
     } finally {
@@ -156,10 +167,12 @@ export default function Bench() {
     camera: camLabel, settings: { preview4k },
     conditions: { lighting, rig, note, endNote },
     attemptsPerCard: BENCH_ATTEMPTS,
-    cards: runs.sort((a, b) => a.index - b.index).map((r) => ({
+    deck: deck.map((c) => ({ name: c.name, number: c.number, expected: c.expected, finish: c.finish })),
+    cards: [...runs].sort((a, b) => a.index - b.index).map((r) => ({
       index: r.index, name: r.card.name, number: r.card.number, expected: r.card.expected, finish: r.card.finish, note: r.card.note,
       attempts: r.attempts,
     })),
+    cropCount: crops.current.length,
   })
 
   const send = async () => {
@@ -178,10 +191,39 @@ export default function Bench() {
       }
       const ok = await sendCompanion({ type: 'report', report: text })
       let sent = 0
-      for (const c of images) { if (await sendCompanion({ type: 'report-crop', report: { id: sessionId.current, i: sent, card: c.card, attempt: c.i, jpeg: c.jpeg } })) sent++ }
-      toast(ok ? `Sent to Desk: ${runs.length} cards, ${sent} crops` : 'Could not reach the Desk')
+      // The live link drops bursts: one crop every 200 ms, with progress on screen
+      for (let k = 0; k < images.length; k++) {
+        const c = images[k]
+        if (await sendCompanion({ type: 'report-crop', report: { id: sessionId.current, i: k, card: c.card, attempt: c.i, jpeg: c.jpeg } })) sent++
+        setSentNote(`Sending crops ${k + 1}/${images.length}`)
+        await new Promise((r) => setTimeout(r, 200))
+      }
+      setSentNote(null)
+      toast(ok ? `Sent to Desk: ${runs.length} cards, ${sent}/${images.length} crops` : 'Could not reach the Desk')
     } finally { setSending(false) }
   }
+
+  // ---- deck editing ----
+  const removeCard = (i: number) => {
+    const next = deck.filter((_, k) => k !== i)
+    setSettings({ benchCards: next })
+    setRuns((l) => l.filter((r) => r.index !== i).map((r) => (r.index > i ? { ...r, index: r.index - 1 } : r)))
+    if (idx >= next.length) setIdx(Math.max(0, next.length - 1))
+  }
+  const pickCard = async (id: string) => {
+    setAdding(false)
+    try {
+      const c = await getCard(id, { quick: true })
+      const options = finishesOf(c)
+      setPending({ id, name: c.name, number: `${c.localId}/${c.setTotal || '?'} · ${setCode(c.setId).toUpperCase()}`, options, finish: options[0] })
+    } catch { toast('Could not load that card') }
+  }
+  const addPending = () => {
+    if (!pending) return
+    setSettings({ benchCards: [...deck, { name: pending.name, number: pending.number, expected: [pending.id], finish: pending.finish }] })
+    setPending(null)
+  }
+  const resetDeck = () => { setSettings({ benchCards: null }); setRuns([]); setIdx(0) }
 
   const toggleTorch = async () => { if (cam.current) setTorch(await cam.current.torch(!torch)) }
   const hits = current ? current.attempts.filter((a) => a.hit).length : 0
@@ -204,21 +246,26 @@ export default function Bench() {
 
       <div className="scan__top">
         <button className="iconbtn iconbtn--ghost" style={{ background: 'rgba(7,20,17,.6)' }} onClick={() => nav(-1)} aria-label="Back"><ChevronLeft /></button>
-        <div className="scan__status">{camError ? 'No camera' : ready === null ? 'Loading' : ready === false ? 'Offline' : `Bench ${done}/${BENCH_CARDS.length}`}</div>
-        <button className="iconbtn iconbtn--ghost" style={{ background: 'rgba(7,20,17,.6)', color: torch ? 'var(--accent)' : undefined }} onClick={toggleTorch} aria-label="Torch" disabled={!cam.current?.hasTorch}>{torch ? <Zap /> : <ZapOff />}</button>
+        <div className="scan__status">{camError ? 'No camera' : ready === null ? 'Loading' : ready === false ? 'Offline' : `Bench ${done}/${deck.length}`}</div>
+        <div className="row" style={{ gap: 8 }}>
+          <button className="iconbtn iconbtn--ghost" style={{ background: 'rgba(7,20,17,.6)' }} onClick={() => setEditing(true)} aria-label="Edit the test deck"><ListChecks /></button>
+          <button className="iconbtn iconbtn--ghost" style={{ background: 'rgba(7,20,17,.6)', color: torch ? 'var(--accent)' : undefined }} onClick={toggleTorch} aria-label="Torch" disabled={!cam.current?.hasTorch}>{torch ? <Zap /> : <ZapOff />}</button>
+        </div>
       </div>
 
       {/* Which card to put in, and how the last reads went */}
       <div className="bench__card">
-        <div className="row row--between">
-          <button className="iconbtn iconbtn--ghost" onClick={() => setIdx((i) => Math.max(0, i - 1))} disabled={busy || idx === 0} aria-label="Previous card"><ChevronLeft /></button>
-          <div style={{ textAlign: 'center', minWidth: 0 }}>
-            <div className="muted" style={{ fontSize: 'var(--fs-xs)', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Card {idx + 1} of {BENCH_CARDS.length} · {card.finish === 'normal' ? 'standard' : card.finish === 'reverse' ? 'reverse holo' : card.finish}</div>
-            <div className="scan__tagname" style={{ fontSize: 'var(--fs-xl)' }}>{card.name}</div>
-            <div className="scan__tagsub">{card.number}{card.note ? ` · ${card.note}` : ''}</div>
+        {card ? (
+          <div className="row row--between">
+            <button className="iconbtn iconbtn--ghost" onClick={() => setIdx((i) => Math.max(0, i - 1))} disabled={busy || idx === 0} aria-label="Previous card"><ChevronLeft /></button>
+            <div style={{ textAlign: 'center', minWidth: 0 }}>
+              <div className="muted" style={{ fontSize: 'var(--fs-xs)', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Card {idx + 1} of {deck.length} · {card.finish === 'normal' ? 'standard' : card.finish === 'reverse' ? 'reverse holo' : card.finish}</div>
+              <div className="scan__tagname" style={{ fontSize: 'var(--fs-xl)' }}>{card.name}</div>
+              <div className="scan__tagsub">{card.number}{card.note ? ` · ${card.note}` : ''}</div>
+            </div>
+            <button className="iconbtn iconbtn--ghost" onClick={() => setIdx((i) => Math.min(deck.length - 1, i + 1))} disabled={busy || idx === deck.length - 1} aria-label="Next card"><ChevronRight /></button>
           </div>
-          <button className="iconbtn iconbtn--ghost" onClick={() => setIdx((i) => Math.min(BENCH_CARDS.length - 1, i + 1))} disabled={busy || idx === BENCH_CARDS.length - 1} aria-label="Next card"><ChevronRight /></button>
-        </div>
+        ) : <div className="empty">The deck is empty</div>}
         {!focused && (
           <div className="stack" style={{ gap: 8 }}>
             <Segmented value={lighting} onChange={setLighting} options={[{ value: 'overhead', label: 'Overhead' }, { value: 'daylight', label: 'Daylight' }, { value: 'lamp', label: 'Lamp' }, { value: 'dim', label: 'Dim' }]} />
@@ -233,22 +280,58 @@ export default function Bench() {
                 {a.hit ? <Check size={12} strokeWidth={3} /> : <X size={12} strokeWidth={3} />} {a.best ? a.best.name.slice(0, 12) : 'nothing'} · {(a.ms / 1000).toFixed(1)}s{a.foil ? ` · ${a.foil.ratio.toFixed(2)}` : ''}
               </span>
             ))}
-            {!busy && <span className="muted" style={{ fontSize: 'var(--fs-xs)', fontWeight: 700 }}>{hits}/{current.attempts.length} right{current.attempts.length === BENCH_ATTEMPTS && idx < BENCH_CARDS.length - 1 ? ' · put the next card in' : ''}</span>}
+            {!busy && <span className="muted" style={{ fontSize: 'var(--fs-xs)', fontWeight: 700 }}>{hits}/{current.attempts.length} right</span>}
           </div>
         )}
         {focused && done > 0 && !busy && (
           <input className="input" placeholder="Anything you noticed while scanning (sent with the report)" value={endNote} onChange={(e) => setEndNote(e.target.value)} />
         )}
+        {sentNote && <div className="muted" style={{ fontSize: 'var(--fs-xs)', textAlign: 'center' }}>{sentNote}</div>}
       </div>
 
       <div className="scan__bottom" style={{ justifyContent: 'center', gap: 10 }}>
         {!focused ? (
           <button className="scan__go" onClick={start} disabled={starting || !!camError || ready === null} aria-label="Start"><Play size={18} strokeWidth={3} /><span>{starting ? 'Focus' : 'Start'}</span></button>
         ) : (
-          <button className="scan__go" onClick={scan} disabled={busy || !!camError} aria-label="Scan this card"><Camera size={18} strokeWidth={3} /><span>{busy ? `Reading ${progress}/${BENCH_ATTEMPTS}` : `Scan ×${BENCH_ATTEMPTS}`}</span></button>
+          <button className="scan__go" onClick={scan} disabled={busy || !!camError || !card} aria-label="Scan this card"><Camera size={18} strokeWidth={3} /><span>{busy ? `Reading ${progress}/${BENCH_ATTEMPTS}` : `Scan ×${BENCH_ATTEMPTS}`}</span></button>
         )}
         <button className="btn btn--sm" style={{ background: 'rgba(7,20,17,.8)', color: 'var(--text)' }} onClick={send} disabled={sending || done === 0}>{companionConnected() ? <Send size={14} /> : <Share2 size={14} />} {sending ? 'Sending' : 'Send to Desk'}</button>
       </div>
+
+      {/* Deck editor */}
+      <Sheet open={editing} onClose={() => setEditing(false)}>
+        <div className="stack">
+          <div className="row row--between">
+            <span className="title title--sm">Test deck</span>
+            <div className="row" style={{ gap: 6 }}>
+              {benchCards && <button className="btn btn--sm btn--ghost" onClick={resetDeck}>Reset</button>}
+              <button className="btn btn--sm btn--accent" onClick={() => { setEditing(false); setAdding(true) }}><Plus size={14} /> Add card</button>
+            </div>
+          </div>
+          <div className="stack" style={{ gap: 6 }}>
+            {deck.map((c, i) => (
+              <div key={`${c.expected[0]}-${i}`} className="row row--between card-panel" style={{ padding: '8px 10px' }}>
+                <div style={{ minWidth: 0 }}>
+                  <div className="list__title">{i + 1}. {c.name}</div>
+                  <div className="list__sub">{c.number} · {c.finish === 'normal' ? 'standard' : c.finish === 'reverse' ? 'reverse holo' : c.finish}{c.note ? ` · ${c.note}` : ''}</div>
+                </div>
+                <button className="iconbtn iconbtn--ghost" onClick={() => removeCard(i)} aria-label={`Remove ${c.name}`}><Trash2 size={18} /></button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Sheet>
+      <SearchSheet open={adding} onClose={() => setAdding(false)} onPick={(id) => void pickCard(id)} />
+      <Sheet open={!!pending} onClose={() => setPending(null)}>
+        {pending && (
+          <div className="stack">
+            <span className="title title--sm">Which finish is your copy?</span>
+            <div><div className="list__title">{pending.name}</div><div className="list__sub">{pending.number}</div></div>
+            <Segmented value={pending.finish} onChange={(f) => setPending({ ...pending, finish: f })} options={pending.options.map((f) => ({ value: f, label: FINISH_LABEL[f] }))} />
+            <button className="btn btn--accent btn--block" onClick={addPending}><Plus size={18} /> Add to the deck</button>
+          </div>
+        )}
+      </Sheet>
     </div>
   )
 }

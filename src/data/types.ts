@@ -37,6 +37,8 @@ export interface CardRecord {
   rarity?: string | null
   category?: string | null
   lang?: 'ja'
+  /** The printed (Japanese) name when `name` has been rendered in English from the Pokédex number. */
+  nameJa?: string | null
   /** Finishes this card was printed in, from the card database. */
   variants?: { normal: boolean; reverse: boolean; holo: boolean; firstEdition: boolean } | null
   /** Market price per finish, where the database prices them separately. */

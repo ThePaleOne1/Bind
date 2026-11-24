@@ -30,7 +30,7 @@ export default function Companion() {
   // Diagnostic reports from the phone: text and images arrive as two messages; saved
   // to Downloads as one JSON file a moment after the text lands.
   const reportsRef = useRef(new Map<string, { text?: any; images?: any; crops?: Record<number, any>; saved?: boolean; timer?: ReturnType<typeof setTimeout> }>())
-  const [reports, setReports] = useState<{ id: string; at: number; minutes?: number; fps?: string }[]>([])
+  const [reports, setReports] = useState<{ id: string; at: number; minutes?: number; fps?: string; crops?: string }[]>([])
   const saveReport = (id: string) => {
     const p = reportsRef.current.get(id)
     if (!p?.text) return
@@ -52,12 +52,17 @@ export default function Companion() {
       const fps = Array.isArray(r?.samples) && r.samples.length ? `${Math.min(...r.samples.map((s: any) => s.fps))}–${Math.max(...r.samples.map((s: any) => s.fps))} fps` : undefined
       setReports((l) => [{ id, at: m.at, minutes: r?.sessionMinutes, fps }, ...l.filter((x) => x.id !== id)].slice(0, 10))
       if (p.timer) clearTimeout(p.timer)
-      p.timer = setTimeout(() => saveReport(id), 2500)
+      // crops follow one every 200 ms: wait for them (or 6 s of silence) before saving
+      p.timer = setTimeout(() => saveReport(id), r?.cropCount ? 6000 : 2500)
     } else if (m.type === 'report-crop') {
       p.crops = p.crops ?? {}
-      p.crops[r.i] = { i: r.i, jpeg: r.jpeg }
+      p.crops[r.i] = { i: r.i, jpeg: r.jpeg, card: r.card, attempt: r.attempt }
+      const have = Object.keys(p.crops).length, want = p.text?.cropCount
+      setReports((l) => l.map((x) => (x.id === id ? { ...x, crops: `${have}${want ? `/${want}` : ''} crops` } : x)))
       if (p.timer) clearTimeout(p.timer)
-      p.timer = setTimeout(() => saveReport(id), 2500)   // save once the crops stop arriving
+      // save when every announced crop is in, or when they stop arriving
+      if (want && have >= want) saveReport(id)
+      else p.timer = setTimeout(() => saveReport(id), 6000)
     } else {
       p.images = r
       if (p.saved) saveReport(id)
@@ -126,7 +131,7 @@ export default function Companion() {
           <b>Phone reports</b>
           {reports.map((r) => (
             <div key={r.id} className="row row--between">
-              <span className="setting__sub">{new Date(r.at).toLocaleTimeString()} · {r.minutes != null ? `${r.minutes} min session` : 'report'}{r.fps ? ` · ${r.fps}` : ''} · <span className="mono">bind-report-{r.id}.json</span></span>
+              <span className="setting__sub">{new Date(r.at).toLocaleTimeString()} · {r.minutes != null ? `${r.minutes} min session` : 'report'}{r.fps ? ` · ${r.fps}` : ''}{r.crops ? ` · ${r.crops}` : ''} · <span className="mono">bind-report-{r.id}.json</span></span>
               <button className="btn btn--sm btn--ghost" onClick={() => saveReport(r.id)}>Download</button>
             </div>
           ))}

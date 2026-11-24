@@ -190,7 +190,7 @@ export function matchCards(
         // The name is Japanese and unreadable; the printed set code decides instead. Without
         // it the English card with the same number keeps winning, as it should.
         // "Expect Japanese" mode: a Japanese print needs no code to be in the running.
-        s += codeHit(parsed.setCodes, codeOf(e.set)) ? 0.3 : opts.ja ? 0.1 : -0.35
+        s += codeHit(parsed.setCodes, codeOf(e.set)) ? 0.3 : opts.ja && !read.weak && read.total != null ? 0.1 : -0.35
       } else if (variants.length) {
         const sim = bestSim(variants, e.name)
         // A clearly different name is evidence against, but only when enough of it was read.
@@ -203,7 +203,11 @@ export function matchCards(
 
   if (parsed.number) {
     scored = scoreNumber({ number: parsed.number, total: parsed.total })
-    if (parsed.numberWeak && scored.length && scored[0].score < 0.92) scored = []
+    // A guessed split ("079191" with the slash lost) is only trusted with the name agreeing,
+    // unless both halves came out zero-padded to three digits and the set size is exact:
+    // that is the printed form and hard to hit by chance.
+    const padded = parsed.numberWeak && parsed.total != null && /^\d{6}$/.test(parsed.number.padStart(3, '0') + String(parsed.total).padStart(3, '0')) && index.entries.some((e) => e.n === parsed.number && e.total === parsed.total)
+    if (parsed.numberWeak && scored.length && scored[0].score < (padded ? 0.78 : 0.92)) scored = []
   }
   // The first reading found no card with that number and total: try the other readings.
   // A reading with a real slash needs number + total to match a card outright; a guessed
