@@ -87,7 +87,7 @@ export const MIN_CONTRAST = 0.06
 
 const EMPTY: Omit<Recognition, 'ms' | 'sharpness'> = {
   card: null, confidence: 0, alternatives: [],
-  parsed: { number: null, total: null, numberWeak: false, numberAlts: [], nameGuess: '', illustratorGuess: null, setCodes: [] },
+  parsed: { number: null, total: null, numberWeak: false, numberPadded: false, numberAlts: [], nameGuess: '', illustratorGuess: null, setCodes: [] },
   ocr: { top: '', bottom: '', corner: '' },
 }
 
@@ -167,7 +167,10 @@ export async function tieBreak(ocr: { corner: string; bottom: string }, close: C
     return { c: t.c, num: t.num, ill, s: 0.65 * t.num + 0.35 * ill }
   }).sort((a, b) => b.s - a.s)
   const [t, u] = ranked
-  const pick = t && t.s >= 0.45 && (!u || t.s - u.s >= 0.1) ? t : null
+  // Commit only on a number that really fits the digits read (a loose fit to junk picked
+  // Poké Ball 079 over 080 and a promo Mimikyu over the set print), or on the illustrator.
+  const sure = t && (t.num >= 0.85 || (t.ill >= 0.5 && t.num >= 0.5))
+  const pick = t && sure && t.s >= 0.45 && (!u || t.s - u.s >= 0.1) ? t : null
   return { ranked, pick }
 }
 

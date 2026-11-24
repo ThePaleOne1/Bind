@@ -8,13 +8,21 @@ export interface OcrText {
   corner?: string  // tight bottom-left crop, number only (read at higher scale)
 }
 
-export interface NumberRead { number: string; total: number | null; weak?: boolean }
+export interface NumberRead {
+  number: string
+  total: number | null
+  weak?: boolean
+  /** Both halves came out as three digits ("079191", "034088"): the printed form, hard to hit by chance. */
+  padded?: boolean
+}
 
 export interface Parsed {
   number: string | null
   total: number | null
   /** The main reading was a guessed split of a digit run with no slash. */
   numberWeak: boolean
+  /** ...but both halves were three digits, as printed. */
+  numberPadded: boolean
   /** Other ways the digits could be read (slash dropped, second band); tried when the first finds nothing. */
   numberAlts: NumberRead[]
   nameGuess: string
@@ -43,17 +51,19 @@ const fixDigits = (s: string) =>
 function findNumbers(text: string): NumberRead[] {
   const s = fixDigits(text)
   const out: NumberRead[] = []
-  const push = (number: string, total: number | null, weak = false) => {
+  const push = (number: string, total: number | null, weak = false, padded = false) => {
     if (total != null && (total < 10 || total > 999)) return
-    if (!out.some((o) => o.number === number && o.total === total)) out.push(weak ? { number, total, weak } : { number, total })
+    if (!out.some((o) => o.number === number && o.total === total)) out.push({ number, total, ...(weak ? { weak } : {}), ...(padded ? { padded } : {}) })
   }
   // Lettered numbering first (TG01/TG30, GG12/GG70, RC5/RC32, SV001/SV122), then plain 025/198.
   // Lettered numbering carries the letters on both sides (TG12/TG30); "SV 025/198" is the
   // set code sitting next to a plain number and must not be read as SV25.
   const lettered = s.match(/(?<![A-Za-z])((?:TG|GG|RC|SV|SH|SL|SWSH|SM|XY|BW|DP|HGSS)\s?\d{1,3})\s*[\/|]\s*[A-Z]{1,4}\s?(\d{1,3})/i)
   if (lettered) push(normNumber(lettered[1]), parseInt(lettered[2], 10))
-  // Plain: a stray digit glued on after the total ("230/2365") is tolerated.
-  for (const m of s.matchAll(/(?<!\d)(\d{1,3})\s*[\/|]\s*(\d{1,3})/g)) push(normNumber(m[1]), parseInt(m[2], 10))
+  // Plain. The total must end there: "191/ 2024" is the copyright year, not 191/202.
+  for (const m of s.matchAll(/(?<!\d)(\d{1,3})\s*[\/|]\s*(\d{1,3})(?!\d)/g)) push(normNumber(m[1]), parseInt(m[2], 10))
+  // A stray digit glued on before the number ("1053/191": the rarity mark read as 1).
+  for (const m of s.matchAll(/(?<!\d)\d(\d{3})\s*[\/|]\s*(\d{3})(?!\d)/g)) push(normNumber(m[1]), parseInt(m[2], 10), true, true)
   // Slash lost by the OCR ("04189", "0 04189", "4 189"): split a digit run as n/total both ways.
   for (const m of s.matchAll(/(?<![A-Za-z\d])(\d[\d ]{2,10}\d)(?![A-Za-z\d])/g)) {
     const tokens = m[1].split(' ').filter(Boolean)
@@ -64,7 +74,7 @@ function findNumbers(text: string): NumberRead[] {
       for (const cut of [3, 2]) {
         const total = parseInt(run.slice(-cut), 10), n = run.slice(0, -cut)
         if (n.length < 1 || n.length > 3) continue
-        if (parseInt(n, 10) <= total * 1.5) push(normNumber(n), total, true)
+        if (parseInt(n, 10) <= total * 1.5) push(normNumber(n), total, true, cut === 3 && n.length === 3)
       }
     }
   }
@@ -72,7 +82,7 @@ function findNumbers(text: string): NumberRead[] {
   // code's letters. Only the 3+1+3 split makes sense.
   for (const m of s.matchAll(/(?<!\d)(\d{3})[714](\d{3})\d?(?!\d)/g)) {
     const total = parseInt(m[2], 10)
-    if (parseInt(m[1], 10) <= total * 1.5 && !/^(?:19|20)\d\d$/.test(m[2])) push(normNumber(m[1]), total, true)
+    if (parseInt(m[1], 10) <= total * 1.5 && !/^(?:19|20)\d\d$/.test(m[2])) push(normNumber(m[1]), total, true, true)
   }
   // No set size printed (basic energies: "MEE EN 003", "SVE 003"): three digits right after
   // a set code. A guess, since any three digits beside capitals would fit.
@@ -89,6 +99,7 @@ export function parseOcr(t: OcrText): Parsed {
   const number = reads[0]?.number ?? null
   const total = reads[0]?.total ?? null
   const numberWeak = !!reads[0]?.weak
+  const numberPadded = !!reads[0]?.padded
   const numberAlts = reads.slice(1, 8)
 
   // Illustrator credit: "Illus. Name" or "Illustrator: Name"
@@ -108,11 +119,13 @@ export function parseOcr(t: OcrText): Parsed {
     .filter((w) => w && !STOP.has(w) && !/^\d+$/.test(w) && !/^(hp\d*|\d+hp|lv\d*)$/.test(w) && w.length > 1)
   const joined = words.slice(0, 14).join(' ') // several frames may be pooled: keep enough for the name to survive junk
   const nameGuess = joined.length >= 3 ? joined : '' // one or two letters is noise, not a name
+  // Code-shaped tokens, plus a three-letter code with the language marker glued on
+  // ("SVE EN 009" comes back as "SVEN 009"); codeHit knows to peel the marker off.
   const setCodes = Array.from(new Set(
     `${t.corner ?? ''} ${t.bottom}`.toUpperCase().replace(/-/g, '').split(/[^A-Z0-9+]+/)
-      .filter((w) => /^[A-Z]{1,4}\d{1,2}[A-Z]?$|^[A-Z]{1,2}\d?[A-Z]$/.test(w) && w.length >= 2 && w.length <= 6),
+      .filter((w) => (/^[A-Z]{1,4}\d{1,2}[A-Z]?$|^[A-Z]{1,2}\d?[A-Z]$|^[A-Z]{3}E?E?N$/.test(w)) && w.length >= 2 && w.length <= 6),
   ))
-  return { number, total, numberWeak, numberAlts, nameGuess, illustratorGuess, setCodes }
+  return { number, total, numberWeak, numberPadded, numberAlts, nameGuess, illustratorGuess, setCodes }
 }
 
 /** Set id as the OCR would see the printed code: "ja:M2a" → "M2A". */
@@ -124,7 +137,11 @@ export const printedCodeOf = (set: string, sets?: Record<string, SetInfo>) => co
 /** A read token stands for the code when equal, or one character off on a code of four or more. */
 export function codeHit(tokens: string[], code: string): boolean {
   if (tokens.includes(code)) return true
-  if (code.length < 4) return false
+  // The language marker glued on: "SVE EN" read as "SVEN" or "SVEEN", "MEE EN" as "MEEN".
+  if (tokens.some((t) => t.length > code.length && t.startsWith(code) && /^E?E?N$/.test(t.slice(code.length)))) return true
+  // One character off is allowed only on the longer codes with a digit in them (SV8A, S12A):
+  // an all-letter code has look-alikes a letter apart ("SVEN" for SVE EN is not SVLN).
+  if (code.length < 4 || !/\d/.test(code)) return false
   return tokens.some((t) => t.length === code.length && t.slice(0, 2) === code.slice(0, 2) && [...t].filter((ch, i) => ch !== code[i]).length <= 1)
 }
 
@@ -180,7 +197,7 @@ export function matchCards(
   let scored: Candidate[] = []
   const variants = nameVariants(parsed.nameGuess)
 
-  const scoreNumber = (read: NumberRead): Candidate[] => {
+  const scoreNumber = (read: NumberRead, opts2: { printedForm?: boolean } = {}): Candidate[] => {
     const out: Candidate[] = []
     for (const e of entries) {
       if (e.n !== read.number) continue
@@ -203,8 +220,10 @@ export function matchCards(
         if (codeHit(parsed.setCodes, printedCodeOf(e.set, index.sets))) s += 0.2
         if (variants.length) {
           const sim = bestSim(variants, e.name)
-          // A clearly different name is evidence against, but only when enough of it was read.
-          s += 0.3 * sim - (sim < 0.2 && parsed.nameGuess.length >= 4 ? 0.25 : 0)
+          // A clearly different name is evidence against, but only when enough of it was read,
+          // and not against the printed form of the number ("034/088" read whole): the name
+          // band on a foil card is often junk while the number is right.
+          s += 0.3 * sim - (sim < 0.2 && parsed.nameGuess.length >= 4 && !opts2.printedForm ? 0.25 : 0)
         }
       }
       out.push({ entry: e, score: s })
@@ -213,11 +232,14 @@ export function matchCards(
   }
 
   if (parsed.number) {
-    scored = scoreNumber({ number: parsed.number, total: parsed.total })
     // A guessed split ("079191" with the slash lost) is only trusted with the name agreeing,
     // unless both halves came out zero-padded to three digits and the set size is exact:
     // that is the printed form and hard to hit by chance.
-    const padded = parsed.numberWeak && parsed.total != null && /^\d{6}$/.test(parsed.number.padStart(3, '0') + String(parsed.total).padStart(3, '0')) && index.entries.some((e) => e.n === parsed.number && e.total === parsed.total)
+    const padded = parsed.numberWeak && parsed.numberPadded && parsed.total != null && index.entries.some((e) => e.n === parsed.number && e.total === parsed.total)
+    // The printed form outranks a junk name, not a clearly read one: "mesprit" beside
+    // "070/191" still says this is not card 070.
+    const nameReadable = padded && variants.length > 0 && entries.some((e) => e.total === parsed.total && bestSim(variants, e.name) >= 0.5)
+    scored = scoreNumber({ number: parsed.number, total: parsed.total }, { printedForm: padded && !nameReadable })
     // Three digits with no set size are only read right after a set code (energies: "MEE 003");
     // when that code is the best candidate's own, the read is the printed form too.
     const coded = parsed.numberWeak && parsed.total == null && scored.length > 0 && codeHit(parsed.setCodes, printedCodeOf(scored[0].entry.set, index.sets))
@@ -289,10 +311,11 @@ const confusable = (a: string, b: string) => a === b ? 0 : (CONFUSABLE[a]?.inclu
 /** All digit runs in a piece of OCR (spaces inside a run removed), longest first. */
 export function digitRuns(text: string): string[] {
   const runs = new Set<string>()
+  const year = (r: string) => /^0?(?:19|20)\d\d$/.test(r) // the copyright line, not a number
   for (const m of text.matchAll(/\d[\d /|]*\d/g)) {
     const r = m[0].replace(/[^\d]/g, '')
-    if (r.length >= 4) runs.add(r)
-    for (const part of m[0].split(/[ /|]+/)) if (part.length >= 4) runs.add(part)
+    if (r.length >= 4 && !year(r)) runs.add(r)
+    for (const part of m[0].split(/[ /|]+/)) if (part.length >= 4 && !year(part)) runs.add(part)
   }
   return [...runs].sort((a, b) => b.length - a.length)
 }

@@ -73,7 +73,7 @@ export default function Companion() {
 
   useEffect(() => {
     return onCompanion(async (m) => {
-      if (m.type === 'report' || m.type === 'report-images') { handleReport(m); return }
+      if (m.type === 'report' || m.type === 'report-images' || m.type === 'report-crop') { handleReport(m); return }
       if (m.type !== 'scan' || !m.scan) return
       const ev = m.scan
       setLive((l) => [ev, ...l].slice(0, 60))
