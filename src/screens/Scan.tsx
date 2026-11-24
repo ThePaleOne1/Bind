@@ -25,6 +25,7 @@ import { samplePerf, logEvent, logScan, baseReport } from '../utils/perfLog'
 import { BUILD } from '../pwa'
 import { Particles, PALETTES } from '../components/Particles'
 import { CardImage, prefetchCardImage, Sheet, Segmented, TileTags, STATUS_WORD, toast } from '../components/ui'
+import { jaSetEn } from '../data/jaSets'
 import { CardDetailSheet } from '../components/CardDetail'
 
 type Result = { ev: ScanEvent; card: CardRecord; rec: Recognition }
@@ -951,18 +952,23 @@ export function SearchSheet({ open, onClose, onPick }: { open: boolean; onClose:
 /** Search result; a Japanese print swaps in its English name once the card record is at hand. */
 function ResultTile({ entry, fallback, onPick }: { entry: IndexEntry; fallback?: string; onPick: () => void }) {
   const [name, setName] = useState(fallback && entry.lang === 'ja' ? fallback : entry.name)
+  // Most Japanese prints have no art in the catalogue: the set is then the only way to tell
+  // prints apart, so its name goes under the tile (the English-era name for the old sets).
+  const [setLabel, setSetLabel] = useState<string | null>(entry.lang === 'ja' ? jaSetEn(entry.set) : null)
   useEffect(() => {
     if (entry.lang !== 'ja') return
     let alive = true
     getCard(entry.id, { quick: true }).then((c) => { if (alive && c.name) setName(c.name) }).catch(() => {})
+    if (!jaSetEn(entry.set)) setNameOf(entry.set).then((n) => { if (alive) setSetLabel(n) })
     return () => { alive = false }
-  }, [entry.id, entry.lang])
+  }, [entry.id, entry.lang, entry.set])
   return (
     <button className="tile" onClick={onPick}>
-      <CardImage src={entry.img} alt={name} />
+      <CardImage src={entry.img} alt={entry.img ? name : 'No art in the catalogue'} />
       <TileTags lang={entry.lang ?? null} />
       <div className="list__title" style={{ fontSize: 'var(--fs-sm)', marginTop: 6 }}>{name}</div>
       <div className="list__sub">{printedCode(entry.set).toUpperCase()} · {entry.n}/{entry.total}</div>
+      {setLabel && <div className="list__sub" style={{ whiteSpace: 'normal', lineHeight: 1.25 }}>{setLabel}</div>}
     </button>
   )
 }

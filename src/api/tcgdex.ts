@@ -7,7 +7,7 @@ const API_JA = 'https://api.tcgdex.net/v2/ja'
 const INDEX_TTL = 7 * 86_400_000
 const PRICE_TTL = 86_400_000
 const INDEX_KEY = 'cardIndex:v3' // bump when the index shape or filters change (v3: Japanese catalogue)
-const CARD_SCHEMA = 2            // bump when a cached card record's derived fields change meaning
+const CARD_SCHEMA = 3            // bump when a cached card record's derived fields change meaning (3: Japanese English names were wrong)
 
 /** Japanese prints live in the catalogue under a "ja:" prefix; the API id is the rest. */
 export const isJa = (id: string) => id.startsWith('ja:')
@@ -232,14 +232,16 @@ async function englishName(d: any): Promise<string | null> {
   if (!dex) return null
   let base = dexNames.get(dex)
   if (!base) {
-    const stored = await getMeta<string>(`dexName:${dex}`)
+    // "eq:" is essential: without it the filter is a substring match and No. 21 brings back
+    // No. 213 (Shuckle) ahead of Spearow. (The old "dexName:" cache held those wrong names.)
+    const stored = await getMeta<string>(`dexName2:${dex}`)
     if (stored) base = stored.value
     else {
       try {
-        const r = await fetch(`${API}/cards?dexId=${dex}`)
+        const r = await fetch(`${API}/cards?dexId=eq:${dex}`)
         const list: any[] = r.ok ? await r.json() : []
         const plain = list.map((c) => String(c.name)).find((n) => /^[A-Za-z' .-]+$/.test(n)) ?? list[0]?.name
-        if (plain) { base = plain; await setMeta(`dexName:${dex}`, plain) }
+        if (plain) { base = plain; await setMeta(`dexName2:${dex}`, plain) }
       } catch { /* offline: keep the Japanese name */ }
     }
     if (base) dexNames.set(dex, base)
