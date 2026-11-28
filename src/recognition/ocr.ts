@@ -204,38 +204,71 @@ export async function readPrimary(card: HTMLCanvasElement): Promise<{ top: strin
   // bold digits: "032/191" came back "5357797". A second, tight read of just the number
   // line as a single line of digits is cheap and usually clean.
   const cornerRead = async () => {
-    const r2 = await w2.recognize(band(card, ...REGIONS.corner, 'corner'), {}, OUTPUT)
-    // Digits only over the number line (two lines on some layouts: the illustrator credit
-    // sits just above on Japanese cards, so a block, not a single line).
-    await w2.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_BLOCK, tessedit_char_whitelist: '0123456789/ ' })
+    const cb = band(card, ...REGIONS.corner, 'corner')
+    const r2 = await w2.recognize(cb, {}, { ...OUTPUT, blocks: true })
+    const DIGITS = '0123456789/ '
+    const numRe = /\d{1,3}\s*\/\s*\d{1,3}|\d{6,}/
     let line = '', codes = ''
-    try {
-      // Plain band first; box-line removal second, only when no number came out of the
-      // plain one (on patterned reverse holos the removal can eat the digits themselves).
-      let nb = band(card, ...REGIONS.number, 'number', false)
-      let r3 = await w2.recognize(nb, {}, { ...OUTPUT, blocks: true })
-      if (!/\d{1,3}\s*\/\s*\d{1,3}/.test(r3.data.text)) {
-        nb = band(card, ...REGIONS.number, 'number', true)
-        r3 = await w2.recognize(nb, {}, { ...OUTPUT, blocks: true })
-      }
-      line = clean(r3.data.text)
+    // Digits only over a band; the words' boxes locate the number so the set code can be
+    // read from just left of it.
+    const readDigits = async (fx: number, fy: number, fw: number, fh: number, targetH: number, delines: boolean, single: boolean) => {
+      await w2.setParameters({ tessedit_pageseg_mode: single ? PSM.SINGLE_LINE : PSM.SINGLE_BLOCK, tessedit_char_whitelist: DIGITS })
+      const nb = band(card, fx, fy, fw, fh, targetH, 'number', delines)
+      const r = await w2.recognize(nb, {}, { ...OUTPUT, blocks: true })
+      const words: any[] = ((r.data as any).blocks ?? []).flatMap((b: any) => b.paragraphs.flatMap((pg: any) => pg.lines.flatMap((l: any) => l.words)))
+      return { text: clean(r.data.text), words, nb, region: [fx, fy, fw, fh] as const }
+    }
+    const readCode = async (hit: Awaited<ReturnType<typeof readDigits>>) => {
       // The set code sits on the same line, left of the number ("[G] [sv3a] 038/062",
-      // "[H] [SSP EN] 032/191"). The number's own box from this pass says where the line
-      // is, so the code is read from exactly that strip, boxes erased, at a large scale:
-      // it is what tells a Japanese print from the English card with the same number.
-      const words: any[] = ((r3.data as any).blocks ?? []).flatMap((b: any) => b.paragraphs.flatMap((pg: any) => pg.lines.flatMap((l: any) => l.words)))
-      const num = words.find((w) => /\d{1,3}\/\d{1,3}/.test(w.text))
-      if (num) {
-        const [fx, fy, fw, fh] = REGIONS.number
-        const sx = fx + (num.bbox.x0 / nb.width) * fw
-        const y0 = fy + (num.bbox.y0 / nb.height) * fh, y1 = fy + (num.bbox.y1 / nb.height) * fh
-        const ch = (y1 - y0) * 1.7, cy = Math.max(0, y0 - (ch - (y1 - y0)) / 2)
-        const cw = sx - fx - 0.004
-        if (cw > 0.04) {
-          await w2.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_LINE, tessedit_char_whitelist: CODE_CHARS })
-          codes = clean((await w2.recognize(band(card, fx, cy, cw, ch, 120, 'code', true), {}, OUTPUT)).data.text)
+      // "[H] [SSP EN] 032/191"): read from exactly that strip, boxes erased, at a large
+      // scale. It is what tells a Japanese print from the English card with the same number.
+      const num = hit.words.find((w) => /\d{1,3}\/\d{1,3}/.test(w.text)) ?? hit.words.find((w) => /\d{6,}/.test(w.text))
+      if (!num) return ''
+      const [fx, fy, fw, fh] = hit.region
+      const sx = fx + (num.bbox.x0 / hit.nb.width) * fw
+      const y0 = fy + (num.bbox.y0 / hit.nb.height) * fh, y1 = fy + (num.bbox.y1 / hit.nb.height) * fh
+      const ch = (y1 - y0) * 1.7, cy = Math.max(0, y0 - (ch - (y1 - y0)) / 2)
+      const cw = sx - fx - 0.004
+      if (cw <= 0.04) return ''
+      await w2.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_LINE, tessedit_char_whitelist: CODE_CHARS })
+      return clean((await w2.recognize(band(card, fx, cy, cw, ch, 120, 'code', true), {}, OUTPUT)).data.text)
+    }
+    try {
+      // Where the number line is, the corner block's own line boxes say: cards differ by a
+      // few percent in where it sits (crop margins, layouts), enough to push it out of a
+      // fixed band, and a tight band read as one line of digits is also what the italic
+      // digits on a foil pattern need. The copyright line is not it.
+      const lines: any[] = ((r2.data as any).blocks ?? []).flatMap((b: any) => b.paragraphs.flatMap((pg: any) => pg.lines))
+      const cands = lines
+        .filter((l) => l.bbox && !/(?:19|20)\d\d|P\s*\/\s*N/.test(l.text))
+        .map((l) => ({ l, digits: (l.text.match(/\d/g) ?? []).length, len: l.text.trim().length }))
+        .sort((a, b) => b.digits - a.digits || b.len - a.len)
+      const [cx, cy, cw, ch] = REGIONS.corner
+      let hit: Awaited<ReturnType<typeof readDigits>> | null = null
+      if (cands[0]) {
+        const bb = cands[0].l.bbox
+        const y0 = cy + (bb.y0 / cb.height) * ch, y1 = cy + (bb.y1 / cb.height) * ch
+        const lh = Math.max(0.012, y1 - y0)
+        const fy = Math.max(0, y0 - lh * 0.35), fh = Math.min(1 - fy, lh * 1.7)
+        // Start just left of the first digits: the regulation and set-code boxes before them
+        // ("[H] [SSP EN]") turn a digits-only read into junk when they are in the band.
+        const firstDigits = (cands[0].l.words ?? []).find((w: any) => w.bbox && (w.text.match(/\d/g) ?? []).length >= 2)
+        const fx = firstDigits ? Math.max(cx, cx + (firstDigits.bbox.x0 / cb.width) * cw - 0.025) : cx + cw * 0.18
+        for (const delines of [false, true]) {
+          const t = await readDigits(fx, fy, cx + cw * 0.95 - fx, fh, 100, delines, true)
+          if (numRe.test(t.text)) { hit = t; break }
+          if (!line) line = t.text
         }
       }
+      // The fixed band as before, when the located line gave no number.
+      if (!hit) {
+        for (const delines of [false, true]) {
+          const t = await readDigits(...REGIONS.number, delines, false)
+          if (numRe.test(t.text)) { hit = t; break }
+          if (!line) line = t.text
+        }
+      }
+      if (hit) { line = hit.text; codes = await readCode(hit) }
     } catch (e: any) { logEvent('ocr', `number line failed: ${e?.message ?? e}`); console.warn('number line read failed', e) }
     await w2.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_BLOCK, tessedit_char_whitelist: CORNER_CHARS })
     return `${line} ${codes} ${clean(r2.data.text)}`.trim()
@@ -253,6 +286,19 @@ export async function readBottom(card: HTMLCanvasElement): Promise<string> {
   jobs += 1
   const r = await w1.recognize(band(card, ...REGIONS.bottom, 'bottom'), {}, OUTPUT)
   return clean(r.data.text)
+}
+
+/** Test hooks (desk harness): a preprocessed band of a region, and a digits-only read of a band. */
+export function bandOf(src: HTMLCanvasElement, fx: number, fy: number, fw: number, fh: number, targetH: number, delines = false): HTMLCanvasElement {
+  return band(src, fx, fy, fw, fh, targetH, 'test', delines)
+}
+export async function ocrDigits(c: HTMLCanvasElement, singleLine = true, chars = '0123456789/ '): Promise<{ text: string; words: { text: string; conf: number }[] }> {
+  const [, w2] = await Promise.all(pool())
+  await w2.setParameters({ tessedit_pageseg_mode: singleLine ? PSM.SINGLE_LINE : PSM.SINGLE_BLOCK, tessedit_char_whitelist: chars })
+  const r = await w2.recognize(c, {}, { ...OUTPUT, blocks: true })
+  await w2.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_BLOCK, tessedit_char_whitelist: CORNER_CHARS })
+  const words: any[] = ((r.data as any).blocks ?? []).flatMap((b: any) => b.paragraphs.flatMap((pg: any) => pg.lines.flatMap((l: any) => l.words)))
+  return { text: clean(r.data.text), words: words.map((w) => ({ text: w.text, conf: Math.round(w.confidence) })) }
 }
 
 /** For the debug overlay: the preprocessed bands as data URLs. */

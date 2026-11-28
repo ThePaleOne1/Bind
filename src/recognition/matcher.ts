@@ -65,7 +65,9 @@ function findNumbers(text: string): NumberRead[] {
   // A stray digit glued on before the number ("1053/191": the rarity mark read as 1), or
   // the slash read as a digit and then as itself ("0807/088", "0807/0880" with a stray 0).
   for (const m of s.matchAll(/(?<!\d)\d(\d{3})\s*[\/|]\s*(\d{3})(?!\d)/g)) push(normNumber(m[1]), parseInt(m[2], 10), true, true)
-  for (const m of s.matchAll(/(?<!\d)(\d{3})[714]\s*[\/|]\s*(\d{3})\d?(?!\d)/g)) push(normNumber(m[1]), parseInt(m[2], 10), true, true)
+  for (const m of s.matchAll(/(?<!\d)(\d{3})[741]\s*[\/|]\s*(\d{3})\d?(?!\d)/g)) push(normNumber(m[1]), parseInt(m[2], 10), true, true)
+  // ...or as itself and then as a digit ("32/4191").
+  for (const m of s.matchAll(/(?<!\d)(\d{1,3})\s*[\/|]\s*[741](\d{3})(?!\d)/g)) push(normNumber(m[1]), parseInt(m[2], 10), true, m[1].length === 3)
   // Slash lost by the OCR ("04189", "0 04189", "4 189"): split a digit run as n/total both ways.
   for (const m of s.matchAll(/(?<![A-Za-z\d])(\d[\d ]{2,10}\d)(?![A-Za-z\d])/g)) {
     const tokens = m[1].split(' ').filter(Boolean)
@@ -80,9 +82,9 @@ function findNumbers(text: string): NumberRead[] {
       }
     }
   }
-  // "SPoJ0327191": number, slash read as a digit (7, 1 or 4), total, often glued to the set
-  // code's letters. Only the 3+1+3 split makes sense.
-  for (const m of s.matchAll(/(?<!\d)(\d{3})[714](\d{3})\d{0,2}(?!\d)/g)) {
+  // "SPoJ0327191": number, slash read as a digit (7, 1 or 4, sometimes two of them:
+  // "203277191"), total, often glued to the set code's letters. Only the 3+1+3 split makes sense.
+  for (const m of s.matchAll(/(?<!\d)(\d{3})[741]{1,2}(\d{3})\d{0,2}(?!\d)/g)) {
     const total = parseInt(m[2], 10)
     if (parseInt(m[1], 10) <= total * 1.5 && !/^(?:19|20)\d\d$/.test(m[2])) push(normNumber(m[1]), total, true, true)
   }

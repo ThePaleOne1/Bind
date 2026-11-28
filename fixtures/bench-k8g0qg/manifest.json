@@ -1,0 +1,5117 @@
+[
+ {
+  "card": "Mesprit",
+  "number": "079/191",
+  "expected": [
+   "sv08-079"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "79",
+   "total": 191,
+   "best": "sv08-079",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.4227556467760343,
+   "foil": 0.870407939873439
+  },
+  "ocr": {
+   "top": "fobs “ 2 gr Mesprie > 70D",
+   "bottom": "",
+   "corner": "RR RR ESE UC SRT RNR SW NE PS 5 HYOGONOSUKE K HET 079/191 3"
+  },
+  "file": "00-mesprit-0.jpg",
+  "corner": "00-mesprit-0-corner.jpg"
+ },
+ {
+  "card": "Mesprit",
+  "number": "079/191",
+  "expected": [
+   "sv08-079"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "79",
+   "total": 191,
+   "best": "sv08-079",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.49138225368017,
+   "foil": 0.931177993223547
+  },
+  "ocr": {
+   "top": "gi Mesprit TITTF.L70@ - ase 0 | ;",
+   "bottom": "",
+   "corner": "RA I RARE NY 4 5 HYOGONOSUKE K HET 079/191 I"
+  },
+  "file": "00-mesprit-1.jpg",
+  "corner": "00-mesprit-1-corner.jpg"
+ },
+ {
+  "card": "Mesprit",
+  "number": "079/191",
+  "expected": [
+   "sv08-079"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "70",
+   "total": 191,
+   "best": "sv08-079",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.6002328828376864,
+   "foil": 1.1943415473748442
+  },
+  "ocr": {
+   "top": "gi Mesprit 7. 70@ Ce ———————",
+   "bottom": "akness © x 2 3 resistance 45 -3() ol retreat x PF — S—— - $ ST — E————— amd Js. wosonosue Known as “The Being of Emotion.” It taught En 079/191. 8 ad humans the nobility of sorrow, pain, and jx",
+   "corner": "3  SR CSN TE AA 4 H RE K HET 070/191 M"
+  },
+  "file": "00-mesprit-2.jpg",
+  "corner": "00-mesprit-2-corner.jpg"
+ },
+ {
+  "card": "Mesprit",
+  "number": "079/191",
+  "expected": [
+   "sv08-079"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "79",
+   "total": 191,
+   "best": "sv08-079",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.5696077458147175,
+   "foil": 0.9253741174457936
+  },
+  "ocr": {
+   "top": "go Mesprit TT w/0@ i",
+   "bottom": "",
+   "corner": "3 7  BC NR OO STWNTIONSE YN A I K HET 079/191"
+  },
+  "file": "00-mesprit-3.jpg",
+  "corner": "00-mesprit-3-corner.jpg"
+ },
+ {
+  "card": "Mesprit",
+  "number": "079/191",
+  "expected": [
+   "sv08-079"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "79",
+   "total": 191,
+   "best": "sv08-079",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.6039957493498017,
+   "foil": 1.1908149097448733
+  },
+  "ocr": {
+   "top": "gM esprit L70®@ p EE Ro",
+   "bottom": "",
+   "corner": "EL BY A ORT TENET WN 3 W HYOGONOSUKE KN HET 079/191"
+  },
+  "file": "00-mesprit-4.jpg",
+  "corner": "00-mesprit-4-corner.jpg"
+ },
+ {
+  "card": "Appletun",
+  "number": "140/191",
+  "expected": [
+   "sv08-140"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "140",
+   "total": 191,
+   "best": "sv08-140",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.5909897986054443,
+   "foil": 0.19575684797552637
+  },
+  "ocr": {
+   "top": "| wae Appletun ~ ,90@ FATT YP A —",
+   "bottom": "",
+   "corner": "140/191 iD PEN MM O KATO 4 SW HED 140/191 2024 P / N"
+  },
+  "file": "01-appletun-0.jpg",
+  "corner": "01-appletun-0-corner.jpg"
+ },
+ {
+  "card": "Appletun",
+  "number": "140/191",
+  "expected": [
+   "sv08-140"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "140",
+   "total": 191,
+   "best": "sv08-140",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.9821093553028798,
+   "foil": 0.4581805582111013
+  },
+  "ocr": {
+   "top": "{gm s&s5lc Appletun ~ w906 V7 oa \\ i from-Aopplin - om PE TTT |",
+   "bottom": "",
+   "corner": "0 0 140/191 T P21 YVI I M O KATO LL H ED 140/191 SPE 2024 P / N"
+  },
+  "file": "01-appletun-1.jpg",
+  "corner": "01-appletun-1-corner.jpg"
+ },
+ {
+  "card": "Appletun",
+  "number": "140/191",
+  "expected": [
+   "sv08-140"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "140",
+   "total": 191,
+   "best": "sv08-140",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.9247617277417709,
+   "foil": 0.45452000767991113
+  },
+  "ocr": {
+   "top": "STAGE I’ . ) F255 Appletun AAA",
+   "bottom": "",
+   "corner": "140/191 Id R2X1LNY M O KATO BRE VHED 140/191 S NTH 2024 P / N"
+  },
+  "file": "01-appletun-2.jpg",
+  "corner": "01-appletun-2-corner.jpg"
+ },
+ {
+  "card": "Appletun",
+  "number": "140/191",
+  "expected": [
+   "sv08-140"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "140",
+   "total": 191,
+   "best": "sv08-140",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.913038329712672,
+   "foil": 0.4770471420188327
+  },
+  "ocr": {
+   "top": "{ STAGE] , #5 Appletun ~~ w920S 4 AIR — fromAoolin BA TT |",
+   "bottom": "",
+   "corner": "140/191 I RAN M O KATO BL HED 140/191 SPE 2024 P / N"
+  },
+  "file": "01-appletun-3.jpg",
+  "corner": "01-appletun-3-corner.jpg"
+ },
+ {
+  "card": "Appletun",
+  "number": "140/191",
+  "expected": [
+   "sv08-140"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "140",
+   "total": 191,
+   "best": "sv08-140",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.8628047531106432,
+   "foil": 1.400366617296612
+  },
+  "ocr": {
+   "top": "pale’ Appletun ~ AY 1S",
+   "bottom": "",
+   "corner": "TT LS NITN I FFT INERI INN W H O KATO 3 HED 140/191 SPE S"
+  },
+  "file": "01-appletun-4.jpg",
+  "corner": "01-appletun-4-corner.jpg"
+ },
+ {
+  "card": "Snorlax",
+  "number": "063/088",
+  "expected": [
+   "me03-063"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "63",
+   "total": 88,
+   "best": "me03-063",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.0800426201419013,
+   "foil": 4.031304083435015
+  },
+  "ocr": {
+   "top": "as Snorlax +160 x | wy ———— EE",
+   "bottom": "",
+   "corner": "063/088 2026 / 2 M T A 063/088 YG 2026 P / NI CC A"
+  },
+  "file": "02-snorlax-0.jpg",
+  "corner": "02-snorlax-0-corner.jpg"
+ },
+ {
+  "card": "Snorlax",
+  "number": "063/088",
+  "expected": [
+   "me03-063"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "63",
+   "total": 88,
+   "best": "me03-063",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.096730715035108,
+   "foil": 4.1804105153133255
+  },
+  "ocr": {
+   "top": "a Snorlax +160 *) | emmy ss———— COE |",
+   "bottom": "",
+   "corner": "063/088 02026 / I IE HURIEN H T A POR 0 063/088 Y 2026 P / N CT A TT"
+  },
+  "file": "02-snorlax-1.jpg",
+  "corner": "02-snorlax-1-corner.jpg"
+ },
+ {
+  "card": "Snorlax",
+  "number": "063/088",
+  "expected": [
+   "me03-063"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "63",
+   "total": 88,
+   "best": "me03-063",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.9936465424521895,
+   "foil": 4.235090293323253
+  },
+  "ocr": {
+   "top": "£225 'Snorlax w 160",
+   "bottom": "",
+   "corner": "063/088 2026 / IC REN W T A BE 063/088 Y 02026 P / N SRR EE"
+  },
+  "file": "02-snorlax-2.jpg",
+  "corner": "02-snorlax-2-corner.jpg"
+ },
+ {
+  "card": "Snorlax",
+  "number": "063/088",
+  "expected": [
+   "me03-063"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "63",
+   "total": 88,
+   "best": "me03-063",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.082797850519614,
+   "foil": 3.9003582337871654
+  },
+  "ocr": {
+   "top": "2225 Snorlax 160%) | mwa a————— EE",
+   "bottom": "",
+   "corner": "063/088 62026 / I 2 H T A POR 66 063/088 W 02026 P / N CE"
+  },
+  "file": "02-snorlax-3.jpg",
+  "corner": "02-snorlax-3-corner.jpg"
+ },
+ {
+  "card": "Snorlax",
+  "number": "063/088",
+  "expected": [
+   "me03-063"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "63",
+   "total": 88,
+   "best": "me03-063",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.1247978294503032,
+   "foil": 4.570251348912122
+  },
+  "ocr": {
+   "top": "- Snorlax »160 ®",
+   "bottom": "",
+   "corner": "103 063/088 ICE LURE T A 063/088 S 2026 P / N EE I"
+  },
+  "file": "02-snorlax-4.jpg",
+  "corner": "02-snorlax-4-corner.jpg"
+ },
+ {
+  "card": "Doublade",
+  "number": "057/088",
+  "expected": [
+   "me03-057"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "57",
+   "total": 88,
+   "best": "me03-057",
+   "conf": 0.9,
+   "hit": true,
+   "sharp": 1.4688434865506235,
+   "foil": 3.217202396927516
+  },
+  "ocr": {
+   "top": "| s1aGe], Rhett 0h",
+   "bottom": "-— WIENS nd, CC SS ALK : : ¢ When Honedge evolves, it divides into two lus. Kamome Shirahama swords that cooperate via telepathy to coordinate JED 057/088 @ Lo, Atacksand slash their enemies to ribbons. ©2026 Pokémon / Nintendo / Creatures / GAME EnFAR 3",
+   "corner": "2 057/088 02026 / J UNEN SS 81 POR 057/088 NY S04 02026 P / N / C DRI 50 V"
+  },
+  "file": "03-doublade-0.jpg",
+  "corner": "03-doublade-0-corner.jpg"
+ },
+ {
+  "card": "Doublade",
+  "number": "057/088",
+  "expected": [
+   "me03-057"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "57",
+   "total": 88,
+   "best": "me03-057",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.4807997346337727,
+   "foil": 4.618700089568055
+  },
+  "ocr": {
+   "top": "| pr Doublade 2.100 44 DD Manion. SE",
+   "bottom": "",
+   "corner": "/ 057/088 2026 / 020 J 1 RURIEN RC S 057/088 A 02026 P / NI / C EC A S330"
+  },
+  "file": "03-doublade-1.jpg",
+  "corner": "03-doublade-1-corner.jpg"
+ },
+ {
+  "card": "Doublade",
+  "number": "057/088",
+  "expected": [
+   "me03-057"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "57",
+   "total": 88,
+   "best": "me03-057",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.4786935762018025,
+   "foil": 4.740402173345333
+  },
+  "ocr": {
+   "top": "| pi Doublade 2100 ry dl",
+   "bottom": "",
+   "corner": "057/088 02026 / A FTI 057/088 02026 P / N / C LS SARL SC"
+  },
+  "file": "03-doublade-2.jpg",
+  "corner": "03-doublade-2-corner.jpg"
+ },
+ {
+  "card": "Doublade",
+  "number": "057/088",
+  "expected": [
+   "me03-057"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "57",
+   "total": 88,
+   "best": "me03-057",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.477111976779822,
+   "foil": 4.8943914425370885
+  },
+  "ocr": {
+   "top": "| 755 Doublade 21004",
+   "bottom": "",
+   "corner": "057/088 02026 / 020 J AEREEN FTI SW 057/088 LA 02026 P / N / SUID PIVESEEY VIE RX"
+  },
+  "file": "03-doublade-3.jpg",
+  "corner": "03-doublade-3-corner.jpg"
+ },
+ {
+  "card": "Doublade",
+  "number": "057/088",
+  "expected": [
+   "me03-057"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "57",
+   "total": 88,
+   "best": "me03-057",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.4679501211205292,
+   "foil": 4.762055764283665
+  },
+  "ocr": {
+   "top": "| pac Doublade 100 “@) ' PRY) ¥ a",
+   "bottom": "",
+   "corner": "057/088 02026 / a SEE S 057/088 A LB 14 02026 P / N / C WR TT TTT"
+  },
+  "file": "03-doublade-4.jpg",
+  "corner": "03-doublade-4-corner.jpg"
+ },
+ {
+  "card": "Dedenne",
+  "number": "029/088",
+  "expected": [
+   "me03-029"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "29",
+   "total": 88,
+   "best": "me03-029",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.5113744608756836,
+   "foil": 0.33597781859836423
+  },
+  "ocr": {
+   "top": "was Dedenne W704 |",
+   "bottom": "",
+   "corner": "029/088 02026 / IS CANE E H ED YYW 029/088 02026 P / N"
+  },
+  "file": "04-dedenne-0.jpg",
+  "corner": "04-dedenne-0-corner.jpg"
+ },
+ {
+  "card": "Dedenne",
+  "number": "029/088",
+  "expected": [
+   "me03-029"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "29",
+   "total": 88,
+   "best": "me03-029",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.3729771362770187,
+   "foil": 0.3860872330864286
+  },
+  "ocr": {
+   "top": "“229 'Dedenne wlQ 7 —_——mn v5 1] |",
+   "bottom": "",
+   "corner": "029/088 / I Jah M BS L 029/088 2026 P / N"
+  },
+  "file": "04-dedenne-1.jpg",
+  "corner": "04-dedenne-1-corner.jpg"
+ },
+ {
+  "card": "Dedenne",
+  "number": "029/088",
+  "expected": [
+   "me03-029"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "29",
+   "total": 88,
+   "best": "me03-029",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.3046745046916672,
+   "foil": 0.3663376284170075
+  },
+  "ocr": {
+   "top": "w=azs'Dedenne wi ka _————ml—mmmlYMYmMmMmMmMmMmMoeoe—_—_—_,_S,|_—e_—_TETT",
+   "bottom": "",
+   "corner": "029/088 02026 / C0 LIER H S 029/088 02026 P / N"
+  },
+  "file": "04-dedenne-2.jpg",
+  "corner": "04-dedenne-2-corner.jpg"
+ },
+ {
+  "card": "Dedenne",
+  "number": "029/088",
+  "expected": [
+   "me03-029"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "29",
+   "total": 88,
+   "best": "me03-029",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.2420916591576818,
+   "foil": 0.08975482018437493
+  },
+  "ocr": {
+   "top": "| “225 Dedenne wlQ 4 |",
+   "bottom": "",
+   "corner": "1 029/088 02026 / Sd CLISICNE H S 029/088 02026 P / N"
+  },
+  "file": "04-dedenne-3.jpg",
+  "corner": "04-dedenne-3-corner.jpg"
+ },
+ {
+  "card": "Dedenne",
+  "number": "029/088",
+  "expected": [
+   "me03-029"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "29",
+   "total": 88,
+   "best": "me03-029",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.3130752394870857,
+   "foil": 0.371037032574046
+  },
+  "ocr": {
+   "top": "L225 'Dedenne wl Q 47",
+   "bottom": "",
+   "corner": "029/088 02026 / GI TIA IREN 4 H S 029/088 02026 P / N"
+  },
+  "file": "04-dedenne-4.jpg",
+  "corner": "04-dedenne-4-corner.jpg"
+ },
+ {
+  "card": "Terapagos",
+  "number": "161/191",
+  "expected": [
+   "sv08-161"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "161",
+   "total": 191,
+   "best": "sv08-161",
+   "conf": 0.55,
+   "hit": true,
+   "sharp": 0.9523857381797415,
+   "foil": 0.3699049584751105
+  },
+  "ocr": {
+   "top": "PEE—— (4) ~ rrr cals RE",
+   "bottom": "FE ——— - The shell ismade of crystallized Terastal energy. ; - When struck by amove, this shell absorbs the 0 BIE) 167/191 * move’s energy and transfers itto Terapagos.",
+   "corner": "161/191 1 EL a LA HBT 161/191"
+  },
+  "file": "05-terapagos-0.jpg",
+  "corner": "05-terapagos-0-corner.jpg"
+ },
+ {
+  "card": "Terapagos",
+  "number": "161/191",
+  "expected": [
+   "sv08-161"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "161",
+   "total": 191,
+   "best": "sv08-161",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.1003871274267212,
+   "foil": 1.8864264662993337
+  },
+  "ocr": {
+   "top": "Hi bi tmmy ~ 7. AS ICY Te rapagos | . HP 120 . 4 EET aa. elem",
+   "bottom": "",
+   "corner": "5  RAY TED C S T US W H ETD 161/191 MOVE"
+  },
+  "file": "05-terapagos-1.jpg",
+  "corner": "05-terapagos-1-corner.jpg"
+ },
+ {
+  "card": "Terapagos",
+  "number": "161/191",
+  "expected": [
+   "sv08-161"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "161",
+   "total": 191,
+   "best": "sv08-161",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.1235283291250577,
+   "foil": 1.1515106604772263
+  },
+  "ocr": {
+   "top": "Ee EET ANY 1 ig: o£ &=5\" Terapagos 120% g",
+   "bottom": "",
+   "corner": "0  AAAI JRA TO VW TE T US W H ED 161/191 M"
+  },
+  "file": "05-terapagos-2.jpg",
+  "corner": "05-terapagos-2-corner.jpg"
+ },
+ {
+  "card": "Terapagos",
+  "number": "161/191",
+  "expected": [
+   "sv08-161"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "161",
+   "total": 191,
+   "best": "sv08-161",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.915695331366218,
+   "foil": 0.24399541595028815
+  },
+  "ocr": {
+   "top": "= Terapagos ) 1208)",
+   "bottom": "",
+   "corner": "55 161/191 jl AEN A W HET 161/191 M"
+  },
+  "file": "05-terapagos-3.jpg",
+  "corner": "05-terapagos-3-corner.jpg"
+ },
+ {
+  "card": "Terapagos",
+  "number": "161/191",
+  "expected": [
+   "sv08-161"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "161",
+   "total": 191,
+   "best": "sv08-161",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.0856561385514019,
+   "foil": 1.0977240872512135
+  },
+  "ocr": {
+   "top": "225 Terapagos 120 Bs",
+   "bottom": "",
+   "corner": "JR FP T H GIDORA W H ET 161/191 M"
+  },
+  "file": "05-terapagos-4.jpg",
+  "corner": "05-terapagos-4-corner.jpg"
+ },
+ {
+  "card": "Gouging Fire",
+  "number": "038/191",
+  "expected": [
+   "sv08-038"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "38",
+   "total": 191,
+   "best": "sv08-038",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.6419065753479862,
+   "foil": 0.3349206280454939
+  },
+  "ocr": {
+   "top": ": PNR NAL Mabel cha slr. po | = 2225 Gouging Fire «»130'¢%",
+   "bottom": "",
+   "corner": "038/191 Ma H ARKIKA COAYWA N HED 038/191"
+  },
+  "file": "06-gouging-fire-0.jpg",
+  "corner": "06-gouging-fire-0-corner.jpg"
+ },
+ {
+  "card": "Gouging Fire",
+  "number": "038/191",
+  "expected": [
+   "sv08-038"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "0",
+   "total": 357,
+   "best": "sv08-038",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.5414653374739142,
+   "foil": 0.47296139952576954
+  },
+  "ocr": {
+   "top": "= Gouging Fire .«130'¢&",
+   "bottom": "- iherelarelscantfewjic por Soiiitereatune Hus TAKIRAIEGAWA beingisighted {One Shot vido owWs!it H] En 038/191 % rampagingand pening piles of lame. XD» 4 re",
+   "corner": "J CLAS 0357 T5TR SE A"
+  },
+  "file": "06-gouging-fire-1.jpg",
+  "corner": "06-gouging-fire-1-corner.jpg"
+ },
+ {
+  "card": "Gouging Fire",
+  "number": "038/191",
+  "expected": [
+   "sv08-038"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "38",
+   "total": 191,
+   "best": "sv08-038",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.5887751763885403,
+   "foil": 0.4677838679608904
+  },
+  "ocr": {
+   "top": "d 04 lath 4 = 2225” Gouging Fire «»130'é)",
+   "bottom": "",
+   "corner": "MUS ARNIKA CT OUOARAYYA 0 HED 038/191"
+  },
+  "file": "06-gouging-fire-2.jpg",
+  "corner": "06-gouging-fire-2-corner.jpg"
+ },
+ {
+  "card": "Gouging Fire",
+  "number": "038/191",
+  "expected": [
+   "sv08-038"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "38",
+   "total": 797,
+   "best": "sv08-038",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.5735203844014,
+   "foil": 0.4661899127704791
+  },
+  "ocr": {
+   "top": "PET By Hid RR YAR or 7 BE Gouging Fire «130¢%",
+   "bottom": "",
+   "corner": "038/797  I AKIRA EGAWA RY HET 038/191"
+  },
+  "file": "06-gouging-fire-3.jpg",
+  "corner": "06-gouging-fire-3-corner.jpg"
+ },
+ {
+  "card": "Gouging Fire",
+  "number": "038/191",
+  "expected": [
+   "sv08-038"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "38",
+   "total": 191,
+   "best": "sv08-038",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.5416698496096382,
+   "foil": 0.4973440893757304
+  },
+  "ocr": {
+   "top": "RET Sa a0 The ha li A fa pore a 4. fee Gouging Fire 130% f YU EEE TET ENT fl,",
+   "bottom": "so ny iherelare/scantfew/ie poy oiihisrcatune a - beings ighted ©) elshonyvideolshowslit H) 038/191 % rampagingland SpoULing pillans offlame a ) : hat or TS. Wee TT Eee",
+   "corner": "CE SE"
+  },
+  "file": "06-gouging-fire-4.jpg",
+  "corner": "06-gouging-fire-4-corner.jpg"
+ },
+ {
+  "card": "Telepathic Energy",
+  "number": "088/088",
+  "expected": [
+   "me03-088"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "22",
+   "total": 228,
+   "best": "swsh3.5-22",
+   "conf": 0.2282608695652174,
+   "hit": false,
+   "sharp": 0.7836711374925193,
+   "foil": 0.2257189869546943
+  },
+  "ocr": {
+   "top": "+ ——— IIE — Bc wt ER Telenathic @ Enovaw wa",
+   "bottom": "; | 0 ces Pe — © pm Ran TER GME A a —",
+   "corner": "22/228  RIP IN C07 P"
+  },
+  "file": "07-telepathic-energy-0.jpg",
+  "corner": "07-telepathic-energy-0-corner.jpg"
+ },
+ {
+  "card": "Telepathic Energy",
+  "number": "088/088",
+  "expected": [
+   "me03-088"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "0",
+   "total": 502,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.7902287816579001,
+   "foil": 0.2011371091231765
+  },
+  "ocr": {
+   "top": "WW Taleanathic @ Enaoraw 7.",
+   "bottom": "| de",
+   "corner": "050 2  P2026 P"
+  },
+  "file": "07-telepathic-energy-1.jpg",
+  "corner": "07-telepathic-energy-1-corner.jpg"
+ },
+ {
+  "card": "Telepathic Energy",
+  "number": "088/088",
+  "expected": [
+   "me03-088"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "0",
+   "total": 117,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.7973052516981796,
+   "foil": 0.20833558158411292
+  },
+  "ocr": {
+   "top": "I Talanathta ® Enavals 7,",
+   "bottom": "5 LOE serene — © elon TENMUA TRIN vA | wis bod - A —— — —— —— -",
+   "corner": "/ 26 0 / 117  EN 20261"
+  },
+  "file": "07-telepathic-energy-2.jpg",
+  "corner": "07-telepathic-energy-2-corner.jpg"
+ },
+ {
+  "card": "Telepathic Energy",
+  "number": "088/088",
+  "expected": [
+   "me03-088"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "80",
+   "total": 58,
+   "best": "me03-088",
+   "conf": 0.216,
+   "hit": false,
+   "sharp": 0.5440104910078997,
+   "foil": 0.1377544075480842
+  },
+  "ocr": {
+   "top": "| Telepathic ® Fnerov @y",
+   "bottom": "POR a ES — PR. sui 0]ror a . > RA I la Bo BT Died HE aR 0, N",
+   "corner": "UJ 080/058 2 JU TN TT SE076 P"
+  },
+  "file": "07-telepathic-energy-3.jpg",
+  "corner": "07-telepathic-energy-3-corner.jpg"
+ },
+ {
+  "card": "Telepathic Energy",
+  "number": "088/088",
+  "expected": [
+   "me03-088"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "8",
+   "total": 88,
+   "best": "me03-088",
+   "conf": 0.6,
+   "hit": true,
+   "sharp": 0.8017714593584029,
+   "foil": 0.2075446527981609
+  },
+  "ocr": {
+   "top": "~~ TJelenathic @ Enovaw aa",
+   "bottom": "; Ofporo © 088/088 & © dad i a7 et pide en ASTRA ARE FREAK ee i pa — — -— I a — = .",
+   "corner": "8/088 1 2 26  BF FI SO2026 POK"
+  },
+  "file": "07-telepathic-energy-4.jpg",
+  "corner": "07-telepathic-energy-4-corner.jpg"
+ },
+ {
+  "card": "Chien-Pao",
+  "number": "054/088",
+  "expected": [
+   "me03-054"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "954",
+   "total": 85,
+   "best": "me03-054",
+   "conf": 0.9,
+   "hit": true,
+   "sharp": 0.847014129944116,
+   "foil": 1.4694748849407901
+  },
+  "ocr": {
+   "top": "",
+   "bottom": "TT § WEIR fi fl - ENTa: WwW Le Hllus. Satoshi Ito The hatred of those who perished by the sword long 054/088 % ago has clad itself in snow and become a Pokémon.",
+   "corner": "0 954/085 0 28  S 2 5 5 H 0 POR TT 4 E POR N 054/088"
+  },
+  "file": "08-chien-pao-0.jpg",
+  "corner": "08-chien-pao-0-corner.jpg"
+ },
+ {
+  "card": "Chien-Pao",
+  "number": "054/088",
+  "expected": [
+   "me03-054"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "954",
+   "total": 88,
+   "best": "me03-054",
+   "conf": 0.8999999999999999,
+   "hit": true,
+   "sharp": 0.8303852182698689,
+   "foil": 1.5291469608472241
+  },
+  "ocr": {
+   "top": "Fr BE gies. h “= Chien-Pao 11207\" |",
+   "bottom": "",
+   "corner": "954/088 4 80  J2 SQTONI WIG 6 LTEEEIT HJ J BE PORA 554/088 H 8 LSE RE SE BE P"
+  },
+  "file": "08-chien-pao-1.jpg",
+  "corner": "08-chien-pao-1-corner.jpg"
+ },
+ {
+  "card": "Chien-Pao",
+  "number": "054/088",
+  "expected": [
+   "me03-054"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "54",
+   "total": 88,
+   "best": "me03-054",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.837057377619299,
+   "foil": 1.4933469289573464
+  },
+  "ocr": {
+   "top": "ET Chien-Pao 12000",
+   "bottom": "",
+   "corner": "8 08 054/088 26 ee S 201050 W RT TELE J 4 054/088 A TT EE"
+  },
+  "file": "08-chien-pao-2.jpg",
+  "corner": "08-chien-pao-2-corner.jpg"
+ },
+ {
+  "card": "Chien-Pao",
+  "number": "054/088",
+  "expected": [
+   "me03-054"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "54",
+   "total": 88,
+   "best": "me03-054",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.8302257348955508,
+   "foil": 1.46369327663493
+  },
+  "ocr": {
+   "top": "ZI Chien-Pao «12003 ]",
+   "bottom": "",
+   "corner": "054/088 Gz S 2Q705M WO RAL S1 F 2 054/088"
+  },
+  "file": "08-chien-pao-3.jpg",
+  "corner": "08-chien-pao-3-corner.jpg"
+ },
+ {
+  "card": "Chien-Pao",
+  "number": "054/088",
+  "expected": [
+   "me03-054"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "54",
+   "total": 88,
+   "best": "me03-054",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.8389233993798156,
+   "foil": 1.5037281861034155
+  },
+  "ocr": {
+   "top": "ZT Chien-Pao ge] 2000 -",
+   "bottom": "",
+   "corner": "8 080 054/088 28  JNUS 2Q105N1 1 B NY 9 4 PORY 954/088 AB"
+  },
+  "file": "08-chien-pao-4.jpg",
+  "corner": "08-chien-pao-4-corner.jpg"
+ },
+ {
+  "card": "Poké Ball",
+  "number": "080/088",
+  "expected": [
+   "me03-080"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "80",
+   "total": 88,
+   "best": "me03-080",
+   "conf": 0.9,
+   "hit": true,
+   "sharp": 0.826209247993028,
+   "foil": 0.32041273178696933
+  },
+  "ocr": {
+   "top": "TE — mn IRAINER | Palca Rall",
+   "bottom": "¥ ps NAY Ag CL TR 4 / You may play any number of Item cards during || us¥StudiolBoralincy your turn. {POR 1 080/088 @) BE —",
+   "corner": "4 / 0 4  Y / Y I1/8SB J POR 0807088 4"
+  },
+  "file": "09-pok-ball-0.jpg",
+  "corner": "09-pok-ball-0-corner.jpg"
+ },
+ {
+  "card": "Poké Ball",
+  "number": "080/088",
+  "expected": [
+   "me03-080"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "50",
+   "total": 88,
+   "best": "me03-050",
+   "conf": 0.6,
+   "hit": false,
+   "sharp": 0.8606389192381138,
+   "foil": 0.35609107168983667
+  },
+  "ocr": {
+   "top": "| OT rn TRAINER. Poké Ball",
+   "bottom": "\\ / You may play any number of Item cards during le 310d lBorelingd \"your turn. POR ou J5507 055 10 Pi bib big ©2026 Pokémon / Nintendo / Creatures / GAME FREAK EERE —— SE",
+   "corner": "050/088 02026 / 4 frie SM N A J JPOR J POR F52070881 02026 P / NI"
+  },
+  "file": "09-pok-ball-1.jpg",
+  "corner": "09-pok-ball-1-corner.jpg"
+ },
+ {
+  "card": "Poké Ball",
+  "number": "080/088",
+  "expected": [
+   "me03-080"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "4",
+   "total": 80,
+   "best": "me03-080",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.8257727356001185,
+   "foil": 0.4717686400668434
+  },
+  "ocr": {
+   "top": "item rn TRAINER Poké Ball",
+   "bottom": "",
+   "corner": "4080/0880 2026 3 J N J J POR 4 0807088 A 2026 P / N"
+  },
+  "file": "09-pok-ball-2.jpg",
+  "corner": "09-pok-ball-2-corner.jpg"
+ },
+ {
+  "card": "Poké Ball",
+  "number": "080/088",
+  "expected": [
+   "me03-080"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "7",
+   "total": 55,
+   "best": "me03-080",
+   "conf": 0.6,
+   "hit": true,
+   "sharp": 0.8062764089660229,
+   "foil": 0.41929338649468123
+  },
+  "ocr": {
+   "top": "| EO TRAINER, Polcé Rall",
+   "bottom": "f You may play any number of Item cards during lm, Sooo Coro ls your turn. J POR i 1550 055 10 Jie “Sb tis ii ©2026 Pokémon / Nintendo / Creatures / GAME FREAK",
+   "corner": "7 0 0807088  4 BS YU J POR 0 550 7055 J0 TE 02026 P / N"
+  },
+  "file": "09-pok-ball-3.jpg",
+  "corner": "09-pok-ball-3-corner.jpg"
+ },
+ {
+  "card": "Poké Ball",
+  "number": "080/088",
+  "expected": [
+   "me03-080"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "80",
+   "total": 88,
+   "best": "me03-080",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.8194145774208579,
+   "foil": 0.4734279274765882
+  },
+  "ocr": {
+   "top": "| item rn TRAINER, | Poké Ball",
+   "bottom": "",
+   "corner": "/  TRA NP J POR 0807088 02026 P / N"
+  },
+  "file": "09-pok-ball-4.jpg",
+  "corner": "09-pok-ball-4-corner.jpg"
+ },
+ {
+  "card": "Charcadet",
+  "number": "032/191",
+  "expected": [
+   "sv08-032"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.5102395938429545,
+   "foil": 0.22919539698176922
+  },
+  "ocr": {
+   "top": "| CTI”. 70 &",
+   "bottom": "— — EE ——————— AS » & r Wi fia “Wiios¥Kariyol - g vs Fait \"DED apm o ar \" ©2024 Pokémon / Nintendo / Creatures / GAME FREAK d 3 PR re ao mE EG Ca NN",
+   "corner": "2 027753 8  MUL ED LZUD AY DED 0 2024 P / N"
+  },
+  "file": "10-charcadet-0.jpg",
+  "corner": "10-charcadet-0-corner.jpg"
+ },
+ {
+  "card": "Charcadet",
+  "number": "032/191",
+  "expected": [
+   "sv08-032"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": "me05-011",
+   "conf": 0.36,
+   "hit": false,
+   "sharp": 0.515820741242185,
+   "foil": 0.2354267724644443
+  },
+  "ocr": {
+   "top": "ge Charcadet ; et. 7 L70H",
+   "bottom": "i ’ \\) £3 Ms Cert - | - | DED errno ! p ©2024 Pokémon / Nintendo / Creatures / GAME FREAK _ pr a -— pe ER CoE.",
+   "corner": "AAAS ALLY AZ DED 2024 P / N"
+  },
+  "file": "10-charcadet-1.jpg",
+  "corner": "10-charcadet-1-corner.jpg"
+ },
+ {
+  "card": "Charcadet",
+  "number": "032/191",
+  "expected": [
+   "sv08-032"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "5",
+   "total": 258,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.5083086986919271,
+   "foil": 0.22642092798354527
+  },
+  "ocr": {
+   "top": "",
+   "bottom": "~~ y == w J er ANCY 137 Ra » 2 Fim | DED emmy O ’ ©2024 Pokémon / Nintendo / Creatures / GAME FREAK = re——— ’ - a vr aaa",
+   "corner": "05258  HV SAIL YU 4 OED 2024 P / N"
+  },
+  "file": "10-charcadet-2.jpg",
+  "corner": "10-charcadet-2-corner.jpg"
+ },
+ {
+  "card": "Charcadet",
+  "number": "032/191",
+  "expected": [
+   "sv08-032"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "218",
+   "total": null,
+   "best": "sv04-025",
+   "conf": 0.36,
+   "hit": false,
+   "sharp": 0.5255016541210469,
+   "foil": 0.19637056011677423
+  },
+  "ocr": {
+   "top": "BASIC 3 ' Charcadet = 70% i 3 d dg",
+   "bottom": "| (218 yy “ | DED eye o . X& ©2024 Pokémon / Nintendo / Creatures / GAME FREAK Pp —— . 3 ~ > CT eal TEP",
+   "corner": "0  MLULED LAA 0 ED 0 02024 P / N"
+  },
+  "file": "10-charcadet-3.jpg",
+  "corner": "10-charcadet-3-corner.jpg"
+ },
+ {
+  "card": "Charcadet",
+  "number": "032/191",
+  "expected": [
+   "sv08-032"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": "me05-011",
+   "conf": 0.3388235294117647,
+   "hit": false,
+   "sharp": 0.5041360153844119,
+   "foil": 0.23040875884106166
+  },
+  "ocr": {
+   "top": "(| ye CharcadetT I”. 70 &",
+   "bottom": "Bole EET 7. a 3 AY tos Eo 8 ir 3 Ww fig | DED ary 0 | . ©2024 Pokémon / Nintendo / Creatures / GAME FREAK w - 3 > a E ~ a8 - SasBnddes 20",
+   "corner": "2  WUULLD LAZU AL 0 ED 0 2024 P / N"
+  },
+  "file": "10-charcadet-4.jpg",
+  "corner": "10-charcadet-4-corner.jpg"
+ },
+ {
+  "card": "Cetoddle",
+  "number": "053/191",
+  "expected": [
+   "sv08-053"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "55",
+   "total": 905,
+   "best": "sv08-054",
+   "conf": 0.23999999999999996,
+   "hit": false,
+   "sharp": 0.5510489081160487,
+   "foil": 0.2569168530893673
+  },
+  "ocr": {
+   "top": "ie Ceti. 100 © |",
+   "bottom": "E ; - 7 | . VY W/lus§AyakolOzaki] £s AOR N Pog 0 in 4 |e = En ) d Hl 5p 1053719710 din snow ang LY . . ‘ 43 ©2024 Pokémon / Nintendo / Creatures / GAME FREAK - RP TT Sn —— vale aE. oe",
+   "corner": "11 5590 5 37797  HIUSTAYOKOMUZIOKI DED 0 1 02024 P / N"
+  },
+  "file": "11-cetoddle-0.jpg",
+  "corner": "11-cetoddle-0-corner.jpg"
+ },
+ {
+  "card": "Cetoddle",
+  "number": "053/191",
+  "expected": [
+   "sv08-053"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": "2023sv-4",
+   "conf": 0.2571428571428571,
+   "hit": false,
+   "sharp": 0.42921731451109957,
+   "foil": 0.37465928886723665
+  },
+  "ocr": {
+   "top": "= Cetoddie TTT, 1006",
+   "bottom": "EK 3 - % 2 _ FF 4 Thyvs AyOohO Ook: \\ % OD a om m - 0 ED ammo Ca CL —— a : a GON PoLemon | Nentendd Lreatures GANIE FREAXR § AE TN ERR b Pe as. A — TEE pTe— es ea",
+   "corner": "VIANSRYOALO WL SUN OED 0 G04 P N 3 LAL AR PE ER TC"
+  },
+  "file": "11-cetoddle-1.jpg",
+  "corner": "11-cetoddle-1-corner.jpg"
+ },
+ {
+  "card": "Cetoddle",
+  "number": "053/191",
+  "expected": [
+   "sv08-053"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "21",
+   "total": 570,
+   "best": "sv08-053",
+   "conf": 0.9,
+   "hit": true,
+   "sharp": 1.0062386427319545,
+   "foil": 0.2752005730181186
+  },
+  "ocr": {
+   "top": "| Cetoddie I 100 6",
+   "bottom": "£4 Be add i ! PRESET AA ie. IllusNAyakolOzaki) wit lives ic id fegips in pods of e or so individuals \"OED qyan 0 hey sro",
+   "corner": "2 1570 55757048 5 2024 /  INAO UYES DANTE 0 I JED OF 2024 P / N"
+  },
+  "file": "11-cetoddle-2.jpg",
+  "corner": "11-cetoddle-2-corner.jpg"
+ },
+ {
+  "card": "Cetoddle",
+  "number": "053/191",
+  "expected": [
+   "sv08-053"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "85",
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.9734157539523701,
+   "foil": 0.27166185841941304
+  },
+  "ocr": {
+   "top": "Ec CetoddieTIL100 ©",
+   "bottom": "4 \\~/ n ENE. Bd i — re - LE —— Willys §AyakolOzaki) iri \"A idfegiops in pods of five or so viduals OED aan 0 1 MRE\" 3 snowdrid le, TTT mg nt J ©2024 Pokémon / Nintendo / Creatures / GAME FREAK : NR & b NDT LARRY ae > Si aad Rs er 2 yy ee. Te cc",
+   "corner": "1501053715701  V A / RA LO O85 A H SSP 553779 7 0 02024 P / N"
+  },
+  "file": "11-cetoddle-3.jpg",
+  "corner": "11-cetoddle-3-corner.jpg"
+ },
+ {
+  "card": "Cetoddle",
+  "number": "053/191",
+  "expected": [
+   "sv08-053"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": "sv08-053",
+   "conf": 0.21176470588235294,
+   "hit": false,
+   "sharp": 0.9667095317854505,
+   "foil": 0.259113037262245
+  },
+  "ocr": {
+   "top": "Ec CetoddieIIL 100 ©)",
+   "bottom": "wed LJ od Ro J 3 p , x VY, 4 Bren mm oe v. J et ©2024 Pokémon / Nintendo / Creatures / GAME FREAK i ieee a,",
+   "corner": "1 19015537570  FAY URC NSA URI NW CP OED 0 02024 P / N"
+  },
+  "file": "11-cetoddle-4.jpg",
+  "corner": "11-cetoddle-4-corner.jpg"
+ },
+ {
+  "card": "Koraidon",
+  "number": "116/191",
+  "expected": [
+   "sv08-116"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 1.6816810276500922,
+   "foil": 0.2292633190115689
+  },
+  "ocr": {
+   "top": "EE ET ET ———— >",
+   "bottom": "a Fr LS [RRL Oo Ld CE) 7 retreat LAY) po This seems to be the Wingsd [ng mentioned Ties, Cots (os men old expedition journal, twas said to 0 ED gmap © Thee splits Lenco Bs ber (As, ©2024 Pokémon / Nintendo / Creatures / GAME FREAK",
+   "corner": "WICED L A711 UCTS SEY 4 OED 2024 P / N / C RR RR RI RE"
+  },
+  "file": "12-koraidon-0.jpg",
+  "corner": "12-koraidon-0-corner.jpg"
+ },
+ {
+  "card": "Koraidon",
+  "number": "116/191",
+  "expected": [
+   "sv08-116"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "76",
+   "total": 750,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.9512083620129317,
+   "foil": 0.27005267482982964
+  },
+  "ocr": {
+   "top": "",
+   "bottom": "_— WLS J REESE yg YEAS ACA . This seems to be fhe Winged [ng mentions i. uss Avy man eld expedition fours, Ryes seid 0 ED gmp © eve spi ths lem with Ms bers (se ©2024 Pokémon / Nintendo / Creatures / GAME FREAK",
+   "corner": "76750  LLLLD LAUD UCRAD LL AF RE J 0 ED 2024 P / N"
+  },
+  "file": "12-koraidon-1.jpg",
+  "corner": "12-koraidon-1-corner.jpg"
+ },
+ {
+  "card": "Koraidon",
+  "number": "116/191",
+  "expected": [
+   "sv08-116"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "767",
+   "total": 978,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 1.5693220413222333,
+   "foil": 0.2732551578364005
+  },
+  "ocr": {
+   "top": "we 1 30 } 3 EE rere LEE ———— a",
+   "bottom": "This seems to be he Winged [dng mentioned (ats (Roy nem eld @padition fours, twas seid ET gnapmn © hee pit the lend oih Rs bara (fs, ©2024 Pokémon / Nintendo / Creatures / GAME FREAK",
+   "corner": "SSP R71 76719788 2024 P / N / C"
+  },
+  "file": "12-koraidon-2.jpg",
+  "corner": "12-koraidon-2-corner.jpg"
+ },
+ {
+  "card": "Koraidon",
+  "number": "116/191",
+  "expected": [
+   "sv08-116"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "9",
+   "total": 990,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 1.7154058951260456,
+   "foil": 0.23399804865573556
+  },
+  "ocr": {
+   "top": "| Comicon AR 30) |",
+   "bottom": "This seems to be he Winged [ng mentioned Tj nen old @pediton journsl, tvesseidto ,767,19186 eve Split oe bereits bara (hss, ©2024 Pokémon / Nintendo / Creatures / GAME FREAK",
+   "corner": "WARRRLA AS SAF AAMT NON AA 4 A 5 20 RR 0 E2 9990 O 2024 P / N / C"
+  },
+  "file": "12-koraidon-3.jpg",
+  "corner": "12-koraidon-3-corner.jpg"
+ },
+ {
+  "card": "Koraidon",
+  "number": "116/191",
+  "expected": [
+   "sv08-116"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "99",
+   "total": 300,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 1.2589421323554952,
+   "foil": 0.21656953616894883
+  },
+  "ocr": {
+   "top": "ST 0B] |",
+   "bottom": "ee PACD EE wg IE lB LT This seams obo the Wings ng mentionsd llusYRyuto]Fuse] epedifion Te p. ine eld feurmmel. Rues seid te 619] Thee split the lendwith is bars fists, ©2024 —_— Sal —— :",
+   "corner": "MET REE 0 ED 9930 0"
+  },
+  "file": "12-koraidon-4.jpg",
+  "corner": "12-koraidon-4-corner.jpg"
+ },
+ {
+  "card": "Luxio",
+  "number": "027/088",
+  "expected": [
+   "me03-027"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "1",
+   "total": 106,
+   "best": "me03-027",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.5838449989484275,
+   "foil": 0.4170330836308621
+  },
+  "ocr": {
+   "top": "EEdluxio ,90 4",
+   "bottom": "er LJ J » vias lllusWAtsukolNishidal »logether, they collects 0 027/088} 4; | FS anal ©2026 Pokémon / Nintendo / Creatures / GAME FREAK",
+   "corner": "1 10 6 1527705593  FHV IFFANISUROJINISTNTIOU 1 4 POR 05277088 O 02026 P / N"
+  },
+  "file": "13-luxio-0.jpg",
+  "corner": "13-luxio-0-corner.jpg"
+ },
+ {
+  "card": "Luxio",
+  "number": "027/088",
+  "expected": [
+   "me03-027"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": "me03-027",
+   "conf": 0.8,
+   "hit": true,
+   "sharp": 0.6655560729827705,
+   "foil": 0.4021557875322356
+  },
+  "ocr": {
+   "top": "| #< Luxio ~ w90 4",
+   "bottom": "PRE IEEE EENN——— Ian fie yr a tricity trom! Nr OEE rn & : : 2 4 pu ied ©2026 Pokémon / Nintendo / Creatures / GAME FREAK d RO",
+   "corner": "HIV IF/AISURCOJINISTTIOU MR HT J 027/0881 2026 P / N"
+  },
+  "file": "13-luxio-1.jpg",
+  "corner": "13-luxio-1-corner.jpg"
+ },
+ {
+  "card": "Luxio",
+  "number": "027/088",
+  "expected": [
+   "me03-027"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "27",
+   "total": 88,
+   "best": "me03-027",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.611807075248244,
+   "foil": 0.4068668996750068
+  },
+  "ocr": {
+   "top": "| ge Luxio 90 4",
+   "bottom": "",
+   "corner": "0 LAS ALLL AL 4 F ERI 0277088 4 02026 P / N"
+  },
+  "file": "13-luxio-2.jpg",
+  "corner": "13-luxio-2-corner.jpg"
+ },
+ {
+  "card": "Luxio",
+  "number": "027/088",
+  "expected": [
+   "me03-027"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "27",
+   "total": 88,
+   "best": "me03-027",
+   "conf": 0.6,
+   "hit": true,
+   "sharp": 0.5583298354512654,
+   "foil": 0.43669074309845124
+  },
+  "ocr": {
+   "top": "",
+   "bottom": "wd ’ gs . ar : LEE 8 0277/0881®) | 7 fr Ai - ©2026 Pokémon / Nintendo / Creatures / GAME FREAK J {ENE ERI re ss RE SETAE AT TT TR | DEE",
+   "corner": "1 157770888  FHV IFANISUROJINISNITUU 3 PER A POR 64 0277/0881 02026 P / N"
+  },
+  "file": "13-luxio-3.jpg",
+  "corner": "13-luxio-3-corner.jpg"
+ },
+ {
+  "card": "Luxio",
+  "number": "027/088",
+  "expected": [
+   "me03-027"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "8",
+   "total": 818,
+   "best": "me03-027",
+   "conf": 0.9,
+   "hit": true,
+   "sharp": 0.8096905098307007,
+   "foil": 0.18237715087399642
+  },
+  "ocr": {
+   "top": "| #5 Luxio rd »90 4 |",
+   "bottom": "IE a aT Rina [1110AtsukolNishido RENEE ~ By gathering their tails together, they collectively | BOR MLE nerate powerful el ici i Xi LJ | POR 64 027705576) hE werfy electricity from their claws ©2026 Pokémon / Nintendo / Creatures / GAME FREAK - LL - ET SE——",
+   "corner": "02026 /  NIVRINF027/08818 A 2026 P / N /"
+  },
+  "file": "13-luxio-4.jpg",
+  "corner": "13-luxio-4-corner.jpg"
+ },
+ {
+  "card": "Diggersby",
+  "number": "065/088",
+  "expected": [
+   "me03-065"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": "me03-065",
+   "conf": 0.30857142857142855,
+   "hit": false,
+   "sharp": 0.5796925711808522,
+   "foil": 1.0113665123408253
+  },
+  "ocr": {
+   "top": "asl Di ggersby ~w 1950 *",
+   "bottom": "—————————— £) CURE NE cmmO {a",
+   "corner": "I C 8 2 NT"
+  },
+  "file": "14-diggersby-0.jpg",
+  "corner": "14-diggersby-0-corner.jpg"
+ },
+ {
+  "card": "Diggersby",
+  "number": "065/088",
+  "expected": [
+   "me03-065"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "570",
+   "total": 670,
+   "best": "me03-065",
+   "conf": 0.8,
+   "hit": true,
+   "sharp": 0.4631543628856944,
+   "foil": 0.29630785718645514
+  },
+  "ocr": {
+   "top": "gi Diggersby 150 *",
+   "bottom": "wo 1 VRE ff = FET A A UA | wr ht mp iil hey can heft 065/0881%4 ia bien at construction sites, ©2026 Pokémon / Nintendo / Creatures / GAME FREAK EET pie",
+   "corner": "5708519 3 570670  HSYM VEE SR AY POR F065 57 088193 2026 P / N"
+  },
+  "file": "14-diggersby-1.jpg",
+  "corner": "14-diggersby-1-corner.jpg"
+ },
+ {
+  "card": "Diggersby",
+  "number": "065/088",
+  "expected": [
+   "me03-065"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "705",
+   "total": 510,
+   "best": "me03-065",
+   "conf": 0.9,
+   "hit": true,
+   "sharp": 0.4553254359707929,
+   "foil": 0.29314373258733695
+  },
+  "ocr": {
+   "top": "gi Diggersby ~»150 ) *",
+   "bottom": "————— ——e ee xs 'Mousho : a . t 1h CARALLS ul e. rs a7 | han \\ i 4 oi no 1th a LJ NPR F565 7 05510) Sol Soins sali ©2026 Pokémon / Nintendo / Creatures / GAME FREAK » —— EE ——",
+   "corner": "1 12557 11  ISYM ALRERIEE PORNF06 5/0884 2026 P / N"
+  },
+  "file": "14-diggersby-2.jpg",
+  "corner": "14-diggersby-2-corner.jpg"
+ },
+ {
+  "card": "Diggersby",
+  "number": "065/088",
+  "expected": [
+   "me03-065"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "1",
+   "total": 140,
+   "best": "me03-065",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.5188427928319209,
+   "foil": 0.29445156281407237
+  },
+  "ocr": {
+   "top": "woes Diggersby A 1 50 | *",
+   "bottom": "+ JEAN NNR ay gi TUT TT [— ers 0f ton or more with ease. They 065/088]¥) § 2 he Pp al ONS \" n < i¢ ©2026 Pokémon / Nintendo / Creatures / GAME FREAK",
+   "corner": "11 1 5705528 1140  HSYM C BPR ARG RET 065/08814 2026 P / N"
+  },
+  "file": "14-diggersby-3.jpg",
+  "corner": "14-diggersby-3-corner.jpg"
+ },
+ {
+  "card": "Diggersby",
+  "number": "065/088",
+  "expected": [
+   "me03-065"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "65",
+   "total": 88,
+   "best": "me03-065",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.5203315849475174,
+   "foil": 0.29883527375094016
+  },
+  "ocr": {
+   "top": "pel Diggersby +150 *",
+   "bottom": "",
+   "corner": "2 1057079  HSYM CU A ES SS 5 I 065/088 4 2026 P / N"
+  },
+  "file": "14-diggersby-4.jpg",
+  "corner": "14-diggersby-4-corner.jpg"
+ },
+ {
+  "card": "Clefairy",
+  "number": "094/088",
+  "expected": [
+   "me03-094"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": "base1-5",
+   "conf": 0.36,
+   "hit": false,
+   "sharp": 1.299978173373993,
+   "foil": 2.084712480011885
+  },
+  "ocr": {
+   "top": "ASIC ) NE a A 704 so Clefairy oo % (70)",
+   "bottom": "WY SARS ad S.J res @) 539) | cadftem(\\ a Retreat ] \\ y Ion. Goble? The moonlight thu stores in the wings ons back 7 . * : : PR rn | coperentyghves Rthoability to (ont inmidal",
+   "corner": "WESLEY O J VSRAGAAMSD Y 4 POR V EPP"
+  },
+  "file": "15-clefairy-0.jpg",
+  "corner": "15-clefairy-0-corner.jpg"
+ },
+ {
+  "card": "Clefairy",
+  "number": "094/088",
+  "expected": [
+   "me03-094"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": "base1-5",
+   "conf": 0.36,
+   "hit": false,
+   "sharp": 1.3118428665194755,
+   "foil": 0.30481798608642763
+  },
+  "ocr": {
+   "top": "fs Clefairy iit (70©) |",
+   "bottom": "ERE all; TT Ad v4 Lo LB di - pv RE = Pp rs Goin? WT Retores i the wings ons bad ©2026 Pokémon / Nintendo / Creatures / GAME FREAK",
+   "corner": "0  0 P0R J PORY GD PE 2026 P / N"
+  },
+  "file": "15-clefairy-1.jpg",
+  "corner": "15-clefairy-1-corner.jpg"
+ },
+ {
+  "card": "Clefairy",
+  "number": "094/088",
+  "expected": [
+   "me03-094"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "94",
+   "total": 58,
+   "best": "me03-094",
+   "conf": 0.8,
+   "hit": true,
+   "sharp": 1.33230780956487,
+   "foil": 0.30707060961775273
+  },
+  "ocr": {
+   "top": "§Cleninia w> ¢700) |",
+   "bottom": "E or dud Wl OT. (lhe, Go NE? gh » Themeeniight fhe stores ha ig cms bas 094088 )*4 + apparently ghves Rthabibtytoioa in mide ©2026 Pokémon / Nintendo / Creatures / GAME FREAK baw ENE RES RN SERIE Fp (CI i, 0",
+   "corner": "094 /058 02026 /  094 08853 2026 P / N"
+  },
+  "file": "15-clefairy-2.jpg",
+  "corner": "15-clefairy-2-corner.jpg"
+ },
+ {
+  "card": "Clefairy",
+  "number": "094/088",
+  "expected": [
+   "me03-094"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "947",
+   "total": 88,
+   "best": "me03-094",
+   "conf": 1,
+   "hit": true,
+   "sharp": 1.3047998753314711,
+   "foil": 0.30328115612285406
+  },
+  "ocr": {
+   "top": "oi ci TY gio Clefairy. « *_ \" $700) |",
+   "bottom": "",
+   "corner": "0088 0947/088 094 088 5 j Ul Gi 094 088 4 HAP 2026 P / NI"
+  },
+  "file": "15-clefairy-3.jpg",
+  "corner": "15-clefairy-3-corner.jpg"
+ },
+ {
+  "card": "Clefairy",
+  "number": "094/088",
+  "expected": [
+   "me03-094"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "94",
+   "total": 85,
+   "best": "me03-094",
+   "conf": 0.55,
+   "hit": true,
+   "sharp": 1.2428901073600727,
+   "foil": 0.35159648564628293
+  },
+  "ocr": {
+   "top": "7 , : =a ' TL AY se Clefairy, « ae © py C Yin » \"4709",
+   "bottom": "7 Is ~ 1 (Ion @mo mt? : “V The moenligh thet stores in the wings ons bac 1054) 085 104 + apparently @ves ihe ebiity to float in midair. ©2026 Pokémon / Nintendo / Creatures / GAME FREAK a = o> ou ERSGRS PITRE fa Ty RNR iad ws WE vatican ss . TT oy",
+   "corner": "094/085 2026 BY SE 094 0884 9A 3 2026 P / N"
+  },
+  "file": "15-clefairy-4.jpg",
+  "corner": "15-clefairy-4-corner.jpg"
+ },
+ {
+  "card": "Mega Scrafty ex (JP)",
+  "number": "110/193",
+  "expected": [
+   "ja:M2a-110"
+  ],
+  "finish": "holo",
+  "lang": "ja",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 1.2575368397631619,
+   "foil": 1.1161302829706676
+  },
+  "ocr": {
+   "top": "2 \"td BRT Le AAS FREY N° 7h ’ SEA (El vibe ON i p 4 ~ ’ 7 PE Jay 72 EELS } BN : Wm UN Wp pa al & A E si py HP 3 AZ NT SEX Ap w ION",
+   "bottom": "ARR tt. me eto fio 4 5ban| Graphics) [Arex ~ >. x3 K poe <cXze2 . AT : - 3 : | JV2317707793)RR — yy pkémon/ inten do/ CABMME/GAME FREAY v A se i oT hlemsmme”",
+   "corner": "110719 3/ 4  F 4 D2 ETY AL A"
+  },
+  "file": "16-mega-scrafty-ex-jp-0.jpg",
+  "corner": "16-mega-scrafty-ex-jp-0-corner.jpg"
+ },
+ {
+  "card": "Mega Scrafty ex (JP)",
+  "number": "110/193",
+  "expected": [
+   "ja:M2a-110"
+  ],
+  "finish": "holo",
+  "lang": "ja",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": "ex7-71",
+   "conf": 0.23999999999999996,
+   "hit": false,
+   "sharp": 1.253103294637672,
+   "foil": 1.0977217730392421
+  },
+  "ocr": {
+   "top": "Poe he ARP aN na \" AV RATT PAI ATCT BREN Phas Nig K 8 he EERE ss FR Oa ho oA ah A Goal a I SAXWREVER (fw330C) 2h ; X RILAF Vo 4 J NPAS ep a Y Pe",
+   "bottom": "ARR ead. a ) a 7 XHYIHCXI=IU 5 of, 5ban] Graphics! - :",
+   "corner": "P AR AR IE 7707193RR BY 4 NN DE S"
+  },
+  "file": "16-mega-scrafty-ex-jp-1.jpg",
+  "corner": "16-mega-scrafty-ex-jp-1-corner.jpg"
+ },
+ {
+  "card": "Mega Scrafty ex (JP)",
+  "number": "110/193",
+  "expected": [
+   "ja:M2a-110"
+  ],
+  "finish": "holo",
+  "lang": "ja",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "110",
+   "total": 193,
+   "best": "ja:M2a-110",
+   "conf": 0.9,
+   "hit": true,
+   "sharp": 1.2468554795050941,
+   "foil": 1.1094309129342455
+  },
+  "ocr": {
+   "top": ", AA (v iwl 0 iF ‘Bt - ge Lr Re LR \"REN ALY y ! 7 SERENE ; Si : AA WV WES hig #3 J 7d bl hd SRNR aa oy & lobia 20 A iL , Mol: eg, : OC yi 4 $ CT (Ed § (Lest \" LY y pt HP. : 3( ys. , 4 L w= > FAARXIVA J Ved 4 Sm Nr al",
+   "bottom": "~~ CT Sa —— os lig XHIIBCXI~IV 7” fit Aston Graphics ¢ | | V8Y7707793]RR) 2 ZNexun FEL 3 HERP AE ZINES. es id a & p- ; do Cl GAME FREAR - or Se",
+   "corner": "P SEA ANUHE J 20 1110/193RR 4 7 4 /N"
+  },
+  "file": "16-mega-scrafty-ex-jp-2.jpg",
+  "corner": "16-mega-scrafty-ex-jp-2-corner.jpg"
+ },
+ {
+  "card": "Mega Scrafty ex (JP)",
+  "number": "110/193",
+  "expected": [
+   "ja:M2a-110"
+  ],
+  "finish": "holo",
+  "lang": "ja",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "770",
+   "total": 793,
+   "best": "sv02-171",
+   "conf": 0.23999999999999996,
+   "hit": false,
+   "sharp": 1.2481513523830348,
+   "foil": 1.1128690424015122
+  },
+  "ocr": {
+   "top": "STR \\ Ma Oa aE % A BA \\ Se wv Of Ag oy ARTA Ey hg ots wy p ET gi Sat Se og Zi AFI e330",
+   "bottom": "ARN - - ol ! of, 'sban|Graphics) ( WET ’ ee (EREe sic . . g “ u (m2) 1707,193)RR MN LLLL LEX DE {OLLEE HERI(EESRES. any Ay. ANCES EE : -",
+   "corner": "5  P MR E E7707793 RR BY 4"
+  },
+  "file": "16-mega-scrafty-ex-jp-3.jpg",
+  "corner": "16-mega-scrafty-ex-jp-3-corner.jpg"
+ },
+ {
+  "card": "Mega Scrafty ex (JP)",
+  "number": "110/193",
+  "expected": [
+   "ja:M2a-110"
+  ],
+  "finish": "holo",
+  "lang": "ja",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "170",
+   "total": 193,
+   "best": "ja:M2a-170",
+   "conf": 0.9,
+   "hit": false,
+   "sharp": 1.2498326360385157,
+   "foil": 1.1216319070060785
+  },
+  "ocr": {
+   "top": "Bas poet EEE LER RRA ani ET OT CTD Rk ) ) eh 2a A EOLA Aad 1: > fod oy oR of Ea \" il of Se 7 4 4 ’ 4 > 2 dy Wess IEA LI fy, a INANE ER fF w330 5 ~ Ls A, r I 4 “9 s Z A MNENONO NT",
+   "bottom": "ere coin oh a 8 oy, Sate kh? - 3 BG: XHSIDCXN~I 7 of, 5ban]Graphics) { | pF Ps or 2 Zi: 4 is aa . \" Di(a20 OAEDTY NA RARE AE ETE BLE ES 4 Poi cmon inter do! CABBIE GAME FREAK. -— I I ct i.",
+   "corner": "17019 3/ 2 4 0 /  YW AB P CELL RY 4 /N"
+  },
+  "file": "16-mega-scrafty-ex-jp-4.jpg",
+  "corner": "16-mega-scrafty-ex-jp-4-corner.jpg"
+ },
+ {
+  "card": "Mega Manectric ex (JP)",
+  "number": "077/063",
+  "expected": [
+   "ja:M1S-077",
+   "ja:M1L-077"
+  ],
+  "finish": "holo",
+  "lang": "ja",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 1.0973716341397306,
+   "foil": 0.4200090341419129
+  },
+  "ocr": {
+   "top": "| WS 3 \\ ne A ow \\ = | lL WE Cet - EDU LE PANO pL wy ir IAL , a LE (td BR RONEN 2 et St ER Be Rd ai SAS qr fF ¥ - A TS ROR ) ad oa TN We “oy Sada NEU o N 5 il ue oly / NAT XBSHR | ' 4 22. we ¥ yr \\ y ‘ ESP Lal, 4 [ N pA J] vb N(@X O ) 74S 2 GREER SS Se , — + ERR 0 .",
+   "bottom": "A Ta < - - - anmn. 4 — — ' i ’ R= SN XHSIHOX =I n EDC ) |",
+   "corner": "0  MID Y Q AN EX TT"
+  },
+  "file": "17-mega-manectric-ex-jp-0.jpg",
+  "corner": "17-mega-manectric-ex-jp-0-corner.jpg"
+ },
+ {
+  "card": "Mega Manectric ex (JP)",
+  "number": "077/063",
+  "expected": [
+   "ja:M1S-077",
+   "ja:M1L-077"
+  ],
+  "finish": "holo",
+  "lang": "ja",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.7537759671020894,
+   "foil": 0.6935583491957749
+  },
+  "ocr": {
+   "top": "",
+   "bottom": "lez \\ Xen, A223 = i ——m—m a BYOLI LE, fi: | . Ando! ( a {te “x a C8 ds",
+   "corner": "DL S TE S RR CT ER /N IC 4"
+  },
+  "file": "17-mega-manectric-ex-jp-1.jpg",
+  "corner": "17-mega-manectric-ex-jp-1-corner.jpg"
+ },
+ {
+  "card": "Mega Manectric ex (JP)",
+  "number": "077/063",
+  "expected": [
+   "ja:M1S-077",
+   "ja:M1L-077"
+  ],
+  "finish": "holo",
+  "lang": "ja",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "77",
+   "total": 63,
+   "best": "ja:M1S-077",
+   "conf": 0.54,
+   "hit": true,
+   "sharp": 1.0511845704045824,
+   "foil": 0.34316685157909105
+  },
+  "ocr": {
+   "top": "a = SEY 1) jy ly | 3 : 5 / ps pode bi 4 | | A ~ ra PN g ER aC 4330, 7d a S25 05% 1) aad Ql i on Low . - NN nC SONSTRNEDANS ZAR OR AAAI 2,",
+   "bottom": "Th BN Dror ms aye , a wi ‘A A XDD IBEX I=) an Graphics a i ; \"4 : : ’ ‘oom How yy Eo : . N L |",
+   "corner": "PP UNO H 2077/063SR RA XT X CL EE N"
+  },
+  "file": "17-mega-manectric-ex-jp-2.jpg",
+  "corner": "17-mega-manectric-ex-jp-2-corner.jpg"
+ },
+ {
+  "card": "Mega Manectric ex (JP)",
+  "number": "077/063",
+  "expected": [
+   "ja:M1S-077",
+   "ja:M1L-077"
+  ],
+  "finish": "holo",
+  "lang": "ja",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "356",
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 1.186989823230223,
+   "foil": 0.7329298599375107
+  },
+  "ocr": {
+   "top": "Convo NEY NT Et Da Se a Sr A TA NS Le ET TT 4 v LE RL TAT Ah ALO IE ye i LAT wl. in XHSHRIVN OR 20D) fe Dy Ry VU IV QAR) 7 R232 <IIVVIR 2 (XO AS AY NIE",
+   "bottom": "2 Ox2N ‘ama AG BH 7, WE wg No TEA fandoi Cle SE EAR EYE = hay",
+   "corner": "0  EES CL XT 356G LF 1 N R 4 CI 00 R"
+  },
+  "file": "17-mega-manectric-ex-jp-3.jpg",
+  "corner": "17-mega-manectric-ex-jp-3-corner.jpg"
+ },
+ {
+  "card": "Mega Manectric ex (JP)",
+  "number": "077/063",
+  "expected": [
+   "ja:M1S-077",
+   "ja:M1L-077"
+  ],
+  "finish": "holo",
+  "lang": "ja",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 1.0304336703891512,
+   "foil": 0.36514930578998644
+  },
+  "ocr": {
+   "top": "FT, DPR AL ARE ET RINE De CTO) Rn ) N& A LG a PN / : TAN JUS CN\\& i iv 330.7 is Y GR LS 5 xe) wr RA i",
+   "bottom": "F po 27 BOX I=) go _— SY sbon(Grophts Reap | ml, Se : OUR EE, HF (2 rem DRED. A a Soi I",
+   "corner": "J MN AL CLI SE H PTT L NC A M 2 C LL N"
+  },
+  "file": "17-mega-manectric-ex-jp-4.jpg",
+  "corner": "17-mega-manectric-ex-jp-4-corner.jpg"
+ },
+ {
+  "card": "Blunder Policy",
+  "number": "131/172 · SWSH9",
+  "expected": [
+   "swsh9-131"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "131",
+   "total": 172,
+   "best": "swsh9-131",
+   "conf": 0.9578947368421054,
+   "hit": true,
+   "sharp": 0.3806133320261328,
+   "foil": 0.1853180486438359
+  },
+  "ocr": {
+   "top": "| 2 ANNES — TT, Blinder Dal:",
+   "bottom": "' A You may play any number of Item cards J us. Ayako Yoshida ( during your turn, V4 9) © 131172 — 7, ©2022 Pokém. Nn / Nintendc Creatures GAME FREAK —— AM ER cy: CS",
+   "corner": "MM VPN I/L 02022 P / N / C"
+  },
+  "file": "18-blunder-policy-0.jpg",
+  "corner": "18-blunder-policy-0-corner.jpg"
+ },
+ {
+  "card": "Blunder Policy",
+  "number": "131/172 · SWSH9",
+  "expected": [
+   "swsh9-131"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "131",
+   "total": 172,
+   "best": "swsh9-131",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.3824365927073953,
+   "foil": 0.17163744510569634
+  },
+  "ocr": {
+   "top": "~~ ee | TRAINER ——virT | Blunder PDAl: me.",
+   "bottom": "N - You may Play any number of Item cards J us. Ayaka Yoshida ( during your turn. V4 ) (E) 131/172 ¢ . — ©2022 Pokémor Nintendo / Cre atures / GAME FREAK EE —— CAM a LL",
+   "corner": "NN FSV T/L 2022 P EM N J C"
+  },
+  "file": "18-blunder-policy-1.jpg",
+  "corner": "18-blunder-policy-1-corner.jpg"
+ },
+ {
+  "card": "Blunder Policy",
+  "number": "131/172 · SWSH9",
+  "expected": [
+   "swsh9-131"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "131",
+   "total": 172,
+   "best": "swsh9-131",
+   "conf": 0.9,
+   "hit": true,
+   "sharp": 0.37894649036329103,
+   "foil": 0.1773014006458726
+  },
+  "ocr": {
+   "top": "»” BE —— | IRAUNER —",
+   "bottom": ": v y Tou may Play any number of Item cards | us. Ayako Yoshida ( during your turn. 3) () 131/172 ¢ bc al” | ©2022 Pokémers Nintend Creatures GAME FREAK _— ox -——",
+   "corner": "VI I/L 2022 P /N /"
+  },
+  "file": "18-blunder-policy-2.jpg",
+  "corner": "18-blunder-policy-2-corner.jpg"
+ },
+ {
+  "card": "Blunder Policy",
+  "number": "131/172 · SWSH9",
+  "expected": [
+   "swsh9-131"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "131",
+   "total": 172,
+   "best": "swsh9-131",
+   "conf": 0.9578947368421054,
+   "hit": true,
+   "sharp": 0.3792304969149671,
+   "foil": 0.18006865019422158
+  },
+  "ocr": {
+   "top": "Blinder DAlt—.. —",
+   "bottom": "’ § : You may Play any number of Item cards ) us. Ayaka Yoshida ( during your turn. V4 3) () 131/172 o ——t® | ©2022 p Keémon / Ninter J) Creatures / GAME FREAK PE ——— OAM » 3 aes LL —————————",
+   "corner": "PNT L 9 2022 P /N N /"
+  },
+  "file": "18-blunder-policy-3.jpg",
+  "corner": "18-blunder-policy-3-corner.jpg"
+ },
+ {
+  "card": "Blunder Policy",
+  "number": "131/172 · SWSH9",
+  "expected": [
+   "swsh9-131"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "131",
+   "total": 172,
+   "best": "swsh9-131",
+   "conf": 0.9,
+   "hit": true,
+   "sharp": 0.3787839278818527,
+   "foil": 0.1762432481379734
+  },
+  "ocr": {
+   "top": "BEES — Bhiindes DAIS |",
+   "bottom": "| \\ ma. You May play any number of Item cards J us. Ayako Yoshida ( during your turn. S ) () 131/172 =u. 4 ©2022 Pokémor Nintend Creatures / GAME FREAK EE —— CAM IP om Tm",
+   "corner": "VII I/L 2022 P NI /"
+  },
+  "file": "18-blunder-policy-4.jpg",
+  "corner": "18-blunder-policy-4-corner.jpg"
+ },
+ {
+  "card": "Rust Syndicate Grunt",
+  "number": "081/84 · ME05",
+  "expected": [
+   "me05-081"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "87",
+   "total": 84,
+   "best": "me05-087",
+   "conf": 0.55,
+   "hit": false,
+   "sharp": 0.6880331931585494,
+   "foil": 0.2468537275976807
+  },
+  "ocr": {
+   "top": ". pos Ui Supporter FER, HE. Re a. Nl id ¢",
+   "bottom": "You may play only | Supporter card during ) ys. Teeziro your turn. 081/084 ® : ©2026 Pokémon / Nintendo / Creatures / GAME FREAK eee ———— ee —",
+   "corner": "21 087/084 02026 / LL ERLLEN 02026 P / N / C EE"
+  },
+  "file": "19-rust-syndicate-grunt-0.jpg",
+  "corner": "19-rust-syndicate-grunt-0-corner.jpg"
+ },
+ {
+  "card": "Rust Syndicate Grunt",
+  "number": "081/84 · ME05",
+  "expected": [
+   "me05-081"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "81",
+   "total": 84,
+   "best": "me05-081",
+   "conf": 0.9,
+   "hit": true,
+   "sharp": 0.686050589641191,
+   "foil": 2.216229557649247
+  },
+  "ocr": {
+   "top": "Suppopten EE BN \" _ Re yy 4",
+   "bottom": ". You may play only | Supporter card during “ Mus. Teeziro your turn. VE 081/084 ® ©2026 Pokémon / Nintendo / Creatures / GAME FREAK",
+   "corner": "TOU M P H T YJ 081/084 2026 P / N /"
+  },
+  "file": "19-rust-syndicate-grunt-1.jpg",
+  "corner": "19-rust-syndicate-grunt-1-corner.jpg"
+ },
+ {
+  "card": "Rust Syndicate Grunt",
+  "number": "081/84 · ME05",
+  "expected": [
+   "me05-081"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "81",
+   "total": 84,
+   "best": "me05-081",
+   "conf": 0.9,
+   "hit": true,
+   "sharp": 0.6786454639697796,
+   "foil": 2.2127062927886394
+  },
+  "ocr": {
+   "top": "Suppopten | OY Re a yy 4",
+   "bottom": "[ x B / You may play only | Supporter card during Hus. Teeziro your turn. y YE 081/084 ® ©2026 Pokémon / Nintendo / Creatures / GAME FREAK",
+   "corner": "081/084 SOL T10U M P T U 081/084 2026 P / N /"
+  },
+  "file": "19-rust-syndicate-grunt-2.jpg",
+  "corner": "19-rust-syndicate-grunt-2-corner.jpg"
+ },
+ {
+  "card": "Rust Syndicate Grunt",
+  "number": "081/84 · ME05",
+  "expected": [
+   "me05-081"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "87",
+   "total": 84,
+   "best": "me05-087",
+   "conf": 0.8,
+   "hit": false,
+   "sharp": 0.7440319095419028,
+   "foil": 2.4683642166123296
+  },
+  "ocr": {
+   "top": "",
+   "bottom": "",
+   "corner": "087/084 2026 / / ELLEN 2026 P / N / SS"
+  },
+  "file": "19-rust-syndicate-grunt-3.jpg",
+  "corner": "19-rust-syndicate-grunt-3-corner.jpg"
+ },
+ {
+  "card": "Rust Syndicate Grunt",
+  "number": "081/84 · ME05",
+  "expected": [
+   "me05-081"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "87",
+   "total": 84,
+   "best": "me05-081",
+   "conf": 0.9,
+   "hit": true,
+   "sharp": 0.6712329089851854,
+   "foil": 0.23421221794896555
+  },
+  "ocr": {
+   "top": "- gw - Bm -— Ji SupponRten BE |» MQW 8 ay go — HEH (ENEY TN 7 pT ERENT (",
+   "bottom": "You may play only | Supporter card during ) ys. Teeziro your turn. 0 PBLEN 081/084 & ‘ ©2026 Pokémon / Nintendo / Creatures / GAME FREAK a",
+   "corner": "087/084 02026 / LL ELEN E 081/084 2026 P / N / C BE"
+  },
+  "file": "19-rust-syndicate-grunt-4.jpg",
+  "corner": "19-rust-syndicate-grunt-4-corner.jpg"
+ },
+ {
+  "card": "Deoxys",
+  "number": "GG12/70 · SWSH12.5GG",
+  "expected": [
+   "swsh12.5gg-GG12"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "GG12",
+   "total": null,
+   "best": "swsh12.5gg-GG12",
+   "conf": 0.7,
+   "hit": true,
+   "sharp": 1.3359975405133124,
+   "foil": 0.2310568522658736
+  },
+  "ocr": {
+   "top": "~~ ely se=sdDeoxys BT BEE EA120(©)",
+   "bottom": "As “- = | LJ > ; - = py ‘i . 10s %5¢ avg - . *DINATrom dispacelintisimutatedana wa v E] — HOSA, Reppert Wiss moms are J GG12/GG0R.S — “a 3 > 2 i. v ©2023 Pokémon / Nintendo / Creatures / GAME FREAK",
+   "corner": "2023 /  MME TI R 2023 P / NI / C"
+  },
+  "file": "20-deoxys-0.jpg",
+  "corner": "20-deoxys-0-corner.jpg"
+ },
+ {
+  "card": "Deoxys",
+  "number": "GG12/70 · SWSH12.5GG",
+  "expected": [
+   "swsh12.5gg-GG12"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": "col1-2",
+   "conf": 0.3,
+   "hit": false,
+   "sharp": 1.3170723882171704,
+   "foil": 0.20791733615185945
+  },
+  "ocr": {
+   "top": "A ge=sdDeoxys BT BNEEA120(0)",
+   "bottom": "\\/ ~ | ’ - ] HB - [a 3 » i Nal ‘of 10s %5covg A - oN A froma Raa einutatediand bhecamela i a BokemonMitlappeansiwh ere Seen «) B @aryeam x a 5 & » » 4 <i. ., ©2023 Pokémon / Nintendo / Creatures / GAME FREAK J",
+   "corner": "02/0405 2023 / 5S F RB WI B 2023 P / N / C"
+  },
+  "file": "20-deoxys-1.jpg",
+  "corner": "20-deoxys-1-corner.jpg"
+ },
+ {
+  "card": "Deoxys",
+  "number": "GG12/70 · SWSH12.5GG",
+  "expected": [
+   "swsh12.5gg-GG12"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 1.312900337734937,
+   "foil": 0.20138677226169016
+  },
+  "ocr": {
+   "top": "B. = A < . = % D 3 Je ) 0X) YS. fe 3 ge] 0/O)",
+   "bottom": "— h - / | Shela IE 77 ] 1 , - » a 4 11059500 vg - DN A from'aispacelintsimutated andlbecamela. 8 M 6 Ie Bokemontiliappea Wherelalirerasianelee ng Jd © OPT) x aa yr : ©2023 Pokémon / Nintendo / Creatures / GAME FREAK",
+   "corner": "2/00 408 2023 / WF WNIGIG 3 F WE 6612766700 BE 2023 P / N / C"
+  },
+  "file": "20-deoxys-2.jpg",
+  "corner": "20-deoxys-2-corner.jpg"
+ },
+ {
+  "card": "Deoxys",
+  "number": "GG12/70 · SWSH12.5GG",
+  "expected": [
+   "swsh12.5gg-GG12"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": "col1-2",
+   "conf": 0.36,
+   "hit": false,
+   "sharp": 1.3179730626408572,
+   "foil": 0.20985802382977106
+  },
+  "ocr": {
+   "top": "~~ Als Deoxys: 2 of (1200) |",
+   "bottom": "= = i | 11959500 vg ow SDRNATrom alspacelVinisimutale tard i v 6 4 heey C1276 C708 Bo wry Se ©2023 Pokémon / Nintendo / Creatures / GAME FREAK",
+   "corner": "02023 /  V P JO SE 2023 P / N / C"
+  },
+  "file": "20-deoxys-3.jpg",
+  "corner": "20-deoxys-3-corner.jpg"
+ },
+ {
+  "card": "Deoxys",
+  "number": "GG12/70 · SWSH12.5GG",
+  "expected": [
+   "swsh12.5gg-GG12"
+  ],
+  "finish": "holo",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 1.3224239181345767,
+   "foil": 0.21307737253890494
+  },
+  "ocr": {
+   "top": "Pp: Basic A) eo A Bet ah lg 120) | ges dDeoxys Bi BREETUNI20",
+   "bottom": ". — - NE | » “Slat me PE’ ‘LS &£ 10s %5¢0 vg - *DNAfromaspace pinusimutatediand V E] : ) (Ee, Rappers wherstmomrs am 8 NGG i12/GGZORS or ~ ; ©2023 Pokémon / Nintendo / Creatures / GAME FREAK",
+   "corner": "2/00400 2023 /  V R WW B ER 02023 P / N / C"
+  },
+  "file": "20-deoxys-4.jpg",
+  "corner": "20-deoxys-4-corner.jpg"
+ },
+ {
+  "card": "Carvanha",
+  "number": "35/203 · SWSH7",
+  "expected": [
+   "swsh7-35"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "35",
+   "total": 203,
+   "best": "swsh7-35",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.7925606504249889,
+   "foil": 1.7315929451791274
+  },
+  "ocr": {
+   "top": "£ ee ET | f= Carvanha w50 &)",
+   "bottom": "",
+   "corner": "035/203  EOI 02021 P /NI / C N"
+  },
+  "file": "21-carvanha-0.jpg",
+  "corner": "21-carvanha-0-corner.jpg"
+ },
+ {
+  "card": "Carvanha",
+  "number": "35/203 · SWSH7",
+  "expected": [
+   "swsh7-35"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "35",
+   "total": 203,
+   "best": "swsh7-35",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.756901634478185,
+   "foil": 0.41700061976386626
+  },
+  "ocr": {
+   "top": "#225) Carvanha wd) &)",
+   "bottom": "With its sturdy jaws and fangs, it can | g us. Kyoko Umemoto easily chomp wooden boats to splinters. i | (5) 035/203 @ Itfights with Basculin over food. |/",
+   "corner": "02021 / /  LILO SD 2021 P / NI / C"
+  },
+  "file": "21-carvanha-1.jpg",
+  "corner": "21-carvanha-1-corner.jpg"
+ },
+ {
+  "card": "Carvanha",
+  "number": "35/203 · SWSH7",
+  "expected": [
+   "swsh7-35"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "22",
+   "total": 222,
+   "best": "swsh7-35",
+   "conf": 0.9,
+   "hit": true,
+   "sharp": 0.769678863955368,
+   "foil": 0.4032464465539221
+  },
+  "ocr": {
+   "top": "f= Carvanha id wd) &) |",
+   "bottom": "mes —— k With its sturdy jaws and fangs, itcan | vs: Kyoko Umemoto easily chomp wooden boats to splinters. | (6035203 o Itfights with Basculin over food. creme ENBW th Basculin oven. —— i ©2021 Pokémon / Nintendo / Creatures / GAME FREAK { ee AE dh ae EEE aa a LC TT TEETER EE. 022222 Tess.",
+   "corner": "02021 / /  LT VAVDS 2021 P / N / C SP SS SE SEE SS I TR ER"
+  },
+  "file": "21-carvanha-2.jpg",
+  "corner": "21-carvanha-2-corner.jpg"
+ },
+ {
+  "card": "Carvanha",
+  "number": "35/203 · SWSH7",
+  "expected": [
+   "swsh7-35"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "35",
+   "total": 203,
+   "best": "swsh7-35",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.7690831754357419,
+   "foil": 0.3881692483066678
+  },
+  "ocr": {
+   "top": "f TET | - Carvanha 50 € |",
+   "bottom": "",
+   "corner": "02021 / /  TV TT AR T 035/203 02021 P / N / C B SUE"
+  },
+  "file": "21-carvanha-3.jpg",
+  "corner": "21-carvanha-3-corner.jpg"
+ },
+ {
+  "card": "Carvanha",
+  "number": "35/203 · SWSH7",
+  "expected": [
+   "swsh7-35"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "38",
+   "total": 202,
+   "best": "swsh7-35",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.7703262239331358,
+   "foil": 0.3855761747511283
+  },
+  "ocr": {
+   "top": "f EET BASIC : | an Carvanha wd) '&) |",
+   "bottom": "Cs i 7 o : CR —— ee pe | 4 With its sturdy jaws and fangs, itcan | us. Kyoko Umemoto easily chomp wooden boats to splinters. | (€) 035/203 @ Itfights with Basculin over food. | ©2021 Pokémon / Nintendo / Creatures / Game FREAK oo aa",
+   "corner": "02021 / /  RE W YF 8 SY 038/202 02021 P / NI / C S CREE"
+  },
+  "file": "21-carvanha-4.jpg",
+  "corner": "21-carvanha-4-corner.jpg"
+ },
+ {
+  "card": "Mimikyu",
+  "number": "080/196 · SWSH11",
+  "expected": [
+   "swsh11-080"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": "sv04.5-037",
+   "conf": 0.36,
+   "hit": false,
+   "sharp": 0.7025286377993795,
+   "foil": 1.9512572021771668
+  },
+  "ocr": {
+   "top": "A —————————— gor——\"\" BE te a 5asc) Mimikyu w70 ®",
+   "bottom": "f Pein 02 oe © 230 gra 5 \" n n effor to : gt scary. Unfor 1% X 6 effort olookless scary. Unfortunate fl",
+   "corner": ""
+  },
+  "file": "22-mimikyu-0.jpg",
+  "corner": "22-mimikyu-0-corner.jpg"
+ },
+ {
+  "card": "Mimikyu",
+  "number": "080/196 · SWSH11",
+  "expected": [
+   "swsh11-080"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "0",
+   "total": 196,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.8034712413375136,
+   "foil": 0.47017585913101956
+  },
+  "ocr": {
+   "top": "J Te =r 700)",
+   "bottom": "[twears a rag fashioned into a Pikachu costum Jus. Ligion inan effortto look less scary. Unfortunate or F) 0B0/196. Ke said ionic, the costume only makes it creepi ©2022 Pokémon / Nintendo / Creatures / GAME FREAK _. . PEED ar a se aa a haan nay TUTE EEE. $$ 2Z202Zwm",
+   "corner": "2022 /  LL PP PY J 02022 P / N TE"
+  },
+  "file": "22-mimikyu-1.jpg",
+  "corner": "22-mimikyu-1-corner.jpg"
+ },
+ {
+  "card": "Mimikyu",
+  "number": "080/196 · SWSH11",
+  "expected": [
+   "swsh11-080"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "80",
+   "total": 196,
+   "best": "swsh11-080",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.7213769282412993,
+   "foil": 0.208208606231319
+  },
+  "ocr": {
+   "top": "i RR... Sasc)Mimikyu = w70®)",
+   "bottom": "",
+   "corner": "0 080/196 ZW LEG S A954 C WR T FT J 02022 P / N /"
+  },
+  "file": "22-mimikyu-2.jpg",
+  "corner": "22-mimikyu-2-corner.jpg"
+ },
+ {
+  "card": "Mimikyu",
+  "number": "080/196 · SWSH11",
+  "expected": [
+   "swsh11-080"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": "sv04.5-037",
+   "conf": 0.36,
+   "hit": false,
+   "sharp": 0.7266289876861388,
+   "foil": 0.20586973582162954
+  },
+  "ocr": {
+   "top": ". |. Sasi) Mimikyu w70 ©)",
+   "bottom": "weakness @ x2 reiarce @ -30 oft ree Bo \\ | J NIC J INTO a FiIKach! STUMK an el Ort to 0k less sc ry “ 1 na el Qo 7 oncom niger ‘# 2 i ©2022 Pokémon / Nintendo / Creatures / GAME FREAK psa b",
+   "corner": "RA L SE LE J HC Q 02022 P / N /"
+  },
+  "file": "22-mimikyu-3.jpg",
+  "corner": "22-mimikyu-3-corner.jpg"
+ },
+ {
+  "card": "Mimikyu",
+  "number": "080/196 · SWSH11",
+  "expected": [
+   "swsh11-080"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "582",
+   "total": 617,
+   "best": "sm2-58",
+   "conf": 0.3323076923076923,
+   "hit": false,
+   "sharp": 0.8785649484975441,
+   "foil": 0.2020124848701246
+  },
+  "ocr": {
+   "top": "p= OMimikyu 70 ®)",
+   "bottom": "BE ——————————————————————————————————————————— { SE, i ~~ Dl ' ~~ Itwearsa rag fashioned into a Pikachu costum fd BTN o \"oR “ nan el fortto look le S scary. ortunatel S2 F 96 % he costume only make Ji ©2022 Pokémon / Nintendo / Creatures / GAME FREAK pre . TT —— — EEN = —-—",
+   "corner": "02022 /  ERS REE LEER JR 5 82 617 2022 P / N /"
+  },
+  "file": "22-mimikyu-4.jpg",
+  "corner": "22-mimikyu-4-corner.jpg"
+ },
+ {
+  "card": "Onix",
+  "number": "68/163 · SWSH5",
+  "expected": [
+   "swsh5-68"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.6745597765904189,
+   "foil": 2.1081241305570924
+  },
+  "ocr": {
+   "top": "= nies nw we 110 2 aie 110)",
+   "bottom": "A TR Bae — > La NN - oT \" 58 Bus. Noses fata I api bork through the groung at50 mph by 1 : SQUICEing an IStir sive, ru dy ne ! 101 1s massive, rugged boo, ©2021 Pokémon / Nintendo / Creatures / GAME FREAK ad CT REC ee re. TE",
+   "corner": "A 2021 P / N / C EE"
+  },
+  "file": "23-onix-0.jpg",
+  "corner": "23-onix-0-corner.jpg"
+ },
+ {
+  "card": "Onix",
+  "number": "68/163 · SWSH5",
+  "expected": [
+   "swsh5-68"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": "si1-3",
+   "conf": 0.23999999999999996,
+   "hit": false,
+   "sharp": 0.4493517494368304,
+   "foil": 0.9920465129242136
+  },
+  "ocr": {
+   "top": "|| pe Onin SLIT IT > TT Tn— & ~~",
+   "bottom": "JE—— SE INLANIENYY % “ on. £0 1 th d hoy ff ae imag sy PIAY bores thre e ground at 50 vie : warn L + tough the gro TPh by J an A$ I rugged body I 6 / istbouy J ©2021 Pokémon / Nintendo / Creatures / GAME FREAK",
+   "corner": "9 ES 2021 P / N / RRR"
+  },
+  "file": "23-onix-1.jpg",
+  "corner": "23-onix-1-corner.jpg"
+ },
+ {
+  "card": "Onix",
+  "number": "68/163 · SWSH5",
+  "expected": [
+   "swsh5-68"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.6767270180632311,
+   "foil": 2.0322755242733477
+  },
+  "ocr": {
+   "top": "| —- ——y Es a = Ia egal nadie le",
+   "bottom": "-_ a. Ww, Lo lus. Nossal. —— api bork through the ground at 50 mph by A A \" a i uli 1 an / Rt PN. - ; lf E] | Sl AREER tha uggedbody ©2021 Pokémon / Nintendo / Creatures / Game FREAK 8",
+   "corner": "02021  02021 P / N / C RR EER I"
+  },
+  "file": "23-onix-2.jpg",
+  "corner": "23-onix-2-corner.jpg"
+ },
+ {
+  "card": "Onix",
+  "number": "68/163 · SWSH5",
+  "expected": [
+   "swsh5-68"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "0",
+   "total": 202,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.4852811833969924,
+   "foil": 1.0020620707380428
+  },
+  "ocr": {
+   "top": "BASIC . P Rowioct N A || pc Onin ZIRE",
+   "bottom": "i AP 4 i Ms, imura Lo Wap bors h ought € ground at56 mph ty, W 5 Sah ly ee ei ff ©202 Pokémon / Nintendo / Creatures / Game FREAK",
+   "corner": "AANA SE 0202 P / N / TN FF EE NER"
+  },
+  "file": "23-onix-3.jpg",
+  "corner": "23-onix-3-corner.jpg"
+ },
+ {
+  "card": "Onix",
+  "number": "68/163 · SWSH5",
+  "expected": [
+   "swsh5-68"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "202",
+   "total": 202,
+   "best": "swsh1-202",
+   "conf": 0.8,
+   "hit": false,
+   "sharp": 0.6527864098409905,
+   "foil": 1.3713253222158586
+  },
+  "ocr": {
+   "top": "| ——wy a > 4 a . a i a HS —",
+   "bottom": "",
+   "corner": "2021 /  2021 P / N / C"
+  },
+  "file": "23-onix-4.jpg",
+  "corner": "23-onix-4-corner.jpg"
+ },
+ {
+  "card": "Onix",
+  "number": "138/264 · SWSH8",
+  "expected": [
+   "swsh8-138"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "138",
+   "total": 264,
+   "best": "swsh8-138",
+   "conf": 0.9636363636363636,
+   "hit": true,
+   "sharp": 0.6823948050484347,
+   "foil": 0.9707333449594182
+  },
+  "ocr": {
+   "top": "Bazc) Onix w110 22)",
+   "bottom": "~~ aA ALANS JD . Ee ce ae, SED 0 De Ne TE lus. KENCHIRO ITO Itrapidly bores through the ground at 50 mph by, 4 squirming and twisting its massive, rugged bo. 3 (€) 138/264 @ - TS —— ©2021 Pokémon / Nintendo / Creatures / GAME FREAK RY",
+   "corner": "02021 /  2021 P / N / C"
+  },
+  "file": "24-onix-0.jpg",
+  "corner": "24-onix-0-corner.jpg"
+ },
+ {
+  "card": "Onix",
+  "number": "138/264 · SWSH8",
+  "expected": [
+   "swsh8-138"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "138",
+   "total": 264,
+   "best": "swsh8-138",
+   "conf": 0.9636363636363636,
+   "hit": true,
+   "sharp": 0.6802622463335674,
+   "foil": 1.0158596304620882
+  },
+  "ocr": {
+   "top": "ease) Onix 110 9",
+   "bottom": "",
+   "corner": "02021 /  QUIMI 2 138/264 02021 P / N / C I"
+  },
+  "file": "24-onix-1.jpg",
+  "corner": "24-onix-1-corner.jpg"
+ },
+ {
+  "card": "Onix",
+  "number": "138/264 · SWSH8",
+  "expected": [
+   "swsh8-138"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "138",
+   "total": 264,
+   "best": "swsh8-138",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.7141548505086596,
+   "foil": 1.1475727833506388
+  },
+  "ocr": {
+   "top": "— a - Basic) Onix 110 2)",
+   "bottom": "",
+   "corner": "110 2 6 138/264 0 4 22 M KEIICHIRO ITO I S SQI 2021 P / N / C"
+  },
+  "file": "24-onix-2.jpg",
+  "corner": "24-onix-2-corner.jpg"
+ },
+ {
+  "card": "Onix",
+  "number": "138/264 · SWSH8",
+  "expected": [
+   "swsh8-138"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "130",
+   "total": 404,
+   "best": "swsh8-138",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.8314394266617878,
+   "foil": 1.118956608109933
+  },
+  "ocr": {
+   "top": "&22)Onix ~~ L110®",
+   "bottom": "Hlus. KEICHIRO ITO Itrapidly bores through the ground at 50 mph by 3G, squirming and twisting its massive, rugged body G 138/264 @ ©2021 Pokémon / Nintendo / Creatures / GAME FREAK",
+   "corner": "2021 /  HN A 130/404 2021 P / N / C"
+  },
+  "file": "24-onix-3.jpg",
+  "corner": "24-onix-3-corner.jpg"
+ },
+ {
+  "card": "Onix",
+  "number": "138/264 · SWSH8",
+  "expected": [
+   "swsh8-138"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "138",
+   "total": 264,
+   "best": "swsh8-138",
+   "conf": 0.9636363636363636,
+   "hit": true,
+   "sharp": 0.930355920122658,
+   "foil": 1.1160225030496314
+  },
+  "ocr": {
+   "top": "g22s) Onix L110)",
+   "bottom": "",
+   "corner": "02021 /  SUITING 2 Y 138/264 2021 P / N / C CE"
+  },
+  "file": "24-onix-4.jpg",
+  "corner": "24-onix-4-corner.jpg"
+ },
+ {
+  "card": "Onix",
+  "number": "103/236 · SM11",
+  "expected": [
+   "sm11-103"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "103",
+   "total": 236,
+   "best": "sm11-103",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.5362445917365178,
+   "foil": 1.2330644972014655
+  },
+  "ocr": {
+   "top": "a Onix Ee» foi wl10 [) TEETER TTT SEE TTT |",
+   "bottom": "",
+   "corner": "5 103/236  W M A B 5 103/236"
+  },
+  "file": "25-onix-0.jpg",
+  "corner": "25-onix-0-corner.jpg"
+ },
+ {
+  "card": "Onix",
+  "number": "103/236 · SM11",
+  "expected": [
+   "sm11-103"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "103",
+   "total": 236,
+   "best": "sm11-103",
+   "conf": 0.9384615384615385,
+   "hit": true,
+   "sharp": 0.5156023365860067,
+   "foil": 0.47787236148049755
+  },
+  "ocr": {
+   "top": "sasic JONiX us pe + -110®",
+   "bottom": "Bai a a EE ———— Mus. Hitoshi Arige Burrows at high speed in search of food. The SG 103/236 ® tunnels it leaves are used as homes by Diglet _O219Pokémon Ge ES Pog A EE ——— ce —— BT E : : . Te",
+   "corner": "LE ASAE L 02019 P CL"
+  },
+  "file": "25-onix-1.jpg",
+  "corner": "25-onix-1-corner.jpg"
+ },
+ {
+  "card": "Onix",
+  "number": "103/236 · SM11",
+  "expected": [
+   "sm11-103"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "103",
+   "total": 236,
+   "best": "sm11-103",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.5836656587377482,
+   "foil": 0.46682133717814545
+  },
+  "ocr": {
+   "top": "a Onix a il \" 1108",
+   "bottom": "— ee _ NU WO Mus. Hitoshi Arigo Burrows at high speed in search of food. The 9S 103/236 @ . tunnels it leaves are used as homes by Diglent REE “e, 70 iat Ra — rr pe RE PTY + rie A RAY bi",
+   "corner": ""
+  },
+  "file": "25-onix-2.jpg",
+  "corner": "25-onix-2-corner.jpg"
+ },
+ {
+  "card": "Onix",
+  "number": "103/236 · SM11",
+  "expected": [
+   "sm11-103"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "103",
+   "total": 236,
+   "best": "sm11-103",
+   "conf": 0.33,
+   "hit": false,
+   "sharp": 0.6380581707530252,
+   "foil": 1.2164884725247112
+  },
+  "ocr": {
+   "top": "TTT TC pe ee——",
+   "bottom": "reakness @ Xx 2 | resistance : EET Re i wy Yer 2 HP UIeE as home: by Diglett",
+   "corner": "5 103/236  WUS M A BR 5 103/236"
+  },
+  "file": "25-onix-3.jpg",
+  "corner": "25-onix-3-corner.jpg"
+ },
+ {
+  "card": "Onix",
+  "number": "103/236 · SM11",
+  "expected": [
+   "sm11-103"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "103",
+   "total": 236,
+   "best": "sm11-103",
+   "conf": 0.9500000000000001,
+   "hit": true,
+   "sharp": 0.5227985750937314,
+   "foil": 0.6041554940081951
+  },
+  "ocr": {
+   "top": "J———— a —— paste Onix wl10 B® [I ETT EE yy——",
+   "bottom": "pr —— SNE a Ne NAS Mus. Hitoshi Arig Burrows at high speed in search of food. The 9 103/236 @ tunnels it leaves are used as homes by Diglett. . PMisPokdmen oo i. CRONE Se EE SN EE ——________ = ETE ~~ C—— WIRE i TTT : SelRiees i",
+   "corner": "TO EL TR API RIRL 02019 P 4 BN"
+  },
+  "file": "25-onix-4.jpg",
+  "corner": "25-onix-4-corner.jpg"
+ },
+ {
+  "card": "Meowstic",
+  "number": "034/88 · POR",
+  "expected": [
+   "me03-034"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "103",
+   "total": 85,
+   "best": "me03-034",
+   "conf": 1,
+   "hit": true,
+   "sharp": 0.5617567820425021,
+   "foil": 0.45674568139119065
+  },
+  "ocr": {
+   "top": "EEE ne TAGE . GER TEER z5'¢Meowstic ~~ ,100® |",
+   "bottom": "",
+   "corner": "0 1034/0858 59 02026 / Ls LVS IR RLLA TS 1 POR 04 034708819 02026 P / N / C EE"
+  },
+  "file": "26-meowstic-0.jpg",
+  "corner": "26-meowstic-0-corner.jpg"
+ },
+ {
+  "card": "Meowstic",
+  "number": "034/88 · POR",
+  "expected": [
+   "me03-034"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "103",
+   "total": 88,
+   "best": "me03-103",
+   "conf": 0.8,
+   "hit": false,
+   "sharp": 0.5709781233969228,
+   "foil": 0.4561290451378317
+  },
+  "ocr": {
+   "top": "EEE TAIRA. zildMeowstic 100 @",
+   "bottom": "",
+   "corner": "1034/0889 02026 /  CART CE RIMCNAARA POR 034708818 02026 P / N / C A"
+  },
+  "file": "26-meowstic-1.jpg",
+  "corner": "26-meowstic-1-corner.jpg"
+ },
+ {
+  "card": "Meowstic",
+  "number": "034/88 · POR",
+  "expected": [
+   "me03-034"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": "me03-034",
+   "conf": 0.8,
+   "hit": true,
+   "sharp": 0.7118011299141223,
+   "foil": 0.3157710977517433
+  },
+  "ocr": {
+   "top": "~i<'¢Meowstic _«100®@ | 2) ae Nig re raed AR EE",
+   "bottom": "A ER Ai Wore selfish and aggressive us§Kannny an VARTA | they don’t getwhat they want, they EB mn © gwith their psychical ! ©2026 Pokémon / Nintendo / Creatures / GAME FREAK BE —— > hE ee -e —",
+   "corner": "34/ 02026 /  J POR F327 088 1 02026 P / N / C I"
+  },
+  "file": "26-meowstic-2.jpg",
+  "corner": "26-meowstic-2-corner.jpg"
+ },
+ {
+  "card": "Meowstic",
+  "number": "034/88 · POR",
+  "expected": [
+   "me03-034"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": "swsh12-082",
+   "conf": 0.36,
+   "hit": false,
+   "sharp": 0.6986544555291999,
+   "foil": 0.32111142447337615
+  },
+  "ocr": {
+   "top": "2¢Meowstic_ +100® | 29) ar Ng te rarest AR TEE",
+   "bottom": "us§Kannnuj Fe EE ay 0 Dore se ishand aggressive | hey don’t getwhat they want, they EB eye © FEL ©2026 Pokémon / Nintendo / Creatures / GAME FREAK EE ———",
+   "corner": "34/ 2026 /  J JPOR F377 085 1 02026 P / N / C EE E"
+  },
+  "file": "26-meowstic-3.jpg",
+  "corner": "26-meowstic-3-corner.jpg"
+ },
+ {
+  "card": "Meowstic",
+  "number": "034/88 · POR",
+  "expected": [
+   "me03-034"
+  ],
+  "finish": "reverse",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.367844334582821,
+   "foil": 1.1633033605957186
+  },
+  "ocr": {
+   "top": "ced HIT — 1",
+   "bottom": "v, | O pe x",
+   "corner": "S NE"
+  },
+  "file": "26-meowstic-4.jpg",
+  "corner": "26-meowstic-4-corner.jpg"
+ },
+ {
+  "card": "Meowstic (JP)",
+  "number": "033/80 · M3",
+  "expected": [
+   "ja:M3-033"
+  ],
+  "finish": "normal",
+  "lang": "ja",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "33",
+   "total": 60,
+   "best": "ja:SM1S-033",
+   "conf": 0.54,
+   "hit": false,
+   "sharp": 0.8483023835618736,
+   "foil": 0.35097073825762193
+  },
+  "ocr": {
+   "top": "",
+   "bottom": "~ — — u —- WE ye UNITED 033/08 c Hoousn ©2026 Pokemon/Nintendo/Creatures/GAME FREAK.",
+   "corner": "033/060 02026 / 2  CCW 033/080 M 02026 P/N/"
+  },
+  "file": "27-meowstic-jp-0.jpg",
+  "corner": "27-meowstic-jp-0-corner.jpg"
+ },
+ {
+  "card": "Meowstic (JP)",
+  "number": "033/80 · M3",
+  "expected": [
+   "ja:M3-033"
+  ],
+  "finish": "normal",
+  "lang": "ja",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "933",
+   "total": 80,
+   "best": "neo1-99",
+   "conf": 0.3428571428571428,
+   "hit": false,
+   "sharp": 0.8253763915218717,
+   "foil": 0.35273811400060934
+  },
+  "ocr": {
+   "top": "FN errr Ay a B",
+   "bottom": "bE el | » 5 1, UR lus. Kannnu WL AAR xT FIL bree REE JTW 933/080 LL BBE Bbst ¥1257-T Reopen N a ©2026 Pokémon/Nintendo/Creatures/ GAME FREAK re SE hl a a a -",
+   "corner": "2 02026 /  WER 0330800 WE 02026 P/N/ LE NS A A"
+  },
+  "file": "27-meowstic-jp-1.jpg",
+  "corner": "27-meowstic-jp-1-corner.jpg"
+ },
+ {
+  "card": "Meowstic (JP)",
+  "number": "033/80 · M3",
+  "expected": [
+   "ja:M3-033"
+  ],
+  "finish": "normal",
+  "lang": "ja",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "33",
+   "total": 80,
+   "best": "ja:M2-033",
+   "conf": 0.54,
+   "hit": false,
+   "sharp": 0.8370117495408185,
+   "foil": 0.3527123462367036
+  },
+  "ocr": {
+   "top": "rr —t—r | pins pt 5AM. 1009",
+   "bottom": "— — — - - — vw . Kon Re ge mies ba [A Lo Ge LU ’ 4 \\ a of i: a AR 2 [X] 033/0 ( AS 8 n : ©2026 Pokémon/Nintendo/Creatures/GAME FREAK.",
+   "corner": "033/080 02026 / 2 8  ICE 033/080 02026 P/N/ AL TRS EE"
+  },
+  "file": "27-meowstic-jp-2.jpg",
+  "corner": "27-meowstic-jp-2-corner.jpg"
+ },
+ {
+  "card": "Meowstic (JP)",
+  "number": "033/80 · M3",
+  "expected": [
+   "ja:M3-033"
+  ],
+  "finish": "normal",
+  "lang": "ja",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "33",
+   "total": 80,
+   "best": "ja:M3-033",
+   "conf": 0.9,
+   "hit": true,
+   "sharp": 0.8464468711555553,
+   "foil": 0.38349502247224104
+  },
+  "ocr": {
+   "top": "yi —pA=5Z2 7.1000 AO hamid e am we",
+   "bottom": "— — - _—-— - ha ab a A — n —- — s. Kann ne vy Le vou prers i04 J NICN 033/080 D—7 i fn ©2026 Pokémon/Nintendo/Creatures/GAME FREAK.",
+   "corner": "033/080 02026 /  CCE 033/080 02026 P/N/ SN LTE"
+  },
+  "file": "27-meowstic-jp-3.jpg",
+  "corner": "27-meowstic-jp-3-corner.jpg"
+ },
+ {
+  "card": "Meowstic (JP)",
+  "number": "033/80 · M3",
+  "expected": [
+   "ja:M3-033"
+  ],
+  "finish": "normal",
+  "lang": "ja",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "33",
+   "total": 50,
+   "best": "ja:SM7b-033",
+   "conf": 0.54,
+   "hit": false,
+   "sharp": 0.8393757753391562,
+   "foil": 0.35688140942787255
+  },
+  "ocr": {
+   "top": "Tao —t=27 0",
+   "bottom": "— i as -— . [A i =~ 4 a pat : la - FALL xT LB > ©2026 Pokémon/Nintendo/Creatures/ GAME FREAK, - xl . oe. ES - 4 .s - LL —-—-.",
+   "corner": "033/050 02026 /  WCE 033/080 02026 P/N/ NW SUES PURP P"
+  },
+  "file": "27-meowstic-jp-4.jpg",
+  "corner": "27-meowstic-jp-4-corner.jpg"
+ },
+ {
+  "card": "Water Energy",
+  "number": "003/16 · MEE",
+  "expected": [
+   "mee-003"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.2688319112744873,
+   "foil": 0.3573728760049328
+  },
+  "ocr": {
+   "top": "A —— 4",
+   "bottom": "©2025 Pokémon / Nintendo / Creatures / GAME FREAK . Drea ee ne : Ra of ae cdi ern Fert Pr ro —— a",
+   "corner": "02025 / /  02025 P / NI /"
+  },
+  "file": "28-water-energy-0.jpg",
+  "corner": "28-water-energy-0-corner.jpg"
+ },
+ {
+  "card": "Water Energy",
+  "number": "003/16 · MEE",
+  "expected": [
+   "mee-003"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "3",
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.2357999062511317,
+   "foil": 0.34909615152411483
+  },
+  "ocr": {
+   "top": "- A",
+   "bottom": ". ere . : Be. i id | (hizo >» EE 003 ————— : ©2025 Pokémon / Nintendo / Creatures / GAME FREAK - re wa PRP ECNe SP pe TL en HE — - _ x A an rn RN RW et a fo -",
+   "corner": "02025 /  J 0 FE T 02025 P / N"
+  },
+  "file": "28-water-energy-1.jpg",
+  "corner": "28-water-energy-1-corner.jpg"
+ },
+ {
+  "card": "Water Energy",
+  "number": "003/16 · MEE",
+  "expected": [
+   "mee-003"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.23903541529796496,
+   "foil": 0.34246891371198807
+  },
+  "ocr": {
+   "top": "EE — ' Basic Energy wr umn ENERGY J",
+   "bottom": "i ’ : | (MEE oy « 4 ra TS I m———— ©2025 Pokémon / Nintendo / Creatures / GAME FREAK ak a Sr ET a © \"",
+   "corner": "3 02025 /  003 02025 P / NI"
+  },
+  "file": "28-water-energy-2.jpg",
+  "corner": "28-water-energy-2-corner.jpg"
+ },
+ {
+  "card": "Water Energy",
+  "number": "003/16 · MEE",
+  "expected": [
+   "mee-003"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.23515223776594357,
+   "foil": 0.3427701999815776
+  },
+  "ocr": {
+   "top": "Basic Energy uur unm ENERGY / |",
+   "bottom": "a aa sce nanan SEIN 1] | MEE - | ( on) 003 — - Juve. - #» ©2025 Pokémon / Nintendo / Creatures / GAME FREAK = ST EO MINS. TT, Th Te em an",
+   "corner": "02025 /  I 02025 P / NI"
+  },
+  "file": "28-water-energy-3.jpg",
+  "corner": "28-water-energy-3-corner.jpg"
+ },
+ {
+  "card": "Water Energy",
+  "number": "003/16 · MEE",
+  "expected": [
+   "mee-003"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.23926537973349718,
+   "foil": 0.34309901323625874
+  },
+  "ocr": {
+   "top": "Basic Energy wr’ mmm ENERGY / |",
+   "bottom": "@ « BE A —— . ©2025 Pokémon / Nintendo / Creatures / GAME FREAK",
+   "corner": "2025 /  AL FT SR 2 02025 P / N"
+  },
+  "file": "28-water-energy-4.jpg",
+  "corner": "28-water-energy-4-corner.jpg"
+ },
+ {
+  "card": "Grass Energy",
+  "number": "009/24 · SVE",
+  "expected": [
+   "sve-009"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.3479307783957116,
+   "foil": 0.24030340761717464
+  },
+  "ocr": {
+   "top": "Basic Enerdy. BI d— ENERGY / I Racic © Fnerov OD 4",
+   "bottom": "Rr EY. ~~ en ——— ha (SVE) € ©2024 Pokémon / Nintendo / Creatures / GAME FREAK EER a Te SA TT TT ee",
+   "corner": "02024 /  02024 P / N / C"
+  },
+  "file": "29-grass-energy-0.jpg",
+  "corner": "29-grass-energy-0-corner.jpg"
+ },
+ {
+  "card": "Grass Energy",
+  "number": "009/24 · SVE",
+  "expected": [
+   "sve-009"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "9",
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.3479775429429241,
+   "foil": 0.23132453077323564
+  },
+  "ocr": {
+   "top": "Basic Energy rs — ENERGY / A Racic €© Energy QD 4",
+   "bottom": "ET a ET NR | 5: oa TAY rr — Lg | ‘4 is 009. se —— ©2024 Pokémon / Nintendo / Creatures / GAME FREAK",
+   "corner": "02024 /  ETD 009 2024 P / NI / C"
+  },
+  "file": "29-grass-energy-1.jpg",
+  "corner": "29-grass-energy-1-corner.jpg"
+ },
+ {
+  "card": "Grass Energy",
+  "number": "009/24 · SVE",
+  "expected": [
+   "sve-009"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "8",
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.34306684258292297,
+   "foil": 0.24458434829612066
+  },
+  "ocr": {
+   "top": "Basic Energy ur’ ENERGY / I Racic € Fnergoy QO",
+   "bottom": "SER Cle. Aiohhtaaan cides gs PURE rr— os 4 Vv, AIT 00 i ——— J 3 ©2024 Pokémon / Nintendo / Creatures / GAME FREAK IR TE he LL : ots i A EE... $=",
+   "corner": "02024 /  TT 008 02024 P / NI /"
+  },
+  "file": "29-grass-energy-2.jpg",
+  "corner": "29-grass-energy-2-corner.jpg"
+ },
+ {
+  "card": "Grass Energy",
+  "number": "009/24 · SVE",
+  "expected": [
+   "sve-009"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": "sv03-188",
+   "conf": 0.20571428571428568,
+   "hit": false,
+   "sharp": 0.34772517145136383,
+   "foil": 0.23657808149017362
+  },
+  "ocr": {
+   "top": "Basic Energy. RETA ENERGY / I Racic €© EFnerey OQ a",
+   "bottom": "pr NORA’ na LS aii. 4 pis (sven 6 ©2024 Pokémon / Nintendo / Creatures / GAME FREAK EEE ee y EE ee. |) an",
+   "corner": "02024 /  WE VE 77 T 2024 P / NI / C"
+  },
+  "file": "29-grass-energy-3.jpg",
+  "corner": "29-grass-energy-3-corner.jpg"
+ },
+ {
+  "card": "Grass Energy",
+  "number": "009/24 · SVE",
+  "expected": [
+   "sve-009"
+  ],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": "sve-002",
+   "conf": 0.8,
+   "hit": false,
+   "sharp": 0.34636775795733715,
+   "foil": 0.23455711280935304
+  },
+  "ocr": {
+   "top": "Basic Energy. or’ WENERGY / A Racic €@ Energy Q a",
+   "bottom": "RT RETR oy on Sr v= — Re. - o “ - 4 2 (sVEn € ©2024 Pokémon / Nintendo / Creatures / GAME FREAK — Fen Te",
+   "corner": "0 2 02024 /  02024 P / N /"
+  },
+  "file": "29-grass-energy-4.jpg",
+  "corner": "29-grass-energy-4-corner.jpg"
+ },
+ {
+  "card": "Check language",
+  "number": "—",
+  "expected": [],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "37",
+   "total": 43,
+   "best": "me05-037",
+   "conf": 0.216,
+   "hit": true,
+   "sharp": 0.7309571296133722,
+   "foil": 1.8338612109637165
+  },
+  "ocr": {
+   "top": "PE. ——— 1 VE. mi) Ed F—UL B+",
+   "bottom": "USA IA L JA) =, “ Hus. Tairo Akitsu Yi—hZ. BoDOEICT BUDE ZEN, c) m 037/043 ©2025 Pokémon /Nintendo/Creatures/GAME FREAK.",
+   "corner": "2 03/7/7043 0 2 02025 / I EA 02025 P/NI C LT"
+  },
+  "file": "30-check-language-0.jpg",
+  "corner": "30-check-language-0-corner.jpg"
+ },
+ {
+  "card": "Check language",
+  "number": "—",
+  "expected": [],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "37",
+   "total": 43,
+   "best": "me02-037",
+   "conf": 0.23999999999999996,
+   "hit": true,
+   "sharp": 0.7050204376682602,
+   "foil": 1.876387165736568
+  },
+  "ocr": {
+   "top": "Pc —— 1 VY mm] F—ULI+",
+   "bottom": "! CSA EA EIR) on Hus. Tairo Akitsu Ui—hZE, BOE BUDEZ EL), (c) 037/043 ©2025 Pokémon/Nintendo/Creatures/GAME FREAK.",
+   "corner": "/ 037/043 02025 / / MAA P 037/043 02025 P/NI DD"
+  },
+  "file": "30-check-language-1.jpg",
+  "corner": "30-check-language-1-corner.jpg"
+ },
+ {
+  "card": "Check language",
+  "number": "—",
+  "expected": [],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "37",
+   "total": 43,
+   "best": "swsh8-37",
+   "conf": 0.8,
+   "hit": false,
+   "sharp": 0.7054389795244344,
+   "foil": 1.8262803462665205
+  },
+  "ocr": {
+   "top": "Cep— : pty pecans, {E+ Hz F—ULB+",
+   "bottom": "| CSA EA L J9) on lus. Tairo Akitsu HY iR—bIZ, BOO®WIC1RUH BIEL), (c] 037/043 ©2025 Pokémon/Nintendo/Creatures/GAME FREAK.",
+   "corner": "037/043 02025 / A 02025 P/N TT"
+  },
+  "file": "30-check-language-2.jpg",
+  "corner": "30-check-language-2-corner.jpg"
+ },
+ {
+  "card": "Check language",
+  "number": "—",
+  "expected": [],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "37",
+   "total": 43,
+   "best": "sm7.5-37",
+   "conf": 0.198,
+   "hit": true,
+   "sharp": 0.7102364606498712,
+   "foil": 1.927842524176655
+  },
+  "ocr": {
+   "top": "B=, Te a— = US A= {E+ Hz F—UL IE",
+   "bottom": "USA EA L 19) on - Mus. Taira Akitsu Ui—hE, BoOEIC BUDE IEL), a | (c] 037/043 ©2025 Pokémon/Nintendo/Creatures/GAME FREAK. Ee ———— eee",
+   "corner": "037/043 02025 / SY LL J 6/ IW 037/043 N 02025 P/N DE"
+  },
+  "file": "30-check-language-3.jpg",
+  "corner": "30-check-language-3-corner.jpg"
+ },
+ {
+  "card": "Check language",
+  "number": "—",
+  "expected": [],
+  "finish": "normal",
+  "lang": "en",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": "37",
+   "total": 43,
+   "best": "me02-037",
+   "conf": 0.20571428571428568,
+   "hit": true,
+   "sharp": 0.7323858353836555,
+   "foil": 1.9642906465807686
+  },
+  "ocr": {
+   "top": "cL —— DY 2 mm] F—ULIB+",
+   "bottom": "Udi EA L J9) on Hus. Tairo Akitsu Yi—hZ, BoOHEICT BUDE ZEN, 0 037/043 ©2025 Pokémon /Nintendo/Creatures/GAME FREAK.",
+   "corner": "3/7/083 02025 / ER 02025 P/N BD"
+  },
+  "file": "30-check-language-4.jpg",
+  "corner": "30-check-language-4-corner.jpg"
+ },
+ {
+  "card": "Spearow (JP)",
+  "number": "034/48 · PMCG2",
+  "expected": [
+   "ja:PMCG2-034"
+  ],
+  "finish": "normal",
+  "lang": "ja",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.47410721669577854,
+   "foil": 0.5325101492995735
+  },
+  "ocr": {
+   "top": "4 FZAZXX wn HP50 XX",
+   "bottom": "CCD, | w Enh 9x-y .30 BERR — . — i EE |",
+   "corner": "A E 3 ST EE BE"
+  },
+  "file": "31-spearow-jp-0.jpg",
+  "corner": "31-spearow-jp-0-corner.jpg"
+ },
+ {
+  "card": "Spearow (JP)",
+  "number": "034/48 · PMCG2",
+  "expected": [
+   "ja:PMCG2-034"
+  ],
+  "finish": "normal",
+  "lang": "ja",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.5015524969637675,
+   "foil": 0.5782275102561331
+  },
+  "ocr": {
+   "top": "",
+   "bottom": "Blo. ENED LN Cl TOLDZ LESS & TCH, uy) BY gx—y -30 lus Mitsuhiro Arita Na. 021",
+   "corner": "4 2 3  ER1 I TISAI A"
+  },
+  "file": "31-spearow-jp-1.jpg",
+  "corner": "31-spearow-jp-1-corner.jpg"
+ },
+ {
+  "card": "Spearow (JP)",
+  "number": "034/48 · PMCG2",
+  "expected": [
+   "ja:PMCG2-034"
+  ],
+  "finish": "normal",
+  "lang": "ja",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.5005828302737932,
+   "foil": 0.5760799917278903
+  },
+  "ocr": {
+   "top": "",
+   "bottom": "LJ FR Blo. FHERDILNH ee Ll TOLD LEGS & CY) ERD sx-y .30 TThl, Illus, Mitsuhiro EE TE ere eve",
+   "corner": "5 3  WINT IX"
+  },
+  "file": "31-spearow-jp-2.jpg",
+  "corner": "31-spearow-jp-2-corner.jpg"
+ },
+ {
+  "card": "Spearow (JP)",
+  "number": "034/48 · PMCG2",
+  "expected": [
+   "ja:PMCG2-034"
+  ],
+  "finish": "normal",
+  "lang": "ja",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.5023894147471046,
+   "foil": 0.5848185951517372
+  },
+  "ocr": {
+   "top": "",
+   "bottom": "Ly Vm Blo. ENED Tree TOLD LEGS & BW ERS sx-y 39 CTH Illus, Mitsuhiro RRR —— I ——— ae.",
+   "corner": "0  BN7 I2"
+  },
+  "file": "31-spearow-jp-3.jpg",
+  "corner": "31-spearow-jp-3-corner.jpg"
+ },
+ {
+  "card": "Spearow (JP)",
+  "number": "034/48 · PMCG2",
+  "expected": [
+   "ja:PMCG2-034"
+  ],
+  "finish": "normal",
+  "lang": "ja",
+  "conditions": {
+   "lighting": "overhead",
+   "rig": "jig",
+   "note": "",
+   "endNote": ""
+  },
+  "build": "ce23841",
+  "read": {
+   "number": null,
+   "total": null,
+   "best": null,
+   "conf": null,
+   "hit": false,
+   "sharp": 0.5030398285508186,
+   "foil": 0.589199567055763
+  },
+  "ocr": {
+   "top": "",
+   "bottom": "LJ Fm Blo. FREDO ra. TOLD LEGS & BW EHH wx-y 39 CCPL TIS PASO Agee a No.021 rr re",
+   "corner": "EL I SMES A"
+  },
+  "file": "31-spearow-jp-4.jpg",
+  "corner": "31-spearow-jp-4-corner.jpg"
+ }
+]
